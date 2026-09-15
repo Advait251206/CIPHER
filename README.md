@@ -32,7 +32,7 @@ CIPHER fulfills eight core technical objectives:
 - **Deterministic Heuristic & Signature Detection**: 14 stateful rules operating alongside ML to guarantee deterministic detection of horizontal scans, credential storms, and volumetric floods.
 - **Threat Intelligence Correlation**: Local-first SQLite IOC store (`threat_intel_iocs`) with in-memory caching and dominant severity risk floors.
 - **Multi-Stage Event Correlation**: Sliding-window (300s) incident correlation linking related events using strict `(source_ip, destination_ip)` identity pairing with automated escalation tracking.
-- **Incident Management**: State transitions (`ACTIVE`, `INVESTIGATING`, `RESOLVED`) and chronological timeline reconstruction.
+- **Incident Management**: State transitions (`ACTIVE`, `INVESTIGATING`, `RESOLVED`), chronological timeline reconstruction, and official PDF/TXT incident reporting.
 - **Defensive Intrusion Prevention**: Multi-mode defense (`detect_only`, `simulate`, `enforce`) with TTL blocklists and flow rate limiting.
 - **SOC Visualization**: Comprehensive React 18 / TypeScript single-page dashboard with 10 operational views and structured evidence inspection.
 
