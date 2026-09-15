@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIPHER Browser Guard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <div class="brand-text">
+          <span class="brand-title">CIPHER</span>
+          <span class="brand-sub">BROWSER GUARD</span>
+        </div>
+      </div>
+      <div class="backend-status" id="backendStatus" title="Local Backend Connection">
+        <span class="status-dot"></span>
+        <span class="status-label" id="backendStatusText">Connecting...</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tabWebsiteBtn">Current Website</button>
+      <button class="tab-btn" id="tabEmailBtn">Email Scanner</button>
+    </div>
+
+    <!-- Tab 1: Current Website Inspection -->
+    <main class="tab-content active" id="tabWebsiteContent">
+      <div class="url-card">
+        <span class="section-label">ANALYZED TARGET</span>
+        <div class="url-text" id="targetUrl" title="Inspecting active tab URL">Detecting active tab...</div>
+      </div>
+
+      <!-- Verdict Banner -->
+      <div class="verdict-card" id="verdictCard">
+        <div class="verdict-header">
+          <span class="verdict-badge" id="verdictBadge">SCANNING</span>
+          <div class="metrics">
+            <div class="metric-item">
+              <span class="metric-label">RISK SCORE</span>
+              <span class="metric-val" id="riskScoreVal">-- / 100</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">CONFIDENCE</span>
+              <span class="metric-val" id="confidenceVal">--%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-bar-container">
+          <div class="risk-bar" id="riskProgressBar"></div>
+        </div>
+      </div>
+
+      <!-- Evidence -->
+      <div class="evidence-card">
+        <span class="section-label">DETECTION EVIDENCE</span>
+        <ul class="evidence-list" id="evidenceList">
+          <li>Inspecting URL structure and security indicators...</li>
+        </ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn btn-secondary" id="reAnalyzeBtn">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          Re-Analyze
+        </button>
+        <button class="btn btn-primary" id="openDashboardBtn">
+          Open SOC Dashboard
+        </button>
+      </div>
+    </main>
+
+    <!-- Tab 2: Webmail Content Scanner -->
+    <main class="tab-content" id="tabEmailContent">
+      <div class="webmail-status-box" id="webmailStatusBox">
+        <span class="section-label">WEBMAIL STATUS</span>
+        <div class="webmail-indicator" id="webmailIndicatorText">Checking active tab provider...</div>
+      </div>
+
+      <button class="btn btn-primary full-width" id="scanEmailBtn">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        Analyze Visible Email
+      </button>
+
+      <!-- Email Result Box -->
+      <div class="email-result-card hidden" id="emailResultCard">
+        <div class="verdict-header">
+          <span class="verdict-badge" id="emailVerdictBadge">--</span>
+          <div class="metrics">
+            <div class="metric-item">
+              <span class="metric-label">EMAIL RISK</span>
+              <span class="metric-val" id="emailRiskVal">-- / 100</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">SEVERITY</span>
+              <span class="metric-val" id="emailSeverityVal">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="evidence-card">
+          <span class="section-label">EMAIL RATIONALE</span>
+          <ul class="evidence-list" id="emailEvidenceList"></ul>
+        </div>
+
+        <div class="embedded-urls-box hidden" id="embeddedUrlsBox">
+          <span class="section-label">EMBEDDED URLS</span>
+          <div class="url-pills" id="urlPillsList"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span class="footer-text">CIPHER v1.2 &bull; Local-First 127.0.0.1</span>
+      <button class="settings-toggle-btn" id="settingsToggleBtn" title="Extension Settings">⚙</button>
+    </footer>
+
+    <!-- Settings Overlay -->
+    <div class="settings-drawer hidden" id="settingsDrawer">
+      <div class="settings-header">
+        <span>Settings</span>
+        <button class="close-btn" id="closeSettingsBtn">&times;</button>
+      </div>
+      <div class="settings-body">
+        <label class="setting-label" for="backendUrlInput">CIPHER Backend URL:</label>
+        <input type="text" id="backendUrlInput" class="setting-input" value="http://127.0.0.1:8000">
+        <button class="btn btn-primary full-width" id="saveSettingsBtn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+# Root .gitignore for CIPHER Project
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Python Caches & Build Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend Caches & Build Output
+node_modules/
+dist/
+dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+
+# Large Datasets & Binary Archives
+data/raw/
+data/processed/
+backend/data/raw/
+backend/data/processed/
+*.csv
+*.parquet
+*.zip
+
+# Local SQLite Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE, Editor & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Explicit Inclusions: Preserve Serialized Models, Documentation & Validation Artifacts
+!backend/models/**
+!backend/artifacts/**
+!docs/**
+
+# Local Tooling & Generation
+.gemini/
+scratch/
+backend/data/trusted_domains.json

@@ -1,0 +1,567 @@
+{
+  "model_name": "CIPHER Network Intrusion Detection System",
+  "model_architecture": "Dual Random Forest (Binary Gate + Multiclass Granular)",
+  "framework": "scikit-learn",
+  "dataset": "CIC-IDS2017 (MachineLearningCSV)",
+  "source_files": [
+    "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv",
+    "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv",
+    "Friday-WorkingHours-Morning.pcap_ISCX.csv",
+    "Monday-WorkingHours.pcap_ISCX.csv",
+    "Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv",
+    "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv",
+    "Tuesday-WorkingHours.pcap_ISCX.csv",
+    "Wednesday-workingHours.pcap_ISCX.csv"
+  ],
+  "training_timestamp": "2026-09-14T20:14:17Z",
+  "split_strategy": "Stratified split by attack category (70% train, 15% validation, 15% test) with cross-file flow deduplication to ensure zero flow memorization and full class representation",
+  "training_samples": 448019,
+  "validation_samples": 374832,
+  "test_samples": 374833,
+  "feature_count": 67,
+  "feature_names": [
+    "Destination Port",
+    "Flow Duration",
+    "Total Fwd Packets",
+    "Total Backward Packets",
+    "Total Length of Fwd Packets",
+    "Total Length of Bwd Packets",
+    "Fwd Packet Length Max",
+    "Fwd Packet Length Min",
+    "Fwd Packet Length Mean",
+    "Fwd Packet Length Std",
+    "Bwd Packet Length Max",
+    "Bwd Packet Length Min",
+    "Bwd Packet Length Mean",
+    "Bwd Packet Length Std",
+    "Flow Bytes/s",
+    "Flow Packets/s",
+    "Flow IAT Mean",
+    "Flow IAT Std",
+    "Flow IAT Max",
+    "Flow IAT Min",
+    "Fwd IAT Total",
+    "Fwd IAT Mean",
+    "Fwd IAT Std",
+    "Fwd IAT Max",
+    "Fwd IAT Min",
+    "Bwd IAT Total",
+    "Bwd IAT Mean",
+    "Bwd IAT Std",
+    "Bwd IAT Max",
+    "Bwd IAT Min",
+    "Fwd PSH Flags",
+    "Fwd Header Length",
+    "Bwd Header Length",
+    "Fwd Packets/s",
+    "Bwd Packets/s",
+    "Min Packet Length",
+    "Max Packet Length",
+    "Packet Length Mean",
+    "Packet Length Std",
+    "Packet Length Variance",
+    "FIN Flag Count",
+    "SYN Flag Count",
+    "RST Flag Count",
+    "PSH Flag Count",
+    "ACK Flag Count",
+    "URG Flag Count",
+    "ECE Flag Count",
+    "Down/Up Ratio",
+    "Average Packet Size",
+    "Avg Fwd Segment Size",
+    "Avg Bwd Segment Size",
+    "Subflow Fwd Packets",
+    "Subflow Fwd Bytes",
+    "Subflow Bwd Packets",
+    "Subflow Bwd Bytes",
+    "Init_Win_bytes_forward",
+    "Init_Win_bytes_backward",
+    "act_data_pkt_fwd",
+    "min_seg_size_forward",
+    "Active Mean",
+    "Active Std",
+    "Active Max",
+    "Active Min",
+    "Idle Mean",
+    "Idle Std",
+    "Idle Max",
+    "Idle Min"
+  ],
+  "classes": [
+    "BENIGN",
+    "BOTNET",
+    "BRUTE_FORCE",
+    "DDOS",
+    "DOS",
+    "INFILTRATION",
+    "OTHER_ATTACK",
+    "PORT_SCAN",
+    "WEB_ATTACK"
+  ],
+  "class_to_idx": {
+    "BENIGN": 0,
+    "BOTNET": 1,
+    "BRUTE_FORCE": 2,
+    "DDOS": 3,
+    "DOS": 4,
+    "INFILTRATION": 5,
+    "OTHER_ATTACK": 6,
+    "PORT_SCAN": 7,
+    "WEB_ATTACK": 8
+  },
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 24,
+    "min_samples_leaf": 2,
+    "max_features": "sqrt",
+    "random_state": 42
+  },
+  "training_duration_seconds": {
+    "binary_model": 9.73,
+    "multiclass_model": 13.02,
+    "total": 22.75
+  },
+  "binary_metrics": {
+    "accuracy": 0.999032,
+    "precision": 0.995196,
+    "recall": 0.999139,
+    "f1_score": 0.997164,
+    "roc_auc": 0.999969,
+    "pr_auc": 0.999878,
+    "true_negatives": 310664,
+    "false_positives": 308,
+    "false_negatives": 55,
+    "true_positives": 63806,
+    "false_positive_rate": 0.00099,
+    "false_negative_rate": 0.000861
+  },
+  "multiclass_metrics": {
+    "accuracy": 0.998997,
+    "macro_f1": 0.961416,
+    "weighted_f1": 0.999024,
+    "per_class": {
+      "BENIGN": {
+        "precision": 0.9998165580497225,
+        "recall": 0.999022420024954,
+        "f1-score": 0.9994193312819589,
+        "support": 310972.0
+      },
+      "BOTNET": {
+        "precision": 0.6938775510204082,
+        "recall": 0.9283276450511946,
+        "f1-score": 0.7941605839416058,
+        "support": 293.0
+      },
+      "BRUTE_FORCE": {
+        "precision": 0.9978150036416606,
+        "recall": 0.9978150036416606,
+        "f1-score": 0.9978150036416606,
+        "support": 1373.0
+      },
+      "DDOS": {
+        "precision": 0.9994794377928162,
+        "recall": 0.9998437744102484,
+        "f1-score": 0.9996615729050061,
+        "support": 19203.0
+      },
+      "DOS": {
+        "precision": 0.9959503054430641,
+        "recall": 0.9992424764134702,
+        "f1-score": 0.9975936748023376,
+        "support": 29042.0
+      },
+      "INFILTRATION": {
+        "precision": 1.0,
+        "recall": 0.8,
+        "f1-score": 0.8888888888888888,
+        "support": 5.0
+      },
+      "OTHER_ATTACK": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 1.0
+      },
+      "PORT_SCAN": {
+        "precision": 0.9953199268738574,
+        "recall": 0.999119136754019,
+        "f1-score": 0.9972159132537182,
+        "support": 13623.0
+      },
+      "WEB_ATTACK": {
+        "precision": 0.9873015873015873,
+        "recall": 0.9688473520249221,
+        "f1-score": 0.9779874213836478,
+        "support": 321.0
+      },
+      "accuracy": 0.9989968866135052,
+      "macro avg": {
+        "precision": 0.963284485569235,
+        "recall": 0.9658019787022742,
+        "f1-score": 0.9614158211220916,
+        "support": 374833.0
+      },
+      "weighted avg": {
+        "precision": 0.9990791109646869,
+        "recall": 0.9989968866135052,
+        "f1-score": 0.9990240582328037,
+        "support": 374833.0
+      }
+    }
+  },
+  "top_15_feature_importances": {
+    "Bwd Packet Length Std": 0.05063317474828875,
+    "Fwd Packet Length Max": 0.05015212276313322,
+    "Avg Fwd Segment Size": 0.04543518976582051,
+    "Subflow Fwd Bytes": 0.04487102192764065,
+    "Fwd Packet Length Mean": 0.04167244396553712,
+    "Total Length of Fwd Packets": 0.03578807929656969,
+    "Packet Length Variance": 0.034020124571585104,
+    "Packet Length Std": 0.03373137115103816,
+    "Bwd Packet Length Mean": 0.029760981150854564,
+    "Average Packet Size": 0.029128307584565024,
+    "Idle Min": 0.028643634895068642,
+    "Idle Mean": 0.028284826718209602,
+    "Init_Win_bytes_backward": 0.027427700943332127,
+    "Idle Max": 0.02694471056655841,
+    "Subflow Bwd Bytes": 0.02474420781764144
+  },
+  "realtime_feature_compatibility": {
+    "Destination Port": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow Duration": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Total Fwd Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Total Backward Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Total Length of Fwd Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Total Length of Bwd Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Packet Length Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Packet Length Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Packet Length Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Packet Length Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Packet Length Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Packet Length Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Packet Length Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Packet Length Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow Bytes/s": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow Packets/s": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow IAT Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow IAT Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow IAT Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Flow IAT Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd IAT Total": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd IAT Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd IAT Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd IAT Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd IAT Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd IAT Total": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd IAT Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd IAT Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd IAT Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd IAT Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd PSH Flags": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Header Length": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Header Length": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Fwd Packets/s": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Bwd Packets/s": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Min Packet Length": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Max Packet Length": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Packet Length Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Packet Length Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Packet Length Variance": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "FIN Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "SYN Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "RST Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "PSH Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "ACK Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "URG Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "ECE Flag Count": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Down/Up Ratio": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Average Packet Size": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Avg Fwd Segment Size": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Avg Bwd Segment Size": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Subflow Fwd Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Subflow Fwd Bytes": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Subflow Bwd Packets": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Subflow Bwd Bytes": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Init_Win_bytes_forward": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Init_Win_bytes_backward": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "act_data_pkt_fwd": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "min_seg_size_forward": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "STREAMING_COMPUTABLE",
+      "description": "Streaming accumulator feature computed during live packet aggregation"
+    },
+    "Active Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Active Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Active Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Active Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Idle Mean": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Idle Std": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Idle Max": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    },
+    "Idle Min": {
+      "status": "REALTIME_COMPATIBLE",
+      "mode": "FLOW_COMPLETION_REQUIRED",
+      "description": "Computed upon flow idle timeout or session termination"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+# Environment & Secrets
+.env
+.env.local
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Data files (Exclude large raw and processed datasets)
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.zip
+
+# Local SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+cipher.db
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

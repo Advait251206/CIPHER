@@ -1,0 +1,68 @@
+================================================================================
+CIPHER NETWORK INTRUSION DETECTION SYSTEM - EVALUATION REPORT
+================================================================================
+
+Model Architecture: Dual Random Forest (Binary + Multiclass)
+Dataset:            CIC-IDS2017 (MachineLearningCSV)
+Evaluated Samples:  374,833 held-out test flows (15% unskewed)
+Split Strategy:     Stratified split by attack category (70% train, 15% validation, 15% test) with cross-file flow deduplication to ensure zero flow memorization and full class representation
+Features:           67 numerical flow features
+
+--------------------------------------------------------------------------------
+1. BINARY CLASSIFICATION METRICS (BENIGN vs ATTACK)
+--------------------------------------------------------------------------------
+Accuracy:                  99.9032%
+Precision:                 99.5196%
+Recall:                    99.9139%
+F1-Score:                  99.7164%
+ROC-AUC:                   0.99997
+PR-AUC:                    0.99988
+Confusion Matrix:          TN=310,664, FP=308, FN=55, TP=63,806
+False Positive Rate (FPR): 0.0990% (308 benign flows misclassified as attack)
+False Negative Rate (FNR): 0.0861% (55 attack flows misclassified as benign)
+
+--------------------------------------------------------------------------------
+2. MULTICLASS CLASSIFICATION REPORT (9 TAXONOMY CATEGORIES)
+--------------------------------------------------------------------------------
+              precision    recall  f1-score   support
+
+      BENIGN     0.9998    0.9990    0.9994    310972
+      BOTNET     0.6939    0.9283    0.7942       293
+ BRUTE_FORCE     0.9978    0.9978    0.9978      1373
+        DDOS     0.9995    0.9998    0.9997     19203
+         DOS     0.9960    0.9992    0.9976     29042
+INFILTRATION     1.0000    0.8000    0.8889         5
+OTHER_ATTACK     1.0000    1.0000    1.0000         1
+   PORT_SCAN     0.9953    0.9991    0.9972     13623
+  WEB_ATTACK     0.9873    0.9688    0.9780       321
+
+    accuracy                         0.9990    374833
+   macro avg     0.9633    0.9658    0.9614    374833
+weighted avg     0.9991    0.9990    0.9990    374833
+
+
+--------------------------------------------------------------------------------
+3. TOP 20 FEATURE IMPORTANCES
+--------------------------------------------------------------------------------
+ 1. Bwd Packet Length Std              : 0.05063
+ 2. Fwd Packet Length Max              : 0.05015
+ 3. Avg Fwd Segment Size               : 0.04544
+ 4. Subflow Fwd Bytes                  : 0.04487
+ 5. Fwd Packet Length Mean             : 0.04167
+ 6. Total Length of Fwd Packets        : 0.03579
+ 7. Packet Length Variance             : 0.03402
+ 8. Packet Length Std                  : 0.03373
+ 9. Bwd Packet Length Mean             : 0.02976
+10. Average Packet Size                : 0.02913
+11. Idle Min                           : 0.02864
+12. Idle Mean                          : 0.02828
+13. Init_Win_bytes_backward            : 0.02743
+14. Idle Max                           : 0.02694
+15. Subflow Bwd Bytes                  : 0.02474
+16. Fwd IAT Max                        : 0.02406
+17. Max Packet Length                  : 0.02398
+18. Avg Bwd Segment Size               : 0.02397
+19. Flow IAT Max                       : 0.02383
+20. Packet Length Mean                 : 0.02181
+
+================================================================================

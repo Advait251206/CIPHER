@@ -1,0 +1,240 @@
+{
+  "phase": "10",
+  "title": "CIPHER Controlled Local End-to-End Validation",
+  "timestamp": "2026-09-15T16:03:16Z",
+  "duration_seconds": 4.4,
+  "environment": "Localhost (Air-Gapped / Isolated Loopback)",
+  "summary": {
+    "total_scenarios": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "success_rate": "100.0%"
+  },
+  "scenarios": [
+    {
+      "scenario": "A",
+      "name": "Benign Localhost Traffic",
+      "traffic_type": "REAL LOCAL TRAFFIC",
+      "status": "PASS",
+      "evidence": "Generated 5 HTTP flows to http://127.0.0.1:18080. Classification: BENIGN. Threat Score: 4/100. Severity: LOW. ML Confidence: 86.5%. Action: MONITORED_ONLY. No false critical alert raised.",
+      "flow_ids": [
+        "flow-benign-b3fc5b5f"
+      ],
+      "event_ids": [
+        "b46c39bd-7dd4-489d-a929-6ac5871d115c"
+      ],
+      "incident_ids": [],
+      "rule_matches": [],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "B",
+      "name": "Port Scan Heuristic Sweep",
+      "traffic_type": "REAL LOCAL TRAFFIC",
+      "status": "PASS",
+      "evidence": "Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-002', 'HEUR-PORTSCAN-001', 'SIGN-PORTSCAN-001']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0\u00b5s)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance'].",
+      "flow_ids": [
+        "flow-sweep-be8abac9"
+      ],
+      "event_ids": [
+        "36c602c4-6103-4a89-a1e0-f7331a9c4deb"
+      ],
+      "incident_ids": [],
+      "rule_matches": [
+        "HEUR-PORTSCAN-002",
+        "HEUR-PORTSCAN-001",
+        "SIGN-PORTSCAN-001"
+      ],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "C",
+      "name": "Auth-Storm / Brute-Force Heuristic",
+      "traffic_type": "REAL LOCAL TRAFFIC + AUTH FLOW METADATA",
+      "status": "PASS",
+      "evidence": "Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-BRUTEFORCE-002', 'HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry'].",
+      "flow_ids": [
+        "flow-auth-300d713e"
+      ],
+      "event_ids": [
+        "62cceea8-c640-49bc-84e0-c3dec35eadca"
+      ],
+      "incident_ids": [],
+      "rule_matches": [
+        "HEUR-BRUTEFORCE-002",
+        "HEUR-PORTSCAN-001",
+        "HEUR-BRUTEFORCE-001"
+      ],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "D",
+      "name": "Controlled Flood Heuristic",
+      "traffic_type": "CONTROLLED SYNTHETIC TEST DATA",
+      "status": "PASS",
+      "evidence": "Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DOS-002', 'HEUR-DDOS-001', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY.",
+      "flow_ids": [
+        "flow-flood-b480498d"
+      ],
+      "event_ids": [
+        "4ef29495-6e82-4c92-ad7d-d0345850e61d"
+      ],
+      "incident_ids": [],
+      "rule_matches": [
+        "HEUR-DOS-001",
+        "HEUR-DOS-002",
+        "HEUR-DDOS-001",
+        "SIGN-WEB-001"
+      ],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "E",
+      "name": "Local Threat Intelligence / IOC Match",
+      "traffic_type": "CONTROLLED SYNTHETIC TEST DATA",
+      "status": "PASS",
+      "evidence": "Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-3D8A746F severity: CRITICAL (100/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs.",
+      "flow_ids": [
+        "flow-ioc-1aa905d3"
+      ],
+      "event_ids": [
+        "29e8fc98-7d0c-4771-ab3d-8c58629128ec"
+      ],
+      "incident_ids": [
+        "INC-3D8A746F"
+      ],
+      "rule_matches": [],
+      "ioc_matches": [
+        "203.0.113.199"
+      ],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "F",
+      "name": "Multi-Stage Attack Correlation",
+      "traffic_type": "CONTROLLED SEQUENTIAL EVENTS",
+      "status": "PASS",
+      "evidence": "Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-E008589B. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-7DA2084C.",
+      "flow_ids": [],
+      "event_ids": [
+        "7555a160-0607-4442-8b17-56d80e5d9741",
+        "835292bb-4857-4575-bb58-50094fb68b6f",
+        "f04aa349-f381-4e93-89d5-8d31990be0c0"
+      ],
+      "incident_ids": [
+        "INC-E008589B",
+        "INC-7DA2084C"
+      ],
+      "rule_matches": [],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "G",
+      "name": "IPS Prevention Simulation",
+      "traffic_type": "CONTROLLED ENGINE VERIFICATION",
+      "status": "PASS",
+      "evidence": "Simulate mode returned action 'SIMULATED_TEMPORARY_BLOCK' without host firewall changes. Detect_only mode returned action 'MONITORED_ONLY'. Enforcement path not exercised on host; detect_only/simulate validated safely.",
+      "flow_ids": [],
+      "event_ids": [],
+      "incident_ids": [],
+      "rule_matches": [],
+      "ioc_matches": [],
+      "prevention_decisions": [
+        "SIMULATED_TEMPORARY_BLOCK",
+        "MONITORED_ONLY"
+      ]
+    },
+    {
+      "scenario": "H",
+      "name": "Full End-to-End Pipeline Chain",
+      "traffic_type": "INTEGRATED PIPELINE DEMONSTRATION",
+      "status": "PASS",
+      "evidence": "Complete provenance chain successfully established: Flow [flow-e2e-79e62165] -> Event ID [b79477f1-f74b-422b-9c81-96299f4c8ba1] -> Rule Match [['HEUR-PORTSCAN-002', 'HEUR-DDOS-001', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-D5A07B4D] -> Prevention Action [MONITORED_ONLY].",
+      "flow_ids": [
+        "flow-e2e-79e62165"
+      ],
+      "event_ids": [
+        "b79477f1-f74b-422b-9c81-96299f4c8ba1"
+      ],
+      "incident_ids": [
+        "INC-D5A07B4D"
+      ],
+      "rule_matches": [
+        "HEUR-PORTSCAN-002",
+        "HEUR-DDOS-001",
+        "SIGN-PORTSCAN-001"
+      ],
+      "ioc_matches": [
+        "203.0.113.88"
+      ],
+      "prevention_decisions": [
+        "MONITORED_ONLY"
+      ],
+      "chain_trace": {
+        "flow_id": "flow-e2e-79e62165",
+        "event_id": "b79477f1-f74b-422b-9c81-96299f4c8ba1",
+        "rule_matches": [
+          "HEUR-PORTSCAN-002",
+          "HEUR-DDOS-001",
+          "SIGN-PORTSCAN-001"
+        ],
+        "ioc_matches": [
+          "203.0.113.88"
+        ],
+        "incident_id": "INC-D5A07B4D",
+        "prevention_action": "MONITORED_ONLY",
+        "threat_score": 80,
+        "severity": "CRITICAL"
+      }
+    }
+  ],
+  "telemetry_summary": {
+    "total_events_generated": 9,
+    "total_incidents_generated": 4,
+    "distinct_rules_matched": [
+      "HEUR-PORTSCAN-002",
+      "HEUR-PORTSCAN-001",
+      "HEUR-BRUTEFORCE-002",
+      "HEUR-DDOS-001",
+      "HEUR-BRUTEFORCE-001",
+      "SIGN-WEB-001",
+      "HEUR-DOS-001",
+      "HEUR-DOS-002",
+      "SIGN-PORTSCAN-001"
+    ],
+    "distinct_iocs_matched": [
+      "203.0.113.199",
+      "203.0.113.88"
+    ],
+    "prevention_decisions": [
+      "SIMULATED_TEMPORARY_BLOCK",
+      "MONITORED_ONLY"
+    ]
+  },
+  "safety_checks": {
+    "target_confined_to_localhost": true,
+    "external_network_isolated": true,
+    "no_real_credential_attacks": true,
+    "no_host_firewall_modified": true,
+    "bounded_connections_enforced": true,
+    "bounded_duration_enforced": true
+  }
+}

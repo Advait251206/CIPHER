@@ -1,0 +1,81 @@
+================================================================================
+CIPHER (Cyber Intrusion Prevention & Heuristic Event Response)
+MACHINE LEARNING EVALUATION REPORT - PHISHING URL DETECTOR
+================================================================================
+
+Model Name:                 CIPHER Random Forest Phishing Detector
+Model Version:              phiusiil-rf-v1
+Evaluation Date:            2026-09-14 19:38:37 UTC
+Dataset:                    PhiUSIIL Phishing URL Dataset
+Dataset Total Clean Rows:   235,370 unique URLs (zero duplicate URLs)
+Split Strategy:             Stratified Split: 70% Train, 15% Validation, 15% Held-Out Test
+Test Set Sample Count:      35,306 samples (Unseen during training & hyperparameter tuning)
+
+--------------------------------------------------------------------------------
+1. EXECUTIVE PERFORMANCE SUMMARY
+--------------------------------------------------------------------------------
+Accuracy:                   99.66%
+Precision (Positive=Phish): 99.91%
+Recall / Sensitivity:       99.29%
+F1 Score:                   0.9960
+ROC-AUC:                    0.9991
+Specificity (TNR):          99.94%
+
+False Positive Rate (FPR):  0.064% (13 out of 20,228 legitimate sites)
+False Negative Rate (FNR):  0.710% (107 out of 15,078 phishing sites)
+
+Inference Throughput:       161,916 URLs/sec (0.006 ms/URL)
+Local Privacy:              100% Offline, Zero Network Calls, Zero Browsing History Leaks
+
+--------------------------------------------------------------------------------
+2. CONFUSION MATRIX
+--------------------------------------------------------------------------------
+                          Predicted Legitimate (0)    Predicted Phishing (1)
+Actual Legitimate (0):           20,215 (TN)                      13 (FP)
+Actual Phishing (1):                107 (FN)                  14,971 (TP)
+
+--------------------------------------------------------------------------------
+3. SECURITY RISK & TRADE-OFF ANALYSIS
+--------------------------------------------------------------------------------
+A. FALSE POSITIVES (13 occurrences, FPR = 0.064%):
+   - Impact: A legitimate website is flagged as phishing, potentially causing user
+     friction or alert fatigue.
+   - Analysis: With an FPR under 0.1%, fewer than 1 in 1,000 legitimate URLs trigger
+     an ML alarm. Those that do typically lack HTTPS or feature unusually complex
+     tracking parameters resembling obfuscated payloads.
+   - Mitigation: CIPHER's Threat Scorer requires corroboration from the Heuristic
+     Engine before escalating severity to CRITICAL.
+
+B. FALSE NEGATIVES (107 occurrences, FNR = 0.710%):
+   - Impact: A phishing website is misclassified as legitimate, leaving credentials
+     vulnerable.
+   - Analysis: Missed URLs are predominantly clean HTTPS links hosted on compromised
+     free cloud domains (e.g. Firebase, Weebly, IPFS gateways) with short paths.
+   - Mitigation: CIPHER's independent Heuristic Engine specifically detects cloud-hosted
+     brand tokens, IPFS gateways, and lookalike domains, compensating for lexical blind spots.
+
+--------------------------------------------------------------------------------
+4. TOP INFLUENTIAL FEATURES
+--------------------------------------------------------------------------------
+   1. IsHTTPS                     : 39.78%
+   2. PathLength                  : 20.76%
+   3. NoOfDegitsInURL             :  7.49%
+   4. DegitRatioInURL             :  7.30%
+   5. URLLength                   :  5.37%
+   6. CharContinuationRate        :  2.62%
+   7. NoOfSubDomain               :  2.61%
+   8. NoOfLettersInURL            :  2.59%
+   9. URLEntropy                  :  1.77%
+  10. LetterRatioInURL            :  1.74%
+
+--------------------------------------------------------------------------------
+5. PRODUCTION READINESS & LIMITATIONS
+--------------------------------------------------------------------------------
+- Real-time Browser Feasibility: All 28 features are derived purely from URL lexical
+  and structural parsing in pure Python (<1ms latency).
+- Webpage Content Independence: The model does NOT assume HTML/DOM availability.
+  When DOM features are provided by the upcoming browser extension, an augmented
+  pipeline can be engaged without breaking this baseline.
+- Concept Drift Awareness: Phishing actors constantly adapt domains and TLDs. Periodic
+  retraining with fresh intelligence feeds is recommended.
+================================================================================

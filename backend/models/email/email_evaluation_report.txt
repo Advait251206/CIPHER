@@ -1,0 +1,30 @@
+================================================================================
+CIPHER EMAIL PHISHING MODEL EVALUATION REPORT
+================================================================================
+
+Selected Architecture: Random Forest (100 trees, depth=20)
+Training Date:         2026-09-15T14:31:06Z
+Features Extracted:    32
+
+HELD-OUT TEST SET METRICS (12,359 unskewed samples):
+  Accuracy:          91.528%
+  Precision:         94.237%
+  Recall:            89.143%
+  F1-Score:          91.619%
+  ROC-AUC:           0.9736
+  PR-AUC:            0.9784
+  Confusion Matrix:  TN=5,589, FP=350, FN=697, TP=5,723
+  False Positive Rate: 5.8932% (350 benign emails flagged)
+  False Negative Rate: 10.8567% (697 malicious emails missed)
+  Throughput:        80,945.6 emails/s
+
+CLASSIFICATION REPORT:
+              precision    recall  f1-score   support
+
+      BENIGN     0.8891    0.9411    0.9144      5939
+   MALICIOUS     0.9424    0.8914    0.9162      6420
+
+    accuracy                         0.9153     12359
+   macro avg     0.9157    0.9163    0.9153     12359
+weighted avg     0.9168    0.9153    0.9153     12359
+

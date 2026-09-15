@@ -1,0 +1,121 @@
+{
+  "model_name": "RandomForestClassifier",
+  "model_display_name": "CIPHER Random Forest Phishing Detector",
+  "model_version": "phiusiil-rf-v1",
+  "training_date": "2026-09-15T17:30:41Z",
+  "dataset_name": "PhiUSIIL Phishing URL Dataset",
+  "preprocessing_version": "1.0.0",
+  "feature_count": 15,
+  "feature_names": [
+    "DomainLength",
+    "IsDomainIP",
+    "TLDLength",
+    "NoOfSubDomain",
+    "HasObfuscation",
+    "ObfuscationRatio",
+    "LetterRatioInURL",
+    "DegitRatioInURL",
+    "SpacialCharRatioInURL",
+    "IsHTTPS",
+    "CharContinuationRate",
+    "URLEntropy",
+    "DomainEntropy",
+    "SuspiciousKeywordCount",
+    "IsSuspiciousTLD"
+  ],
+  "feature_importances": {
+    "IsHTTPS": 0.39031,
+    "DegitRatioInURL": 0.13063,
+    "CharContinuationRate": 0.10004,
+    "URLEntropy": 0.09259,
+    "DomainLength": 0.07091,
+    "LetterRatioInURL": 0.06347,
+    "DomainEntropy": 0.05341,
+    "SpacialCharRatioInURL": 0.0352,
+    "IsSuspiciousTLD": 0.02103,
+    "SuspiciousKeywordCount": 0.0188,
+    "TLDLength": 0.01234,
+    "NoOfSubDomain": 0.00926,
+    "HasObfuscation": 0.00112,
+    "ObfuscationRatio": 0.00087,
+    "IsDomainIP": 0.0
+  },
+  "train_samples": 164759,
+  "validation_samples": 35305,
+  "training_performance": {
+    "accuracy": 0.9922,
+    "f1": 0.9908
+  },
+  "validation_performance": {
+    "accuracy": 0.986,
+    "precision": 0.9894,
+    "recall": 0.9777,
+    "f1": 0.9835,
+    "roc_auc": 0.997,
+    "false_positive_rate": 0.0078,
+    "false_negative_rate": 0.0223,
+    "confusion_matrix": {
+      "tn": 20069,
+      "fp": 158,
+      "fn": 336,
+      "tp": 14742
+    }
+  },
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 22,
+    "min_samples_split": 5,
+    "min_samples_leaf": 2,
+    "random_state": 42
+  },
+  "benchmark_comparison": {
+    "Random Forest (100 trees)": {
+      "fit_time_s": 1.04,
+      "val_accuracy": 0.986,
+      "val_precision": 0.9894,
+      "val_recall": 0.9777,
+      "val_f1": 0.9835,
+      "val_roc_auc": 0.997,
+      "val_fpr": 0.0078,
+      "val_fnr": 0.0223,
+      "val_cm": {
+        "tn": 20069,
+        "fp": 158,
+        "fn": 336,
+        "tp": 14742
+      }
+    },
+    "HistGradientBoosting": {
+      "fit_time_s": 2.81,
+      "val_accuracy": 0.9877,
+      "val_precision": 0.9894,
+      "val_recall": 0.9818,
+      "val_f1": 0.9856,
+      "val_roc_auc": 0.9973,
+      "val_fpr": 0.0078,
+      "val_fnr": 0.0182,
+      "val_cm": {
+        "tn": 20069,
+        "fp": 158,
+        "fn": 275,
+        "tp": 14803
+      }
+    },
+    "Logistic Regression (Scaled)": {
+      "fit_time_s": 0.15,
+      "val_accuracy": 0.9429,
+      "val_precision": 0.959,
+      "val_recall": 0.905,
+      "val_f1": 0.9312,
+      "val_roc_auc": 0.9827,
+      "val_fpr": 0.0288,
+      "val_fnr": 0.095,
+      "val_cm": {
+        "tn": 19644,
+        "fp": 583,
+        "fn": 1432,
+        "tp": 13646
+      }
+    }
+  }
+}
