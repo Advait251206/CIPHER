@@ -984,51 +984,6 @@ export const NetworkIdsPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Recent Network Events */}
-      {recentNetworkEvents.length > 0 && (
-        <motion.div variants={itemVariants} className="card">
-          <div className="card-header">
-            <div className="card-title">
-              <Activity size={16} color="var(--accent-cyan)" />
-              <span>Recent Network Detection Events</span>
-            </div>
-          </div>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Severity</th>
-                  <th>Attack Category</th>
-                  <th>Risk Score</th>
-                  <th>Source IP</th>
-                  <th>Target IP</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentNetworkEvents.map((ev) => (
-                  <tr
-                    key={ev.event_id}
-                    onClick={() => setSelectedEvent(ev)}
-                    style={{ cursor: 'pointer' }}
-                    title="Inspect event details"
-                  >
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>{ev.timestamp}</td>
-                    <td><SeverityBadge severity={ev.severity} size="sm" /></td>
-                    <td><span style={{ fontWeight: 600 }}>{ev.attack_type || ev.classification}</span></td>
-                    <td className="mono" style={{ fontWeight: 700 }}>{ev.risk_score}</td>
-                    <td className="mono">{ev.source_ip || 'N/A'}</td>
-                    <td className="mono">{ev.destination_ip || 'N/A'}</td>
-                    <td className="mono">{ev.action || 'ALERT'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-      )}
-
       {/* Event Detail Modal */}
       <EventDetailModal
         isOpen={Boolean(selectedEvent)}

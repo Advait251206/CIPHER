@@ -96,6 +96,10 @@ class CorrelationService:
         except Exception as ti_err:
             logger.warning(f"Threat intelligence matching skipped or failed: {ti_err}")
 
+        # Do not correlate strictly BENIGN events into incidents
+        if norm_event.attack_category in ("BENIGN", "UNKNOWN") and norm_event.severity == "LOW":
+            return None
+
         # 4. Correlate with sliding window and safe identities
         chain, is_new = self.correlator.process_event(norm_event)
 
