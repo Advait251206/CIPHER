@@ -101,7 +101,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
         .getSensorStatus()
         .then((s) => setSensorStatus(s))
         .catch(() => {});
-    }, 3000);
+    }, 5000);
     return () => clearInterval(timer);
   }, [refreshTrigger]);
 

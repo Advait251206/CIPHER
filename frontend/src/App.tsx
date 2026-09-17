@@ -80,8 +80,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     fetchGlobalStatus();
     
-    // Live update interval: 2 seconds
-    const LIVE_POLLING_INTERVAL = 2000;
+    // Live update interval: 5 seconds
+    const LIVE_POLLING_INTERVAL = 5000;
     const intervalId = setInterval(() => {
       fetchGlobalStatus();
       setRefreshKey((k) => k + 1);
