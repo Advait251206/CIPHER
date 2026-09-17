@@ -195,7 +195,6 @@ export interface NetworkInterfacesResponse {
 
 export interface SensorStatusResponse {
   running?: boolean;
-  is_running?: boolean;
   interface?: string;
   bpf_filter?: string;
   started_at?: string;

@@ -5,7 +5,7 @@ import { Header } from './components/layout/Header';
 import { OverviewPage } from './pages/OverviewPage';
 import { LiveEventsPage } from './pages/LiveEventsPage';
 import { IncidentsPage } from './pages/IncidentsPage';
-import { NetworkIdsPage } from './pages/NetworkIdsPage';
+
 import { PhishingPage } from './pages/PhishingPage';
 import { EmailPage } from './pages/EmailPage';
 import { ThreatIntelPage } from './pages/ThreatIntelPage';
@@ -64,7 +64,7 @@ export const App: React.FC = () => {
       }
 
       if (sensorRes.status === 'fulfilled') {
-        setSensorRunning(Boolean(sensorRes.value.running ?? sensorRes.value.is_running));
+        setSensorRunning(Boolean(sensorRes.value.running));
       }
 
       if (netHealthRes.status === 'fulfilled') {
@@ -107,11 +107,7 @@ export const App: React.FC = () => {
           title: 'Incident Correlation Manager',
           subtitle: 'Multi-event correlated attack chains and escalation detection',
         };
-      case 'network':
-        return {
-          title: 'Network Intrusion Detection System',
-          subtitle: 'Dual Random Forest ML pipeline (CIC-IDS2017) & flow analysis sandbox',
-        };
+
       case 'phishing':
         return {
           title: 'Phishing Threat Detector',
@@ -139,8 +135,8 @@ export const App: React.FC = () => {
         };
       case 'sensor':
         return {
-          title: 'Live Network Packet Sensor',
-          subtitle: 'Scapy / Npcap flow aggregation into CIC-compatible 67-feature vectors',
+          title: 'Network IDS (Live Sensor)',
+          subtitle: 'Real-time Scapy flow aggregation into CIC-compatible 67-feature vectors for ML inference',
         };
       case 'health':
         return {
@@ -214,7 +210,6 @@ export const App: React.FC = () => {
                 <IncidentsPage initialIncidentId={selectedIncidentId} refreshTrigger={refreshKey} />
               )}
 
-              {currentTab === 'network' && <NetworkIdsPage />}
 
               {currentTab === 'phishing' && <PhishingPage />}
 

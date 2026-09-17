@@ -71,11 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="nav-badge danger">{openIncidentsCount}</span>
         ) : undefined,
     },
-    {
-      id: 'network',
-      label: 'Network IDS',
-      icon: <Network size={17} />,
-    },
+
     {
       id: 'phishing',
       label: 'Phishing Detection',
@@ -108,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'sensor',
-      label: 'Live Sensor',
+      label: 'Network IDS (Live Sensor)',
       icon: <Radio size={17} />,
       badge: sensorRunning ? (
         <span className="nav-badge active" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -157,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="pulse-dot" />
             Air-Gapped SOC
           </span>
-          <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>v1.1</span>
+          <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>v1.1.0018</span>
         </div>
       </div>
 

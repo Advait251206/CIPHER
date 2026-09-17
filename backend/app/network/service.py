@@ -6,7 +6,7 @@ prevention response, and persistent event logging.
 
 import uuid
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timezone
 
 from app.network.model_loader import NetworkModelLoader
@@ -62,8 +62,24 @@ class NetworkService:
             protocol=request.protocol
         )
 
+        is_bcast_mcast = False
+        if request.destination_ip:
+            import ipaddress
+            try:
+                ip = ipaddress.ip_address(request.destination_ip)
+                if ip.is_multicast or (ip.version == 4 and (str(ip) == "255.255.255.255" or ip.exploded.endswith(".255"))):
+                    is_bcast_mcast = True
+            except ValueError:
+                pass
+
         # 3. Determine Attack Type (Synergy between ML and Heuristics)
-        if h_score >= 50 and h_category:
+        if is_bcast_mcast and (h_category in ["DOS", "DDOS", "PORT_SCAN"] or ml_predicted_category in ["DOS", "DDOS", "PORT_SCAN"]):
+            attack_type = "BENIGN"
+            detection_method = "HEURISTIC"
+            h_score = 0
+            ml_attack_prob = 0.0
+            h_reasons.append("Flow targets broadcast/multicast IP (ignored for DOS/DDOS heuristics & ML)")
+        elif h_score >= 50 and h_category:
             attack_type = h_category
             detection_method = "HEURISTIC" if ml_attack_prob < 0.50 else "HYBRID"
         elif ml_predicted_category != "BENIGN" and ml_attack_prob >= 0.50:
@@ -178,7 +194,7 @@ class NetworkService:
         features: Dict[str, float],
         heuristic_reasons: List[str],
         recommended_action: str
-    ) -> (str, List[str]):
+    ) -> Tuple[str, List[str]]:
         """Generates evidence-based explanations complying with Part 18."""
         reasons = []
 
