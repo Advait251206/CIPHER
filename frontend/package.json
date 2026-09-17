@@ -1,7 +1,7 @@
 {
-  "name": "frontend",
+  "name": "cipher-soc-dashboard",
   "private": true,
-  "version": "1.1.0021",
+  "version": "1.2.0021",
   "type": "module",
   "scripts": {
     "dev": "vite",
