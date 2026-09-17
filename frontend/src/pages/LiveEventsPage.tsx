@@ -214,7 +214,7 @@ export const LiveEventsPage: React.FC<LiveEventsPageProps> = ({ onSelectIncident
             <div style={{ color: 'var(--text-muted)', fontSize: '0.84rem', maxWidth: '420px', margin: '0 auto' }}>
               {severityFilter || searchSource || eventTypeFilter
                 ? 'Try clearing or relaxing your query parameters to see more records.'
-                : 'The local event buffer is clean. Run a simulated flow in the Network IDS sandbox to evaluate live detection.'}
+                : 'The local event buffer is clean. Start the Live Sensor in the Network IDS tab to capture real-time traffic.'}
             </div>
           </div>
         ) : (
