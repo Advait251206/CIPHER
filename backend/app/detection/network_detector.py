@@ -75,14 +75,16 @@ class NetworkDetector:
         fwd_pkts_per_s = features.get("Fwd Packets/s", 0)
         flow_iat_mean = features.get("Flow IAT Mean", 1e6)
 
-        if flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000:
+        # Require at least 50 packets to trust per-second rate calculations (avoiding micro-flow math artifacts)
+        total_pkts = fwd_pkts + bwd_pkts
+        if (flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000) and total_pkts > 50:
             score += 65
             reasons.append(
                 f"Abnormal forward packet rate ({fwd_pkts_per_s:,.0f} pkts/s) exceeding normal client behavior"
             )
             rules.append({"rule_id": "NET-DOS-01", "name": "Extreme Packet Flood Rate", "weight": 65})
             attack_candidates.append(("DOS", 65))
-        elif flow_bytes_per_s > 5_000_000:
+        elif flow_bytes_per_s > 50_000_000 and total_pkts > 50: # Increased to 50 MB/s (400 Mbps)
             score += 50
             reasons.append(
                 f"Excessive volumetric flow rate ({flow_bytes_per_s/1e6:.2f} MB/s) indicating bandwidth saturation attempt"
@@ -104,7 +106,7 @@ class NetworkDetector:
         # Rule 3: Distributed Denial of Service (DDoS) - Uniform Mass Flood
         # ---------------------------------------------------------------------
         pkt_len_var = features.get("Packet Length Variance", 100)
-        if (flow_pkts_per_s > 25000 or fwd_pkts_per_s > 25000) and pkt_len_var < 5.0 and fwd_pkts > 20:
+        if (flow_pkts_per_s > 25000 or fwd_pkts_per_s > 25000) and pkt_len_var < 5.0 and fwd_pkts > 100:
             score += 70
             reasons.append(
                 f"High-frequency uniform packet stream with near-zero length variance ({pkt_len_var:.2f}), classic botnet/DDoS flooder pattern"
