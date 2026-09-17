@@ -73,8 +73,8 @@ def main():
     )
     t_backend.start()
 
-    print(f"\n{CYAN}{BOLD}[SYSTEM] Waiting 2 seconds for backend to initialize...{RESET}")
-    time.sleep(2)
+    print(f"\n{CYAN}{BOLD}[SYSTEM] Waiting 5 seconds for backend to initialize...{RESET}")
+    time.sleep(5)
 
     # Start Frontend (npm run dev)
     frontend_cmd = ["npm", "run", "dev"]
