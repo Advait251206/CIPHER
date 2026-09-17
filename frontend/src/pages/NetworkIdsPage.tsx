@@ -174,7 +174,7 @@ export const NetworkIdsPage: React.FC = () => {
             >
               {interfaces.map(iface => (
                 <option key={iface.name} value={iface.name}>
-                  {iface.name} - {iface.description} {iface.ipv4_addresses.length > 0 ? `(${iface.ipv4_addresses[0]})` : ''}
+                  {iface.name} - {iface.description} {iface.ip_address ? `(${iface.ip_address})` : ''}
                 </option>
               ))}
             </select>
