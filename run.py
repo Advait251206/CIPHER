@@ -68,6 +68,14 @@ def main():
         bufsize=1,
     )
 
+    t_backend = threading.Thread(
+        target=stream_output, args=(backend_proc, "BACKEND", CYAN), daemon=True
+    )
+    t_backend.start()
+
+    print(f"\n{CYAN}{BOLD}[SYSTEM] Waiting 2 seconds for backend to initialize...{RESET}")
+    time.sleep(2)
+
     # Start Frontend (npm run dev)
     frontend_cmd = ["npm", "run", "dev"]
     if sys.platform == "win32":
@@ -82,14 +90,9 @@ def main():
         bufsize=1,
     )
 
-    t_backend = threading.Thread(
-        target=stream_output, args=(backend_proc, "BACKEND", CYAN), daemon=True
-    )
     t_frontend = threading.Thread(
         target=stream_output, args=(frontend_proc, "FRONTEND", MAGENTA), daemon=True
     )
-
-    t_backend.start()
     t_frontend.start()
 
     def shutdown(signum=None, frame=None):
