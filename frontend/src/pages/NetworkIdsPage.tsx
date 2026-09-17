@@ -11,7 +11,7 @@ import {
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
-import { EventDetailModal } from '../components/events/EventDetailModal';
+
 import {
   Network,
   Cpu,
@@ -241,12 +241,6 @@ export const NetworkIdsPage: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Event Detail Modal */}
-      <EventDetailModal
-        isOpen={Boolean(selectedEvent)}
-        onClose={() => setSelectedEvent(null)}
-        event={selectedEvent}
-      />
     </motion.div>
   );
 };
