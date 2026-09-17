@@ -61,12 +61,7 @@ const itemVariants: Variants = {
 };
 
 export const NetworkIdsPage: React.FC = () => {
-  const [modelInfo, setModelInfo] = useState<NetworkModelInfoResponse | null>(null);
-  const [netStats, setNetStats] = useState<NetworkStatsResponse | null>(null);
-  const [netHealth, setNetHealth] = useState<NetworkHealthResponse | null>(null);
-  const [recentNetworkEvents, setRecentNetworkEvents] = useState<SecurityEventItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
 
   // Live Sensor Control State
   const [sensorStatus, setSensorStatus] = useState<SensorStatusResponse | null>(null);
@@ -137,13 +132,7 @@ export const NetworkIdsPage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingState message="Loading Network IDS parameters..." />;
-  }
 
-  if (error && !modelInfo && !netHealth) {
-    return <ErrorState title="Network IDS Unavailable" error={error} onRetry={fetchNetworkData} />;
-  }
 
 
   return (
