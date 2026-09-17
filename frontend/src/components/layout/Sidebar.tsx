@@ -153,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="pulse-dot" />
             Air-Gapped SOC
           </span>
-          <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>v1.1.0019</span>
+          <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>v1.1.0020</span>
         </div>
       </div>
 

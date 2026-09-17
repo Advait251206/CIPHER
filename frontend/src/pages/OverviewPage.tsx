@@ -155,7 +155,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({
   const totalFlows = netStats?.total_flows ?? recentEvents.length;
   const openIncidentsCount = corrStats?.open_incidents ?? activeIncidents.length;
   const blockedIpsCount = activeBlocklist.length;
-  const isSensorActive = sensorStatus?.is_running ?? false;
+  const isSensorActive = sensorStatus?.running ?? false;
 
   // Attack categories distribution from netStats or recentEvents
   const categoryMap: Record<string, number> = netStats?.attacks_by_category || {};

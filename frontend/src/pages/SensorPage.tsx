@@ -81,7 +81,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
       }
       if (statusRes.status === 'fulfilled') {
         setSensorStatus(statusRes.value);
-        const runningNow = Boolean(statusRes.value.running ?? statusRes.value.is_running);
+        const runningNow = Boolean(statusRes.value.running);
         if (runningNow && statusRes.value.interface) {
           setSelectedInterface(statusRes.value.interface);
         }
@@ -144,7 +144,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
     return <LoadingState message="Loading live sensor telemetry..." />;
   }
 
-  const isRunning = Boolean(sensorStatus?.running ?? sensorStatus?.is_running);
+  const isRunning = Boolean(sensorStatus?.running);
 
   return (
     <motion.div

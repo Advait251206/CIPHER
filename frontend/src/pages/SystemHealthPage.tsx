@@ -291,8 +291,8 @@ export const SystemHealthPage: React.FC = () => {
               <Radio size={16} color="var(--accent-cyan)" />
               <span>Packet Capture Sensor</span>
             </div>
-            <span className={`mode-badge ${sensorStatus?.is_running ? 'detect_only' : 'simulate'}`}>
-              {sensorStatus?.is_running ? 'RUNNING' : 'STOPPED'}
+            <span className={`mode-badge ${sensorStatus?.running ? 'detect_only' : 'simulate'}`}>
+              {sensorStatus?.running ? 'RUNNING' : 'STOPPED'}
             </span>
           </div>
           <div className="kv-grid">

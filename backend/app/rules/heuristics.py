@@ -238,10 +238,14 @@ class DosPacketRateRule(BaseRule):
 
         features = event.get("features") or {}
         flow_pkts = features.get("Flow Packets/s", 0)
-        fwd_pkts = features.get("Fwd Packets/s", 0)
-        max_rate = max(flow_pkts, fwd_pkts)
+        fwd_pkts_s = features.get("Fwd Packets/s", 0)
+        max_rate = max(flow_pkts, fwd_pkts_s)
+        
+        fwd_pkts = features.get("Total Fwd Packets", 0)
+        bwd_pkts = features.get("Total Backward Packets", 0)
+        total_pkts = fwd_pkts + bwd_pkts
 
-        if max_rate > DOS_PACKET_RATE_THRESHOLD:
+        if max_rate > DOS_PACKET_RATE_THRESHOLD and total_pkts > 50:
             return RuleMatch(
                 rule_id=self.rule_id,
                 name=self.name,
@@ -278,8 +282,12 @@ class DosByteRateRule(BaseRule):
 
         features = event.get("features") or {}
         flow_bytes = features.get("Flow Bytes/s", 0)
+        
+        fwd_pkts = features.get("Total Fwd Packets", 0)
+        bwd_pkts = features.get("Total Backward Packets", 0)
+        total_pkts = fwd_pkts + bwd_pkts
 
-        if flow_bytes > DOS_BYTE_RATE_THRESHOLD:
+        if flow_bytes > DOS_BYTE_RATE_THRESHOLD and total_pkts > 50:
             return RuleMatch(
                 rule_id=self.rule_id,
                 name=self.name,
@@ -361,6 +369,11 @@ class DdosMultiSourceRule(BaseRule):
         ctx = context or {}
         distinct_sources = ctx.get("distinct_sources_targeting_dest_count", 1)
         dest_ip = event.get("destination_ip") or "unknown"
+        
+        # Ignore multicast and broadcast IPs (e.g. mDNS 224.0.0.251, SSDP 239.255.255.250, broadcast 255.255.255.255)
+        # Multicast range is 224.0.0.0 to 239.255.255.255.
+        if dest_ip.startswith("224.") or dest_ip.startswith("239.") or dest_ip.endswith(".255"):
+            return None
 
         if distinct_sources >= DDOS_SOURCES_THRESHOLD:
             window = ctx.get("ddos_window", 60.0)

@@ -16,7 +16,7 @@ BRUTE_FORCE_WINDOW_SECONDS: float = float(os.getenv("CIPHER_HEURISTIC_BRUTE_FORC
 
 # Denial of Service (DoS) Volumetric Thresholds
 DOS_PACKET_RATE_THRESHOLD: float = float(os.getenv("CIPHER_HEURISTIC_DOS_PACKET_RATE", 50000.0))
-DOS_BYTE_RATE_THRESHOLD: float = float(os.getenv("CIPHER_HEURISTIC_DOS_BYTE_RATE", 5000000.0))
+DOS_BYTE_RATE_THRESHOLD: float = float(os.getenv("CIPHER_HEURISTIC_DOS_BYTE_RATE", 50000000.0))
 
 # Distributed Denial of Service (DDoS) Thresholds (Multiple sources targeting same destination)
 DDOS_SOURCES_THRESHOLD: int = int(os.getenv("CIPHER_HEURISTIC_DDOS_SOURCES_THRESHOLD", 3))
