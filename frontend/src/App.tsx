@@ -19,8 +19,27 @@ import { api } from './api/client';
 import { Severity, PreventionMode } from './api/types';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<NavigationTab>('overview');
-  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => {
+    const saved = localStorage.getItem('cipher_current_tab');
+    return (saved as NavigationTab) || 'overview';
+  });
+  
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(() => {
+    return localStorage.getItem('cipher_selected_incident');
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cipher_current_tab', currentTab);
+  }, [currentTab]);
+
+  useEffect(() => {
+    if (selectedIncidentId) {
+      localStorage.setItem('cipher_selected_incident', selectedIncidentId);
+    } else {
+      localStorage.removeItem('cipher_selected_incident');
+    }
+  }, [selectedIncidentId]);
+
   const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
 
   // Global telemetry
@@ -28,7 +47,7 @@ export const App: React.FC = () => {
   const [threatLevel, setThreatLevel] = useState<Severity>('LOW');
   const [openIncidentsCount, setOpenIncidentsCount] = useState(0);
   const [sensorRunning, setSensorRunning] = useState(false);
-  const [preventionMode, setPreventionMode] = useState<PreventionMode>('detect_only');
+  const [preventionMode, setPreventionMode] = useState<PreventionMode>('enforce');
 
   // Live Refresh
   const [refreshKey, setRefreshKey] = useState(0);
@@ -69,7 +88,7 @@ export const App: React.FC = () => {
       }
 
       if (netHealthRes.status === 'fulfilled') {
-        setPreventionMode(netHealthRes.value.prevention_mode || 'detect_only');
+        setPreventionMode(netHealthRes.value.prevention_mode || 'enforce');
       }
 
     } catch {
@@ -153,6 +172,24 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleSetMode = async (newMode: 'detect_only' | 'enforce') => {
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/network/prevention-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode })
+      });
+      if (response.ok) {
+        setPreventionMode(newMode);
+        // Trigger immediate global refresh
+        setRefreshKey((k) => k + 1);
+        fetchGlobalStatus();
+      }
+    } catch (err) {
+      console.error('Failed to update prevention mode:', err);
+    }
+  };
+
   const { title, subtitle } = getPageMeta();
 
   return (
@@ -176,7 +213,8 @@ export const App: React.FC = () => {
           title={title}
           subtitle={subtitle}
           threatLevel={threatLevel}
-          onOpenExtensionModal={() => setIsExtensionModalOpen(true)}
+          preventionMode={preventionMode}
+          onModeToggle={() => handleSetMode(preventionMode === 'detect_only' ? 'enforce' : 'detect_only')}
         />
 
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -225,7 +263,7 @@ export const App: React.FC = () => {
 
               {currentTab === 'rules' && <DetectionRulesPage />}
 
-              {currentTab === 'prevention' && <PreventionPage />}
+              {currentTab === 'prevention' && <PreventionPage refreshTrigger={refreshKey} onSetMode={handleSetMode} />}
 
               {currentTab === 'sensor' && <SensorPage />}
 

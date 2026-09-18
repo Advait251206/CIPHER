@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SecurityEventItem } from '../../api/types';
 import { Modal } from '../common/Modal';
 import { SeverityBadge } from '../common/SeverityBadge';
@@ -18,6 +18,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   event,
   onNavigateToIncident,
 }) => {
+  const [popupBlocked, setPopupBlocked] = useState(false);
   if (!event) return null;
 
   const metadata = event.metadata || {};
@@ -285,8 +286,9 @@ END OF REPORT
     if (printWindow) {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
+      setPopupBlocked(false);
     } else {
-      alert("Please allow popups to generate the PDF report.");
+      setPopupBlocked(true);
     }
   };
 
@@ -318,6 +320,29 @@ END OF REPORT
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Popup Blocker Warning */}
+        {popupBlocked && (
+          <div style={{
+            padding: '0.75rem 1rem',
+            background: 'var(--med-bg, rgba(212,175,55,0.1))',
+            border: '1px solid var(--accent-gold, #D4AF37)',
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+          }}>
+            <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem', fontWeight: 600 }}>
+              ⚠ Popup blocked — allow popups in your browser to open the print/PDF window.
+            </span>
+            <button
+              onClick={() => setPopupBlocked(false)}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}
+            >
+              &times;
+            </button>
+          </div>
+        )}
         {/* 1. EVENT SECTION */}
         <div className="evidence-section">
           <div className="evidence-header">

@@ -11,6 +11,8 @@ from typing import Dict, Any, Optional, Tuple
 from app.prevention.actions import PreventionAction, PreventionMode
 from app.prevention.blocklist import IPBlocklistManager
 from app.prevention.rate_limiter import FlowRateLimiter
+from app.threat_intel.service import get_threat_intel_service
+from app.threat_intel.models import IOCCreateRequest
 
 logger = logging.getLogger("cipher.prevention")
 
@@ -27,12 +29,12 @@ class PreventionEngine:
         self.blocklist = blocklist_manager or IPBlocklistManager()
         self.rate_limiter = rate_limiter or FlowRateLimiter()
 
-        # Operational mode: default is ALWAYS detect_only
-        env_mode = os.getenv("CIPHER_PREVENTION_MODE", PreventionMode.DETECT_ONLY.value).lower()
+        # Operational mode: default is ALWAYS enforce
+        env_mode = os.getenv("CIPHER_PREVENTION_MODE", PreventionMode.ENFORCE.value).lower()
         self.mode = mode or env_mode
         if self.mode not in [m.value for m in PreventionMode]:
-            logger.warning(f"Invalid CIPHER_PREVENTION_MODE '{self.mode}'. Falling back to 'detect_only'.")
-            self.mode = PreventionMode.DETECT_ONLY.value
+            logger.warning(f"Invalid CIPHER_PREVENTION_MODE '{self.mode}'. Falling back to 'enforce'.")
+            self.mode = PreventionMode.ENFORCE.value
 
         logger.info(f"Initialized CIPHER Prevention Engine in [{self.mode.upper()}] mode")
 
@@ -122,8 +124,24 @@ class PreventionEngine:
                     source_event_id=event_id,
                     is_permanent=is_perm
                 )
+                
+                # Automatically add to Threat Intel
+                ti_service = get_threat_intel_service()
+                try:
+                    req = IOCCreateRequest(
+                        ioc_type="IP",
+                        indicator=source_ip,
+                        severity="CRITICAL" if threat_score >= 95 else "HIGH",
+                        category="AUTO_CONTAINED",
+                        description=f"Auto-added from active containment. Source: {attack_type}, Threat Score: {threat_score}",
+                        confidence=ml_confidence
+                    )
+                    ti_service.add_ioc(req)
+                except Exception as e:
+                    logger.warning(f"Failed to auto-add contained IP {source_ip} to Threat Intel: {e}")
+
                 applied_action = f"ENFORCED_{recommended_action.value}"
-                explanation = f"Host containment registered for source {source_ip} (Duration: {'Permanent' if is_perm else '60m'})."
+                explanation = f"Host containment registered for source {source_ip} (Duration: {'Permanent' if is_perm else '60m'}). Added to Threat Intel."
             else:
                 applied_action = f"ENFORCED_{recommended_action.value}"
                 explanation = f"Applied {recommended_action.value} containment action."

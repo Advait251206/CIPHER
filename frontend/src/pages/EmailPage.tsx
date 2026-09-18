@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Toast, type ToastType } from '../components/common/Toast';
 import { api } from '../api/client';
 import {
   EmailAnalyzeResponse,
@@ -56,42 +57,65 @@ export const EmailPage: React.FC = () => {
   const [result, setResult] = useState<EmailAnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: ToastType; visible: boolean }>({
+    message: '',
+    type: 'info',
+    visible: false,
+  });
+  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+    setToast({ message, type, visible: true });
+  }, []);
+  const hideToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, visible: false }));
+  }, []);
+
   // Subsystem Telemetry
   const [modelInfo, setModelInfo] = useState<EmailModelInfoResponse | null>(null);
   const [healthInfo, setHealthInfo] = useState<EmailHealthResponse | null>(null);
   const [telemetryLoading, setTelemetryLoading] = useState(true);
 
-  // Samples
-  const samples = [
-    {
-      label: 'Legitimate: IT Meeting Invite',
-      sender: 'alex.chen@company.org',
-      recipient: 'dev-team@company.org',
-      subject: 'Quarterly Architecture Sync — Thursday 2 PM',
-      body: 'Hi team, please find the agenda for our architecture review on Thursday. We will review the database migration plan and pipeline latency metrics. Let me know if you have items to add.',
-    },
-    {
-      label: 'Phishing: Security Alert / Account Suspension',
-      sender: 'Security Support <no-reply@security-auth-check.xyz>',
-      recipient: 'user@company.org',
-      subject: 'URGENT: Your Account Has Been Locked Due to Suspicious Login',
-      body: 'Dear Customer,\n\nWe detected unauthorized access to your account from an unknown IP address. Your credentials must be verified immediately or your access will be suspended within 24 hours.\n\nPlease log in immediately at http://192.168.1.100/secure-update/login.php to confirm your identity and reset your password.',
-    },
-    {
-      label: 'Phishing: Fake PayPal Invoice / Billing Scam',
-      sender: 'service@billing-notice-paypal.info',
-      recipient: 'accounting@company.org',
-      subject: 'Invoice #849202 Payment Processed — Action Required',
-      body: 'You sent a payment of $899.00 USD to Crypto Exchange Ltd. If you did not make this transaction, dispute the charges immediately at http://verify-paypal-dispute-resolution.net/auth before funds are irreversibly settled.',
-    },
-    {
-      label: 'Spam / Fraud: Nigerian Advance Fee Lure',
-      sender: 'barrister.kofi@lawfirm-westafrica.org',
-      recipient: 'recipient@domain.com',
-      subject: 'CONFIDENTIAL: Transfer of Unclaimed Inheritance Funds ($14.5M USD)',
-      body: 'DEAR FRIEND, I AM BARRISTER KOFI, PERSONAL ATTORNEY TO A DECEASED CONTRACTOR. HE LEFT FOURTEEN MILLION FIVE HUNDRED THOUSAND UNITED STATES DOLLARS IN A SECURITY VAULT. REPLY WITH YOUR FULL BANK ACCOUNT DETAILS TO RECEIVE 40% SHARE AS NEXT OF KIN.',
-    },
-  ];
+  // Samples (10 of each type)
+  type SampleCategory = 'Legitimate' | 'Phishing' | 'Spam / Fraud';
+  
+  const sampleCategories: Record<SampleCategory, { sender: string; recipient: string; subject: string; body: string }[]> = {
+    'Legitimate': [
+      { sender: 'alex.chen@company.org', recipient: 'dev-team@company.org', subject: 'Quarterly Architecture Sync — Thursday 2 PM', body: 'Hi team, please find the agenda for our architecture review on Thursday. We will review the database migration plan and pipeline latency metrics. Let me know if you have items to add.' },
+      { sender: 'hr@company.org', recipient: 'all-employees@company.org', subject: 'Open Enrollment for Health Benefits', body: 'Friendly reminder that open enrollment for health benefits ends this Friday. Please log into the internal portal (hr.company.internal) to make your selections for the upcoming year.' },
+      { sender: 'sarah.jones@company.org', recipient: 'marketing@company.org', subject: 'Draft: Q3 Campaign Assets', body: 'Attached are the final drafts for the Q3 marketing campaign. Please review the copy and the banners before our sync tomorrow at 10 AM.' },
+      { sender: 'jira-notifications@atlassian.net', recipient: 'dev-team@company.org', subject: '[JIRA] (PROJ-204) Update login flow for edge cases', body: 'Alex Chen updated the description of PROJ-204. "We need to ensure the OAuth callback handles the 503 error gracefully and redirects to the fallback page." View issue: https://company.atlassian.net/browse/PROJ-204' },
+      { sender: 'no-reply-aws@amazon.com', recipient: 'cloud-ops@company.org', subject: 'AWS Invoice Available - August 2026', body: 'Hello, your AWS invoice for the period of August 1 - August 31, 2026 is now available. You can view and download your invoice from the Billing and Cost Management console.' },
+      { sender: 'lunch-bot@company.org', recipient: 'user@company.org', subject: 'Your lunch order has arrived', body: 'Your order from "The Salad Spot" has arrived at the front desk. Please pick it up within the next 15 minutes.' },
+      { sender: 'michael.scott@company.org', recipient: 'user@company.org', subject: '1-on-1 Catch-up', body: 'Hey, do you have 15 minutes this afternoon to quickly sync on the new vendor contract? My calendar is up to date, just throw something on there.' },
+      { sender: 'notifications@slack.com', recipient: 'user@company.org', subject: 'New messages from #engineering', body: 'You have unread messages in #engineering. Sarah said: "Has anyone seen the latency spikes on the EU cluster?" Click here to jump back into the conversation.' },
+      { sender: 'reservations@delta.com', recipient: 'user@company.org', subject: 'Flight Confirmation: SFO to JFK', body: 'Your flight DL 1042 from San Francisco (SFO) to New York (JFK) is confirmed. Departure is at 08:30 AM on Oct 12. View your itinerary or select seats on the Delta app.' },
+      { sender: 'onboarding@company.org', recipient: 'new.hire@company.org', subject: 'Welcome to the team!', body: 'We are thrilled to have you join us! Your IT equipment has been shipped and should arrive tomorrow. Attached is the employee handbook and a schedule for your first week.' }
+    ],
+    'Phishing': [
+      { sender: 'Security Support <no-reply@security-auth-check.xyz>', recipient: 'user@company.org', subject: 'URGENT: Your Account Has Been Locked Due to Suspicious Login', body: 'Dear Customer,\n\nWe detected unauthorized access to your account from an unknown IP address. Your credentials must be verified immediately or your access will be suspended within 24 hours.\n\nPlease log in immediately at http://192.168.1.100/secure-update/login.php to confirm your identity and reset your password.' },
+      { sender: 'service@billing-notice-paypal.info', recipient: 'accounting@company.org', subject: 'Invoice #849202 Payment Processed — Action Required', body: 'You sent a payment of $899.00 USD to Crypto Exchange Ltd. If you did not make this transaction, dispute the charges immediately at http://verify-paypal-dispute-resolution.net/auth before funds are irreversibly settled.' },
+      { sender: 'IT Service Desk <it-support@corp-update.net>', recipient: 'user@company.org', subject: 'ACTION REQUIRED: Password Expiration Notice', body: 'Your corporate network password will expire in 2 hours. To maintain access to your email and internal tools, please update your credentials immediately at https://corp-sso-login-update.com/reset.' },
+      { sender: 'VoiceMail Service <admin@voice-mail-gateway.info>', recipient: 'user@company.org', subject: 'New Voice Message from Unknown Caller (01:14)', body: 'You have received a new secure voice message. Caller ID: +1 (800) 555-0199. Listen to the message online: http://secure-voicemail-portal-122.com/play?id=3819' },
+      { sender: 'Chase Bank Alerts <alerts@chase-secure-notice.com>', recipient: 'user@company.org', subject: 'Overdraft Alert: Account Ending in 4492', body: 'Your account balance has fallen below $0.00. To avoid overdraft fees of $35.00, please log in and transfer funds immediately: https://chase-banking-secure-auth.net/login.' },
+      { sender: 'CEO <executive@company-mail.org>', recipient: 'finance@company.org', subject: 'URGENT WIRE TRANSFER REQUIRED', body: 'I am currently in a meeting and cannot take calls. I need an urgent wire transfer processed for a new vendor acquisition today. Please reply so I can send the banking details. This is confidential.' },
+      { sender: 'Google Docs <no-reply@docs-google-share.com>', recipient: 'user@company.org', subject: 'Document shared with you: "Q4 Bonuses and Layoffs.xlsx"', body: 'A colleague has shared a highly confidential document with you via Google Docs. Click here to view the document: http://docs-share-secure.com/view/8219 (Requires login to verify identity).' },
+      { sender: 'UPS Tracking <tracking@ups-delivery-failed.info>', recipient: 'user@company.org', subject: 'Delivery Exception: Package Undeliverable', body: 'We attempted to deliver your package today but no one was available. Please click the link below to pay the $2.99 redelivery fee and schedule a new time: http://ups-reschedule-delivery.com/track/1Z99999.' },
+      { sender: 'Zoom Video Communications <invites@zoom-meeting-secure.net>', recipient: 'user@company.org', subject: 'Mandatory All-Hands Meeting Starting Now', body: 'The mandatory Q3 All-Hands meeting is starting now. Your attendance is required. Join the meeting using the secure link below:\n\nhttps://zoom-secure-join.net/j/892011928' },
+      { sender: 'Netflix Support <support@netflix-billing-update.com>', recipient: 'user@company.org', subject: 'Your Netflix Membership is on Hold', body: 'We were unable to process your last payment. To avoid losing access to your favorite shows and movies, please update your payment method: http://netflix-billing-auth.com/update.' }
+    ],
+    'Spam / Fraud': [
+      { sender: 'barrister.kofi@lawfirm-westafrica.org', recipient: 'recipient@domain.com', subject: 'CONFIDENTIAL: Transfer of Unclaimed Inheritance Funds ($14.5M USD)', body: 'DEAR FRIEND, I AM BARRISTER KOFI, PERSONAL ATTORNEY TO A DECEASED CONTRACTOR. HE LEFT FOURTEEN MILLION FIVE HUNDRED THOUSAND UNITED STATES DOLLARS IN A SECURITY VAULT. REPLY WITH YOUR FULL BANK ACCOUNT DETAILS TO RECEIVE 40% SHARE AS NEXT OF KIN.' },
+      { sender: 'info@miracle-weight-loss.biz', recipient: 'user@company.org', subject: 'Lose 20lbs in 1 week without diet or exercise!', body: 'Discover the secret Hollywood miracle pill that melts fat instantly. 100% natural and doctor approved! Click here to claim your free trial bottle before supplies run out!' },
+      { sender: 'Elon Musk <giveaway@tesla-crypto-promo.org>', recipient: 'user@company.org', subject: 'Tesla Bitcoin Giveaway 2026 - Claim your 1 BTC!', body: 'To celebrate the launch of the new Tesla CyberCab, Elon Musk is giving away 5,000 BTC! Send between 0.1 and 5 BTC to the address below, and we will send double the amount back immediately! Address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh' },
+      { sender: 'seo-expert@firstpage-guarantee.com', recipient: 'marketing@company.org', subject: 'Rank #1 on Google in 24 Hours!', body: 'Hello, I visited your website and noticed you have several critical SEO errors. We guarantee page 1 rankings on Google for your top keywords within 24 hours. Reply to this email for a free quote.' },
+      { sender: 'sales@luxury-watches-outlet.net', recipient: 'user@company.org', subject: 'Rolex, Breitling, Omega - 90% OFF Retail!', body: 'Get the exact same quality as authentic luxury watches for a fraction of the price. AAA+ Grade Swiss Replicas. Free shipping on all orders over $100. Shop now at luxury-watches-outlet.net.' },
+      { sender: 'prize-board@euromillions-winner.org', recipient: 'user@company.org', subject: 'WINNER: You have won €2,500,000!', body: 'Congratulations! Your email address was selected in the EuroMillions random draw. You have won €2,500,000. To claim your prize, please send your full name, address, and a copy of your ID to our claims agent.' },
+      { sender: 'auto-warranty@vehicle-protection.net', recipient: 'user@company.org', subject: 'Final Notice: Vehicle Warranty Expiration', body: 'We have been trying to reach you regarding your vehicle\'s extended warranty. Your coverage is about to expire. Call us immediately at 1-800-555-0199 to renew your policy and avoid expensive repairs.' },
+      { sender: 'local-singles@dating-match.biz', recipient: 'user@company.org', subject: 'Someone has a crush on you!', body: 'You have 3 new matches waiting for you! Beautiful local singles are online now and want to chat. Click here to view their profiles and start messaging immediately without a credit card.' },
+      { sender: 'b2b-leads@growth-hacker-pro.com', recipient: 'sales@company.org', subject: '10,000 Verified B2B Leads for just $49', body: 'Stop struggling to find customers. We have a database of 10,000 highly targeted, verified B2B leads in your industry. Name, email, phone number, and LinkedIn profiles included. Download now for only $49.' },
+      { sender: 'health@miracle-hair-restore.info', recipient: 'user@company.org', subject: 'Regrow your hair in 30 days guaranteed', body: 'Balding? Thinning hair? Try our revolutionary new serum. Clinically proven to reactivate dormant hair follicles. Get a full head of hair in just 30 days. Order your risk-free supply today.' }
+    ]
+  };
 
   useEffect(() => {
     const fetchTelemetry = async () => {
@@ -112,7 +136,10 @@ export const EmailPage: React.FC = () => {
     fetchTelemetry();
   }, []);
 
-  const handleSelectSample = (sample: (typeof samples)[0]) => {
+  const handleSelectSampleCategory = (category: SampleCategory) => {
+    const list = sampleCategories[category];
+    const sample = list[Math.floor(Math.random() * list.length)];
+    
     setActiveMode('structured');
     setSender(sample.sender);
     setRecipient(sample.recipient);
@@ -158,6 +185,7 @@ export const EmailPage: React.FC = () => {
   };
 
   return (
+    <>
     <motion.div
       className="page-body"
       variants={containerVariants}
@@ -200,15 +228,15 @@ export const EmailPage: React.FC = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Load Sample:</span>
-            {samples.map((s, idx) => (
+            {(Object.keys(sampleCategories) as SampleCategory[]).map((category) => (
               <button
-                key={idx}
+                key={category}
                 type="button"
                 className="btn btn-secondary"
                 style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem' }}
-                onClick={() => handleSelectSample(s)}
+                onClick={() => handleSelectSampleCategory(category)}
               >
-                {s.label.split(':')[0]}
+                {category}
               </button>
             ))}
           </div>
@@ -582,10 +610,10 @@ export const EmailPage: React.FC = () => {
                 try {
                   if (api.extension?.launchChrome) {
                     await api.extension.launchChrome();
-                    alert('Chrome launched with CIPHER extension pre-loaded!');
+                    showToast('Chrome launched with CIPHER extension pre-loaded!', 'success');
                   }
                 } catch (e: any) {
-                  alert(e.detail || e.message || 'Failed to auto-launch Chrome');
+                  showToast(e.detail || e.message || 'Failed to auto-launch Chrome', 'error');
                 }
               }}
               style={{
@@ -707,6 +735,14 @@ export const EmailPage: React.FC = () => {
         </div>
       </motion.div>
     </motion.div>
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.visible}
+        onClose={hideToast}
+      />
+    </>
   );
 };
 

@@ -5,7 +5,7 @@
  */
 
 export type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'BENIGN';
-export type PreventionMode = 'detect_only' | 'simulate' | 'enforce';
+export type PreventionMode = 'detect_only' | 'enforce';
 export type IncidentStatus = 'OPEN' | 'RESOLVED';
 export type IOCType = 'IP' | 'DOMAIN' | 'URL' | 'HASH';
 export type RuleType = 'HEURISTIC' | 'SIGNATURE';

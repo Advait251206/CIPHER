@@ -18,6 +18,10 @@ class NetworkFlowAnalyzeRequest(BaseModel):
     timestamp: Optional[str] = Field(default=None, description="Optional ISO timestamp")
 
 
+class PreventionModeUpdateRequest(BaseModel):
+    mode: str = Field(..., description="The prevention mode to set: 'detect_only' or 'enforce'")
+
+
 class NetworkDetectionResponse(BaseModel):
     event_id: str
     timestamp: str

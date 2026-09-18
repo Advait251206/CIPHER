@@ -29,7 +29,12 @@ const itemVariants: Variants = {
   },
 };
 
-export const PreventionPage: React.FC = () => {
+interface PreventionPageProps {
+  refreshTrigger?: number;
+  onSetMode?: (mode: 'detect_only' | 'enforce') => Promise<void>;
+}
+
+export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger = 0, onSetMode }) => {
   const [health, setHealth] = useState<NetworkHealthResponse | null>(null);
   const [activeBlocks, setActiveBlocks] = useState<BlocklistEntry[]>([]);
   const [expiredBlocks, setExpiredBlocks] = useState<BlocklistEntry[]>([]);
@@ -58,7 +63,7 @@ export const PreventionPage: React.FC = () => {
       if (expiredRes.status === 'fulfilled') setExpiredBlocks(expiredRes.value);
       if (eventsRes.status === 'fulfilled') {
         const pEvents = eventsRes.value.events.filter(
-          (e) => e.action === 'BLOCK' || e.action === 'SIMULATED_BLOCK' || e.metadata?.prevention_action
+          (e) => e.action === 'BLOCK' || e.metadata?.prevention_action
         );
         setPreventionEvents(pEvents);
       }
@@ -71,7 +76,7 @@ export const PreventionPage: React.FC = () => {
 
   useEffect(() => {
     fetchPreventionData();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleConfirmUnblock = async () => {
     if (!ipToUnblock) return;
@@ -88,7 +93,7 @@ export const PreventionPage: React.FC = () => {
     }
   };
 
-  const mode = health?.prevention_mode || 'detect_only';
+  const mode = health?.prevention_mode || 'enforce';
 
   return (
     <motion.div
@@ -125,15 +130,16 @@ export const PreventionPage: React.FC = () => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginTop: '0.75rem' }}>
           <motion.div
+            onClick={() => onSetMode && mode !== 'detect_only' && onSetMode('detect_only')}
             whileHover={{ y: -3, scale: 1.01 }}
             style={{
               padding: '1.25rem',
               borderRadius: '8px',
-              background: mode === 'detect_only' ? 'linear-gradient(135deg, #ffffff 80%, #f0fdf4 100%)' : 'var(--bg-surface-elevated)',
+              background: mode === 'detect_only' ? 'linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(22, 163, 74, 0.15) 100%)' : 'var(--bg-surface-elevated)',
               border: `1.5px solid ${mode === 'detect_only' ? 'var(--benign-color)' : 'var(--border-subtle)'}`,
-              boxShadow: mode === 'detect_only' ? '0 4px 12px rgba(22, 163, 74, 0.08)' : 'none',
+              boxShadow: mode === 'detect_only' ? '0 4px 12px rgba(22, 163, 74, 0.15)' : 'none',
               transition: 'all 0.2s ease',
-              cursor: 'default',
+              cursor: mode === 'detect_only' ? 'default' : 'pointer',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -148,43 +154,21 @@ export const PreventionPage: React.FC = () => {
           </motion.div>
 
           <motion.div
+            onClick={() => onSetMode && mode !== 'enforce' && onSetMode('enforce')}
             whileHover={{ y: -3, scale: 1.01 }}
             style={{
               padding: '1.25rem',
               borderRadius: '8px',
-              background: mode === 'simulate' ? 'linear-gradient(135deg, #ffffff 80%, #fffbeb 100%)' : 'var(--bg-surface-elevated)',
-              border: `1.5px solid ${mode === 'simulate' ? 'var(--med-color)' : 'var(--border-subtle)'}`,
-              boxShadow: mode === 'simulate' ? '0 4px 12px rgba(217, 119, 6, 0.08)' : 'none',
-              transition: 'all 0.2s ease',
-              cursor: 'default',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span className="mono" style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--med-color)' }}>
-                2. SIMULATE
-              </span>
-              {mode === 'simulate' && <span className="nav-badge warn" style={{ fontSize: '0.68rem' }}>ACTIVE MODE</span>}
-            </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-              Calculates drops, TTLs, and blocklist entries into database without actually executing host firewall rule modifications.
-            </p>
-          </motion.div>
-
-          <motion.div
-            whileHover={{ y: -3, scale: 1.01 }}
-            style={{
-              padding: '1.25rem',
-              borderRadius: '8px',
-              background: mode === 'enforce' ? 'linear-gradient(135deg, #ffffff 80%, #fef2f2 100%)' : 'var(--bg-surface-elevated)',
+              background: mode === 'enforce' ? 'linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)' : 'var(--bg-surface-elevated)',
               border: `1.5px solid ${mode === 'enforce' ? 'var(--crit-color)' : 'var(--border-subtle)'}`,
-              boxShadow: mode === 'enforce' ? '0 4px 12px rgba(220, 38, 38, 0.08)' : 'none',
+              boxShadow: mode === 'enforce' ? '0 4px 12px rgba(220, 38, 38, 0.15)' : 'none',
               transition: 'all 0.2s ease',
-              cursor: 'default',
+              cursor: mode === 'enforce' ? 'default' : 'pointer',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
               <span className="mono" style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--crit-color)' }}>
-                3. ENFORCE
+                2. ENFORCE
               </span>
               {mode === 'enforce' && <span className="nav-badge danger" style={{ fontSize: '0.68rem' }}>ACTIVE MODE</span>}
             </div>

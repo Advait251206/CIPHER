@@ -31,13 +31,137 @@ const itemVariants: Variants = {
   },
 };
 
-export const SystemHealthPage: React.FC = () => {
+const SYSTEM_DETAILS = {
+  api: {
+    title: 'API Gateway',
+    description: 'FastAPI (ASGI) core handling real-time telemetry, user configurations, and alert aggregation.',
+    dataset: 'N/A',
+    framework: 'FastAPI / Uvicorn',
+    features: [
+      'Asynchronous Event Loop',
+      'Air-gapped operation readiness',
+      'CORS and Security Headers configured',
+      'WebSocket support for live telemetry'
+    ]
+  },
+  sqlite: {
+    title: 'Local Storage (SQLite)',
+    description: 'Lightweight local database ensuring persistence of configuration and logs without external dependencies.',
+    dataset: 'Local User Data',
+    framework: 'SQLite3 / SQLAlchemy',
+    features: [
+      'journal_mode=WAL for concurrent writes',
+      'Tables: alerts, network_flows, phishing_urls, system_config',
+      'Local encrypted credential storage',
+      'Synchronous commits optimized for low latency'
+    ]
+  },
+  phishing_ml: {
+    title: 'Phishing ML Subsystem',
+    description: 'Random Forest Classifier trained to detect malicious and phishing domains via URL lexical and content analysis.',
+    dataset: 'PhiUSIIL Phishing URL Dataset',
+    framework: 'Scikit-Learn (Random Forest)',
+    features: [
+      'URL Length', 'Domain Length', 'Is IP Address',
+      'Number of Dots', 'Number of Hyphens', 'Number of @ Symbols',
+      'Number of Subdomains', 'Presence of "login"', 'Presence of "verify"',
+      'Presence of "update"', 'Presence of "secure"', 'Presence of "account"',
+      'Presence of "bank"', 'URL Entropy', 'Domain Entropy',
+      'Vowel to Consonant Ratio', 'Digit to Letter Ratio', 'HTTPS in Domain',
+      'Suspicious TLD check', 'Special Character Ratio', 'Query String Length',
+      'Path Length', 'Number of Parameters', 'Number of Fragments',
+      'Presence of Port', 'Presence of Unicode', 'Redirection (//)',
+      'Brand Name spoofing detection'
+    ]
+  },
+  network_ids: {
+    title: 'Network IDS Subsystem',
+    description: 'Dual Random Forest Gate architecture processing packet flows to identify DDoS, Port Scans, and Brute Force attacks.',
+    dataset: 'CICIDS2017 Intrusion Detection Evaluation Dataset',
+    framework: 'Scikit-Learn (Random Forest) / Scapy',
+    features: [
+      'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets',
+      'Total Length of Fwd Packets', 'Total Length of Bwd Packets', 'Fwd Packet Length Max',
+      'Fwd Packet Length Min', 'Fwd Packet Length Mean', 'Fwd Packet Length Std',
+      'Bwd Packet Length Max', 'Bwd Packet Length Min', 'Bwd Packet Length Mean',
+      'Bwd Packet Length Std', 'Flow Bytes/s', 'Flow Packets/s', 'Flow IAT Mean',
+      'Flow IAT Std', 'Flow IAT Max', 'Flow IAT Min', 'Fwd IAT Total',
+      'Fwd IAT Mean', 'Fwd IAT Std', 'Fwd IAT Max', 'Fwd IAT Min',
+      'Bwd IAT Total', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Max',
+      'Bwd IAT Min', 'Fwd PSH Flags', 'Bwd PSH Flags', 'Fwd URG Flags',
+      'Bwd URG Flags', 'Fwd Header Length', 'Bwd Header Length', 'Fwd Packets/s',
+      'Bwd Packets/s', 'Min Packet Length', 'Max Packet Length', 'Packet Length Mean',
+      'Packet Length Std', 'Packet Length Variance', 'FIN Flag Count',
+      'SYN Flag Count', 'RST Flag Count', 'PSH Flag Count', 'ACK Flag Count',
+      'URG Flag Count', 'CWE Flag Count', 'ECE Flag Count', 'Down/Up Ratio',
+      'Average Packet Size', 'Avg Fwd Segment Size', 'Avg Bwd Segment Size',
+      'Fwd Avg Bytes/Bulk', 'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate',
+      'Bwd Avg Bytes/Bulk', 'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate',
+      'Subflow Fwd Packets', 'Subflow Fwd Bytes', 'Subflow Bwd Packets',
+      'Subflow Bwd Bytes', 'Init_Win_bytes_forward', 'Init_Win_bytes_backward',
+      'act_data_pkt_fwd', 'min_seg_size_forward', 'Active Mean', 'Active Std',
+      'Active Max', 'Active Min', 'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min'
+    ]
+  },
+  ips: {
+    title: 'Prevention Engine (IPS)',
+    description: 'Active mitigation subsystem responsible for dropping connections, rate limiting, and blocking malicious actors.',
+    dataset: 'Dynamic Local Ruleset',
+    framework: 'Python / OS Firewall Integration',
+    features: [
+      'Sliding Window Rate Limiter',
+      'Dynamic IP Blocklisting',
+      'TCP RST Packet Injection',
+      'Detect-Only and Enforce modes',
+      'Threshold-based blocking logic',
+      'Automatic IP Unbanning after timeout'
+    ]
+  },
+  sensor: {
+    title: 'Live Packet Sensor',
+    description: 'Raw network interface sniffer that captures, filters, and groups packets into flows for the ML models.',
+    dataset: 'Live Network Traffic',
+    framework: 'PyShark / Scapy / pcap',
+    features: [
+      'Promiscuous Mode Interface Binding',
+      'BPF (Berkeley Packet Filter) syntax support',
+      'Asynchronous Packet Ingestion',
+      'Flow Timeout (Active/Idle)',
+      'Bi-directional flow matching',
+      'Zero-copy packet parsing where possible'
+    ]
+  }
+};
+
+interface SystemHealthPageProps {
+  refreshTrigger?: number;
+}
+
+export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigger = 0 }) => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
   const [netHealth, setNetHealth] = useState<NetworkHealthResponse | null>(null);
   const [sensorStatus, setSensorStatus] = useState<SensorStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liveUptime, setLiveUptime] = useState<number | null>(null);
+  const [selectedCard, setSelectedCard] = useState<keyof typeof SYSTEM_DETAILS | null>(null);
+
+  // Sync uptime with server response
+  useEffect(() => {
+    if (systemStatus?.uptime_seconds !== undefined) {
+      setLiveUptime(systemStatus.uptime_seconds);
+    }
+  }, [systemStatus?.uptime_seconds]);
+
+  // Tick the local uptime every second
+  useEffect(() => {
+    if (liveUptime === null) return;
+    const interval = setInterval(() => {
+      setLiveUptime((prev) => (prev !== null ? prev + 1 : null));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [liveUptime !== null]);
 
   const fetchHealth = async () => {
     try {
@@ -67,7 +191,7 @@ export const SystemHealthPage: React.FC = () => {
 
   useEffect(() => {
     fetchHealth();
-  }, []);
+  }, [refreshTrigger]);
 
   if (loading) {
     return <LoadingState message="Checking system diagnostics..." />;
@@ -134,7 +258,7 @@ export const SystemHealthPage: React.FC = () => {
         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}
       >
         {/* 1. FastAPI Core */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('api')}>
           <div className="card-header">
             <div className="card-title">
               <Server size={16} color="var(--accent-cyan)" />
@@ -162,8 +286,8 @@ export const SystemHealthPage: React.FC = () => {
             <div className="kv-item">
               <span className="kv-label">Server Uptime</span>
               <span className="kv-value mono">
-                {systemStatus?.uptime_seconds !== undefined
-                  ? formatUptime(systemStatus.uptime_seconds)
+                {liveUptime !== null
+                  ? formatUptime(liveUptime)
                   : 'N/A'}
               </span>
             </div>
@@ -171,7 +295,7 @@ export const SystemHealthPage: React.FC = () => {
         </div>
 
         {/* 2. SQLite Local Database */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('sqlite')}>
           <div className="card-header">
             <div className="card-title">
               <Database size={16} color="var(--accent-blue)" />
@@ -200,7 +324,7 @@ export const SystemHealthPage: React.FC = () => {
         </div>
 
         {/* 3. Phishing ML Subsystem */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('phishing_ml')}>
           <div className="card-header">
             <div className="card-title">
               <Cpu size={16} color="var(--accent-cyan)" />
@@ -231,7 +355,7 @@ export const SystemHealthPage: React.FC = () => {
         </div>
 
         {/* 4. Network IDS Subsystem */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('network_ids')}>
           <div className="card-header">
             <div className="card-title">
               <Cpu size={16} color="var(--accent-cyan)" />
@@ -262,20 +386,20 @@ export const SystemHealthPage: React.FC = () => {
         </div>
 
         {/* 5. IPS Prevention Engine */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('ips')}>
           <div className="card-header">
             <div className="card-title">
               <Shield size={16} color="var(--accent-blue)" />
               <span>Prevention Engine (IPS)</span>
             </div>
-            <span className={`mode-badge ${netHealth?.prevention_mode || 'detect_only'}`}>
-              {(netHealth?.prevention_mode || 'detect_only').replace('_', ' ')}
+            <span className={`mode-badge ${netHealth?.prevention_mode || 'enforce'}`}>
+              {(netHealth?.prevention_mode || 'enforce').replace('_', ' ')}
             </span>
           </div>
           <div className="kv-grid">
             <div className="kv-item">
               <span className="kv-label">Current Mode</span>
-              <span className="kv-value mono">{netHealth?.prevention_mode || 'detect_only'}</span>
+              <span className="kv-value mono">{netHealth?.prevention_mode || 'enforce'}</span>
             </div>
             <div className="kv-item">
               <span className="kv-label">Rate Limiter</span>
@@ -285,7 +409,7 @@ export const SystemHealthPage: React.FC = () => {
         </div>
 
         {/* 6. Live Packet Sensor */}
-        <div className="card">
+        <div className="card clickable-card" onClick={() => setSelectedCard('sensor')}>
           <div className="card-header">
             <div className="card-title">
               <Radio size={16} color="var(--accent-cyan)" />
@@ -307,6 +431,50 @@ export const SystemHealthPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Detailed Component Modal */}
+      {selectedCard && SYSTEM_DETAILS[selectedCard] && (
+        <div className="modal-overlay" onClick={() => setSelectedCard(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">{SYSTEM_DETAILS[selectedCard].title}</h2>
+              <button className="modal-close" onClick={() => setSelectedCard(null)}>
+                &times;
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <p className="modal-description">{SYSTEM_DETAILS[selectedCard].description}</p>
+              
+              <div className="modal-section">
+                <h3>Technical Details</h3>
+                <div className="kv-grid" style={{ marginBottom: '1rem' }}>
+                  <div className="kv-item">
+                    <span className="kv-label">Framework / Tech</span>
+                    <span className="kv-value mono">{SYSTEM_DETAILS[selectedCard].framework}</span>
+                  </div>
+                  <div className="kv-item">
+                    <span className="kv-label">Trained Dataset</span>
+                    <span className="kv-value mono">{SYSTEM_DETAILS[selectedCard].dataset}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-section">
+                <h3>Capabilities & Extracted Features ({SYSTEM_DETAILS[selectedCard].features.length})</h3>
+                <div className="features-grid">
+                  {SYSTEM_DETAILS[selectedCard].features.map((feature, idx) => (
+                    <div key={idx} className="feature-badge">
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </motion.div>
   );
 };

@@ -32,12 +32,6 @@ export const PhishingPage: React.FC = () => {
   const [result, setResult] = useState<PhishingAnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const sampleUrls = [
-    { label: 'Legitimate: Wikipedia', url: 'https://en.wikipedia.org/wiki/Computer_security' },
-    { label: 'Legitimate: GitHub', url: 'https://github.com/torvalds/linux' },
-    { label: 'Phishing Probe: Suspicious IP/Token', url: 'http://192.168.1.100/paypal.com/login-verification/update?token=auth928' },
-    { label: 'Phishing Probe: Suspicious Subdomain', url: 'http://secure-banking-alert-update.account-verify.xyz/login.php' },
-  ];
 
   const handleAnalyze = async (urlToTest?: string) => {
     const target = (urlToTest || urlInput).trim();
@@ -148,31 +142,7 @@ export const PhishingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Presets */}
-          <div>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Forensic Investigation Targets:
-            </span>
-            <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', marginTop: '0.45rem' }}>
-              {sampleUrls.map((s, idx) => (
-                <motion.button
-                  key={idx}
-                  whileHover={{ scale: 1.04, y: -1 }}
-                  whileTap={{ scale: 0.96 }}
-                  type="button"
-                  className="preset-pill"
-                  onClick={() => {
-                    setUrlInput(s.url);
-                    handleAnalyze(s.url);
-                  }}
-                  disabled={isAnalyzing}
-                >
-                  {s.label.includes('Legitimate') ? '🟢 ' : '⚠️ '}
-                  {s.label}
-                </motion.button>
-              ))}
-            </div>
-          </div>
+
         </form>
 
         {/* Real-Time URL Anatomical Dissection */}

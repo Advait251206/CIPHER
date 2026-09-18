@@ -286,9 +286,9 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
           </div>
           <div className="kv-item">
             <span className="kv-label">Default Prevention Safety</span>
-            <span className="kv-value mono" style={{ color: 'var(--low-color)' }}>
-              {sensorStatus?.prevention_mode || 'detect_only'}
-            </span>
+              <span className="kv-value mono" style={{ color: 'var(--accent-cyan)' }}>
+                {sensorStatus?.prevention_mode || 'enforce'}
+              </span>
           </div>
         </div>
       </motion.div>

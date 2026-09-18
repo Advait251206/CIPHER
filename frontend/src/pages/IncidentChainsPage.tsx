@@ -259,7 +259,11 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
               </thead>
               <tbody>
                 {incidents.map((inc) => (
-                  <tr key={inc.incident_id}>
+                  <tr 
+                    key={inc.incident_id}
+                    className="clickable-row"
+                    onClick={() => handleOpenDetail(inc.incident_id)}
+                  >
                     <td>
                       <span
                         className="mono"
@@ -323,7 +327,10 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
                         <button
                           className="control-btn"
                           style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                          onClick={() => handleOpenDetail(inc.incident_id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDetail(inc.incident_id);
+                          }}
                           title="View incident events and correlation evidence"
                         >
                           <Eye size={12} />
@@ -333,7 +340,10 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
                           <button
                             className="control-btn success"
                             style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                            onClick={() => setIncidentToResolve(inc)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIncidentToResolve(inc);
+                            }}
                             title="Mark incident as resolved"
                           >
                             <CheckCircle size={12} />
@@ -382,19 +392,23 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
             </div>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="evidence-section">
-              <div className="evidence-header">
-                <Flame size={14} />
-                <span>Correlation Summary</span>
-              </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                {selectedIncident.incident.summary}
-              </p>
+          <div>
+            <p className="modal-description">
+              {selectedIncident.incident.summary}
+            </p>
+
+            <div className="modal-section">
+              <h3>Correlation Diagnostics</h3>
               <div className="kv-grid">
                 <div className="kv-item">
                   <span className="kv-label">Status</span>
                   <span className="kv-value">{selectedIncident.incident.status}</span>
+                </div>
+                <div className="kv-item">
+                  <span className="kv-label">Escalation State</span>
+                  <span className="kv-value" style={{ color: selectedIncident.incident.escalation_detected ? 'var(--crit-color)' : 'var(--benign-color)' }}>
+                    {selectedIncident.incident.escalation_detected ? 'ESCALATED' : 'Normal'}
+                  </span>
                 </div>
                 <div className="kv-item">
                   <span className="kv-label">First Seen</span>
@@ -405,14 +419,8 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
                   <span className="kv-value mono">{selectedIncident.incident.last_seen}</span>
                 </div>
                 <div className="kv-item">
-                  <span className="kv-label">Total Correlated Events</span>
+                  <span className="kv-label">Correlated Events</span>
                   <span className="kv-value mono">{selectedIncident.incident.event_count}</span>
-                </div>
-                <div className="kv-item">
-                  <span className="kv-label">Escalation State</span>
-                  <span className="kv-value" style={{ color: selectedIncident.incident.escalation_detected ? 'var(--crit-color)' : 'var(--benign-color)' }}>
-                    {selectedIncident.incident.escalation_detected ? 'ESCALATED (High Frequency / Repetition)' : 'Normal'}
-                  </span>
                 </div>
                 <div className="kv-item">
                   <span className="kv-label">Recommended Action</span>
@@ -423,12 +431,20 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
               </div>
             </div>
 
-            {/* Linked Events List */}
-            <div className="evidence-section">
-              <div className="evidence-header">
-                <GitBranch size={14} />
-                <span>Associated Security Events ({selectedIncident.events.length})</span>
+            <div className="modal-section">
+              <h3>Attack Categories Identified</h3>
+              <div className="features-grid">
+                {selectedIncident.incident.attack_categories.map((cat: string, idx: number) => (
+                  <div key={idx} className="feature-badge">
+                    {cat}
+                  </div>
+                ))}
               </div>
+            </div>
+
+            {/* Linked Events List */}
+            <div className="modal-section">
+              <h3>Associated Security Events ({selectedIncident.events.length})</h3>
               {selectedIncident.events.length === 0 ? (
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                   No event records found linked to this incident.

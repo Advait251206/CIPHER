@@ -19,18 +19,34 @@ from app.network.schemas import (
     NetworkInterfaceItem,
     NetworkInterfacesResponse,
     SensorStartRequest,
-    SensorStatusResponse
+    SensorStatusResponse,
+    PreventionModeUpdateRequest
 )
 from app.network.service import NetworkService
 from app.network.model_loader import NetworkModelLoader
 from app.schemas.events import EventsListResponse, SecurityEventItem
 from app.network.live_sensor import get_sensor_service
+from app.prevention.actions import PreventionMode
 
 router = APIRouter(prefix="/network", tags=["Network Intrusion Detection & Prevention"])
 network_service = NetworkService()
 
 
+@router.post("/prevention-mode", summary="Set Prevention Mode")
+def set_prevention_mode(req: PreventionModeUpdateRequest):
+    """Dynamically switch between Detect Only and Enforce modes."""
+    valid_modes = [m.value for m in PreventionMode]
+    if req.mode not in valid_modes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid mode. Must be one of {valid_modes}"
+        )
+    network_service.prevention_engine.mode = req.mode
+    return {"status": "success", "mode": req.mode}
+
+
 @router.get("/health", response_model=NetworkHealthResponse, summary="Network IDS Health Check")
+
 def network_health():
     """Returns runtime health, model load status, and active prevention mode."""
     loader = network_service.loader
