@@ -20,7 +20,7 @@
   --border-accent: #D4AF37;
 
   /* Typography Colors */
-  --text-primary: var(--bg-surface);
+  --text-primary: #FFFFFF;
   --text-secondary: #B8B8B8;
   --text-muted: #888888;
   --text-inverse: #000000;
