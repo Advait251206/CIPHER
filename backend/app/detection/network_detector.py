@@ -4,6 +4,7 @@ Evaluates deterministic network flow signatures, TCP flag combinations, port pro
 and traffic rate anomalies independently of machine learning.
 """
 
+import ipaddress
 from typing import Dict, Any, List, Optional, Tuple
 
 
@@ -16,6 +17,28 @@ class NetworkDetector:
     # Common service ports
     WEB_PORTS = {80: "HTTP", 443: "HTTPS", 8080: "HTTP-ALT", 8443: "HTTPS-ALT"}
     IRC_BOT_PORTS = {6667, 6668, 6669, 7000}
+
+    # Known legitimate high-volume CDN ASNs/IP blocks
+    KNOWN_CDN_SUBNETS = [
+        ipaddress.ip_network("104.16.0.0/12"),    # Cloudflare
+        ipaddress.ip_network("1.1.1.0/24"),       # Cloudflare DNS
+        ipaddress.ip_network("8.8.8.0/24"),       # Google DNS
+        ipaddress.ip_network("8.8.4.0/24"),       # Google DNS
+        ipaddress.ip_network("103.102.166.0/24"), # Wikimedia
+        ipaddress.ip_network("198.35.26.0/23"),   # Wikimedia
+        ipaddress.ip_network("14.192.87.0/24"),   # Wikimedia
+    ]
+
+    def _is_known_cdn(self, ip_str: Optional[str]) -> bool:
+        if not ip_str: return False
+        try:
+            ip = ipaddress.ip_address(ip_str)
+            for subnet in self.KNOWN_CDN_SUBNETS:
+                if ip in subnet:
+                    return True
+        except ValueError:
+            pass
+        return False
 
     def evaluate(
         self,
@@ -74,17 +97,31 @@ class NetworkDetector:
         flow_pkts_per_s = features.get("Flow Packets/s", 0)
         fwd_pkts_per_s = features.get("Fwd Packets/s", 0)
         flow_iat_mean = features.get("Flow IAT Mean", 1e6)
+        pkt_len_var = features.get("Packet Length Variance", 100)
 
-        # Require at least 50 packets to trust per-second rate calculations (avoiding micro-flow math artifacts)
+        is_cdn = self._is_known_cdn(source_ip) or self._is_known_cdn(destination_ip)
+        is_web_port = dst_port in self.WEB_PORTS
+
+        # Require at least 1000 packets to trust per-second rate calculations
         total_pkts = fwd_pkts + bwd_pkts
-        if (flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000) and total_pkts > 50:
+        
+        # Volumetric threshold logic
+        volumetric_byte_limit = 50_000_000  # 50 MB/s default
+        
+        # If it's a web port with high variance, or a known CDN, it's likely legitimate high-bandwidth traffic
+        if is_cdn:
+            volumetric_byte_limit = float('inf')  # Bypass volumetric DOS for known CDNs
+        elif is_web_port and pkt_len_var > 15.0:
+            volumetric_byte_limit = 250_000_000   # 250 MB/s (2 Gbps) for variable web traffic
+
+        if (flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000) and total_pkts > 1000 and not is_cdn:
             score += 65
             reasons.append(
                 f"Abnormal forward packet rate ({fwd_pkts_per_s:,.0f} pkts/s) exceeding normal client behavior"
             )
             rules.append({"rule_id": "NET-DOS-01", "name": "Extreme Packet Flood Rate", "weight": 65})
             attack_candidates.append(("DOS", 65))
-        elif flow_bytes_per_s > 50_000_000 and total_pkts > 50: # Increased to 50 MB/s (400 Mbps)
+        elif flow_bytes_per_s > volumetric_byte_limit and total_pkts > 100:
             score += 50
             reasons.append(
                 f"Excessive volumetric flow rate ({flow_bytes_per_s/1e6:.2f} MB/s) indicating bandwidth saturation attempt"
@@ -105,7 +142,6 @@ class NetworkDetector:
         # ---------------------------------------------------------------------
         # Rule 3: Distributed Denial of Service (DDoS) - Uniform Mass Flood
         # ---------------------------------------------------------------------
-        pkt_len_var = features.get("Packet Length Variance", 100)
         if (flow_pkts_per_s > 25000 or fwd_pkts_per_s > 25000) and pkt_len_var < 5.0 and fwd_pkts > 100:
             score += 70
             reasons.append(

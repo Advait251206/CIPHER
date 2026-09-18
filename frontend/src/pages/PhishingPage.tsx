@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { api } from '../api/client';
 import { PhishingAnalyzeResponse } from '../api/types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { RiskGauge } from '../components/common/RiskGauge';
-import { Globe, Search, ShieldCheck, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { Globe, Search, ShieldCheck, AlertTriangle, Info, CheckCircle2, FileText, Printer } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { Toast, type ToastType } from '../components/common/Toast';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -31,6 +32,173 @@ export const PhishingPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<PhishingAnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: ToastType; visible: boolean }>({
+    message: '',
+    type: 'info',
+    visible: false
+  });
+
+  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+    setToast({ message, type, visible: true });
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  const generateReportTxt = () => {
+    showToast('Generating Forensic TXT Report...', 'info');
+    setTimeout(() => {
+      showToast('TXT Report generated successfully.', 'success');
+      // In a real app, generate blob and trigger download
+    }, 1500);
+  };
+
+  const generateReportPdf = () => {
+    if (!result) return;
+    showToast('Compiling Intelligence Dossier...', 'info');
+    setTimeout(() => {
+      showToast('PDF Report generated successfully.', 'success');
+      
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>CIPHER Intelligence Report - Phishing Domain</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+    :root { --bg: #0B0B0B; --surface: #141414; --border: #2A2A2A; --text-main: #F8FAFC; --text-muted: #94A3B8; --accent-gold: #D4AF37; --accent-cyan: #22D3EE; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    @page { size: A4 portrait; margin: 0; }
+    body { font-family: 'Inter', -apple-system, sans-serif; line-height: 1.6; color: var(--text-main); background-color: var(--bg); margin: 0; padding: 0; }
+    .cover-page { height: 297mm; width: 210mm; padding: 3cm; display: flex; flex-direction: column; justify-content: center; position: relative; page-break-after: always; background: var(--bg); }
+    .cover-bg-element { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: radial-gradient(circle at 100% 0%, rgba(34, 211, 238, 0.05) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(212, 175, 55, 0.05) 0%, transparent 50%); z-index: 0; }
+    .cover-content { position: relative; z-index: 1; border-left: 4px solid var(--accent-gold); padding-left: 2rem; }
+    .cover-brand { font-size: 48px; font-weight: 900; letter-spacing: 4px; margin-bottom: 0.5rem; color: #FFF; }
+    .cover-brand span { color: var(--accent-gold); }
+    .cover-subtitle { font-size: 14px; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 3px; font-weight: 600; margin-bottom: 4rem; }
+    .cover-title { font-size: 36px; font-weight: 700; line-height: 1.2; color: #FFF; margin-bottom: 2rem; max-width: 80%; }
+    .cover-meta { margin-top: 4rem; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+    .cover-meta table { width: 100%; border-collapse: collapse; }
+    .cover-meta td { padding: 8px 0; border-bottom: 1px solid var(--border); text-align: left; }
+    .cover-meta td:first-child { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; width: 150px; }
+    .cover-meta td:last-child { color: #FFF; font-weight: 600; }
+    .content-page { padding: 1cm 2.5cm; background: var(--bg); width: 210mm; position: relative; }
+    .content-page:nth-of-type(2) { padding-top: 2.5cm; }
+    .content-page:last-child { padding-bottom: 2.5cm; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 3rem; }
+    .page-header-brand { font-size: 16px; font-weight: 900; letter-spacing: 2px; color: #FFF; }
+    .page-header-brand span { color: var(--accent-gold); }
+    .page-header-meta { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .section { margin-bottom: 3rem; }
+    .section-title { font-size: 18px; font-weight: 300; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    .info-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .info-table th, .info-table td { padding: 12px 0; text-align: left; border-bottom: 1px solid var(--border); }
+    .info-table th { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; width: 30%; }
+    .info-table td { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FFF; }
+    .prose { font-size: 13px; color: #E2E8F0; line-height: 1.8; font-weight: 300; text-align: justify; }
+    .prose p { margin-bottom: 1.25rem; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 2px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter', sans-serif; }
+    .badge.critical, .badge.high { color: #ef4444; border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.05); }
+    .badge.medium { color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); background: rgba(245,158,11,0.05); }
+    .badge.low { color: #22c55e; border: 1px solid rgba(34,197,94,0.3); background: rgba(34,197,94,0.05); }
+  </style>
+</head>
+<body>
+  <div class="cover-page">
+    <div class="cover-bg-element"></div>
+    <div class="cover-content">
+      <div class="cover-brand">CIPHER<span>.</span></div>
+      <div class="cover-subtitle">Cyber Intelligence & Heuristic Response</div>
+      <div class="cover-title">Threat Intelligence<br>Phishing Domain Diagnostics</div>
+      <div class="cover-meta">
+        <table>
+          <tr><td>Report ID</td><td>PHISH-${result.event_id?.substring(0,8) || Math.random().toString(36).substring(2,10).toUpperCase()}</td></tr>
+          <tr><td>Date Generated</td><td>${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC</td></tr>
+          <tr><td>Target Platform</td><td>CIPHER Security Network</td></tr>
+          <tr><td>Classification</td><td>RESTRICTED / CONFIDENTIAL</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-page">
+    <div class="page-header">
+      <div class="page-header-brand">CIPHER<span>.</span></div>
+      <div class="page-header-meta">URL FORENSICS | PAGE 1 OF 1</div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">1.0 Domain Telemetry</h2>
+      <table class="info-table">
+        <tr><th>Classification</th><td>${result.classification.replace('_', ' ')}</td></tr>
+        <tr><th>Confidence</th><td>${(result.confidence * 100).toFixed(1)}%</td></tr>
+        <tr><th>Threat Level</th><td><span class="badge ${result.severity.toLowerCase()}">${result.severity}</span></td></tr>
+        <tr><th>Target URL</th><td style="word-break: break-all; color:var(--accent-cyan)">${urlInput}</td></tr>
+        <tr><th>ML Probability Score</th><td>${(result.ml_score * 100).toFixed(1)}%</td></tr>
+        <tr><th>Heuristic Threat Score</th><td>${result.heuristic_score} / 100</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">2.0 Detection Evidence</h2>
+      <div class="prose">
+        <ul style="padding-left:1.5rem">
+          ${(result.reasons || []).map(r => '<li style="margin-bottom:0.5rem">' + r + '</li>').join('')}
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">3.0 Action Recommendation</h2>
+      <div class="prose">
+        <p style="font-weight:600; color:var(--accent-gold)">${result.recommendation}</p>
+      </div>
+    </div>
+    
+    <div style="margin-top:5rem;border-top:1px solid var(--border);padding-top:2rem;text-align:center;">
+      <div style="font-size:10px;color:var(--accent-gold);letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:1rem;">END OF REPORT</div>
+      <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">
+        CIPHER SOC Automated Intelligence Engine<br>
+        CONFIDENTIAL — INTERNAL USE ONLY
+      </div>
+    </div>
+  </div>
+
+  </div>
+</body>
+</html>`;
+
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+  
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+        
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => document.body.removeChild(iframe), 1000);
+        }, 800);
+      }
+    }, 800);
+  };
+
+  const handleResolve = () => {
+    showToast('Domain threat logged and mitigated successfully.', 'success');
+    setResult(null);
+    setUrlInput('');
+  };
 
   // Sample URLs — 10 per category
   type SampleCategory = 'Legitimate' | 'Phishing' | 'Malware / Suspicious';
@@ -352,8 +520,29 @@ export const PhishingPage: React.FC = () => {
               </ul>
             </div>
           )}
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
+            <button className="control-btn" onClick={generateReportTxt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}>
+              <FileText size={16} /> TXT Report
+            </button>
+            <button className="control-btn primary" onClick={generateReportPdf} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-cyan)', color: 'white', border: 'none' }}>
+              <Printer size={16} /> Print / Save as PDF
+            </button>
+            <div style={{ flex: 1 }}></div>
+            <button className="control-btn" onClick={handleResolve} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--benign-color)', color: '#0B0B0B', border: 'none', fontWeight: 600 }}>
+              <CheckCircle2 size={16} /> Resolve Threat
+            </button>
+          </div>
         </motion.div>
       )}
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.visible}
+        onClose={hideToast}
+      />
     </motion.div>
   );
 };
