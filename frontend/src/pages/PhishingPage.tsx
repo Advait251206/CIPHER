@@ -32,6 +32,55 @@ export const PhishingPage: React.FC = () => {
   const [result, setResult] = useState<PhishingAnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Sample URLs — 10 per category
+  type SampleCategory = 'Legitimate' | 'Phishing' | 'Malware / Suspicious';
+
+  const sampleUrls: Record<SampleCategory, string[]> = {
+    'Legitimate': [
+      'https://www.google.com/search?q=open+source+security',
+      'https://github.com/trending/python',
+      'https://stackoverflow.com/questions/tagged/cybersecurity',
+      'https://developer.mozilla.org/en-US/docs/Web/HTTP',
+      'https://www.wikipedia.org/wiki/Intrusion_detection_system',
+      'https://docs.python.org/3/library/socket.html',
+      'https://www.cloudflare.com/learning/ddos/what-is-a-ddos-attack/',
+      'https://www.amazon.com/dp/B09XYZ1234',
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      'https://www.linkedin.com/in/johndoe',
+    ],
+    'Phishing': [
+      'http://paypa1-secure-login.xyz/account/verify?token=abc123',
+      'https://secure-bankofamerica.net/login/client-auth',
+      'http://apple-id-suspended.com/unlock?session=xz99',
+      'https://microsoft-365-login.info/oauth2/auth',
+      'http://facebook-account-recovery.club/help/login',
+      'http://netflix-billing-update.xyz/payment/verify',
+      'https://amazon-order-confirm.net/track?id=399123',
+      'http://your-paypal-has-been-limited.com/resolve',
+      'http://g00gle-signin-accounts.ru/security/check',
+      'https://dropbox-shared-file.info/download?ref=user_9182',
+    ],
+    'Malware / Suspicious': [
+      'http://192.168.10.4/cmd.php?exec=whoami',
+      'http://xn--pypal-4ve.com/signin',
+      'http://dl.freeupdatenow.xyz/installer.exe?src=popup',
+      'http://tracking-pixel-ad.ru/pixel.gif?uid=102938&ref=phish',
+      'http://cdn-js-update.com/jquery-3.6.min.js.php',
+      'http://update-flash-player.tk/setup.exe',
+      'https://bit.ly/3phishurl',
+      'http://10.0.0.1/admin?pass=admin123',
+      'http://free-robux-generator.com/claim?user=victim&amount=10000',
+      'http://invoice-download.pw/INV_2026_0918.pdf.exe',
+    ],
+  };
+
+  const handleSelectSampleUrl = (category: SampleCategory) => {
+    const list = sampleUrls[category];
+    const url = list[Math.floor(Math.random() * list.length)];
+    setUrlInput(url);
+    setResult(null);
+    setError(null);
+  };
 
   const handleAnalyze = async (urlToTest?: string) => {
     const target = (urlToTest || urlInput).trim();
@@ -142,6 +191,29 @@ export const PhishingPage: React.FC = () => {
             </div>
           </div>
 
+
+          {/* Sample URL Loader */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              Load Sample URL
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {(['Legitimate', 'Phishing', 'Malware / Suspicious'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`control-btn${
+                    cat === 'Legitimate' ? ' success' : cat === 'Phishing' ? ' danger' : ''
+                  }`}
+                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}
+                  onClick={() => handleSelectSampleUrl(cat)}
+                  disabled={isAnalyzing}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
 
         </form>
 

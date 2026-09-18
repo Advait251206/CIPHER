@@ -8,7 +8,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Modal } from '../components/common/Modal';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye } from 'lucide-react';
+import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye, FileText, Printer } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -48,6 +48,153 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
 
   // Detail Modal
   const [selectedIncident, setSelectedIncident] = useState<IncidentDetailResponse | null>(null);
+  const [popupBlocked, setPopupBlocked] = useState(false);
+
+  const generateIncidentReport = (detail: IncidentDetailResponse) => {
+    const inc = detail.incident;
+    const events = detail.events;
+    const now = new Date().toLocaleString();
+
+    const eventsRows = events.map((ev: any) => `
+      <tr>
+        <td>${ev.event_id || 'N/A'}</td>
+        <td>${ev.timestamp || 'N/A'}</td>
+        <td>${ev.attack_type || ev.classification || 'UNKNOWN'}</td>
+        <td>${ev.risk_score ?? ev.threat_score ?? 0}</td>
+        <td>${ev.source_ip || ev.domain || 'N/A'}</td>
+        <td>${ev.destination_ip || 'N/A'}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Incident Report — ${inc.incident_id}</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #fff; color: #111; margin: 0; padding: 2rem; }
+    h1 { font-size: 1.4rem; border-bottom: 2px solid #111; padding-bottom: 0.5rem; margin-bottom: 0.25rem; }
+    .meta { font-size: 0.8rem; color: #555; margin-bottom: 1.5rem; }
+    h2 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: #b8860b; border-bottom: 1px solid #ddd; padding-bottom: 0.35rem; margin: 1.5rem 0 0.75rem; }
+    .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1.5rem; margin-bottom: 1rem; }
+    .kv-item { font-size: 0.85rem; }
+    .kv-label { display: block; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; color: #555; margin-bottom: 2px; }
+    .kv-value { font-family: monospace; }
+    .badge { display: inline-block; background: #111; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin: 3px 3px 3px 0; font-family: monospace; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; }
+    th { background: #111; color: #fff; padding: 6px 10px; text-align: left; font-size: 0.72rem; text-transform: uppercase; }
+    td { padding: 6px 10px; border-bottom: 1px solid #e5e5e5; font-family: monospace; }
+    tr:nth-child(even) td { background: #f9f9f9; }
+    .footer { margin-top: 2rem; font-size: 0.75rem; color: #aaa; border-top: 1px solid #eee; padding-top: 0.75rem; }
+    @media print { body { padding: 1rem; } }
+  </style>
+</head>
+<body>
+  <h1>CIPHER | Incident Chain Report</h1>
+  <div class="meta">Generated: ${now} &nbsp;|&nbsp; Engine: CIPHER IDPS v1.2 &nbsp;|&nbsp; Report Type: Correlated Incident</div>
+
+  <h2>Incident Summary</h2>
+  <p style="font-size:0.9rem;margin-bottom:1rem">${inc.summary}</p>
+
+  <h2>Correlation Diagnostics</h2>
+  <div class="kv-grid">
+    <div class="kv-item"><span class="kv-label">Incident ID</span><span class="kv-value">${inc.incident_id}</span></div>
+    <div class="kv-item"><span class="kv-label">Status</span><span class="kv-value">${inc.status}</span></div>
+    <div class="kv-item"><span class="kv-label">Severity</span><span class="kv-value">${inc.severity}</span></div>
+    <div class="kv-item"><span class="kv-label">Escalation State</span><span class="kv-value">${inc.escalation_detected ? 'ESCALATED' : 'Normal'}</span></div>
+    <div class="kv-item"><span class="kv-label">First Seen</span><span class="kv-value">${inc.first_seen}</span></div>
+    <div class="kv-item"><span class="kv-label">Last Seen</span><span class="kv-value">${inc.last_seen}</span></div>
+    <div class="kv-item"><span class="kv-label">Correlated Events</span><span class="kv-value">${inc.event_count}</span></div>
+    <div class="kv-item"><span class="kv-label">Recommended Action</span><span class="kv-value">${inc.recommended_action || 'Monitor traffic'}</span></div>
+    <div class="kv-item"><span class="kv-label">Source IP</span><span class="kv-value">${inc.source_ip || 'N/A'}</span></div>
+    <div class="kv-item"><span class="kv-label">Destination IP</span><span class="kv-value">${inc.destination_ip || 'N/A'}</span></div>
+  </div>
+
+  <h2>Attack Categories Identified</h2>
+  <div>${(inc.attack_categories || []).map((c: string) => `<span class="badge">${c}</span>`).join('')}</div>
+
+  <h2>Associated Security Events (${events.length})</h2>
+  ${events.length === 0
+    ? '<p style="color:#888;font-size:0.85rem">No events linked to this incident.</p>'
+    : `<table>
+    <thead><tr><th>Event ID</th><th>Timestamp</th><th>Classification</th><th>Risk Score</th><th>Source IP</th><th>Dest IP</th></tr></thead>
+    <tbody>${eventsRows}</tbody>
+  </table>`}
+
+  <div class="footer">CIPHER Cyber Intrusion Prevention &amp; Response | Confidential — For internal SOC use only</div>
+  <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      setPopupBlocked(false);
+    } else {
+      setPopupBlocked(true);
+    }
+  };
+
+  const generateIncidentTxt = (detail: IncidentDetailResponse) => {
+    const inc = detail.incident;
+    const events = detail.events;
+    const eventsBlock = events.length === 0
+      ? '  (none)'
+      : events.map((ev: any, i: number) =>
+`  [${i + 1}] ID: ${ev.event_id || 'N/A'}
+      Timestamp:      ${ev.timestamp || 'N/A'}
+      Classification: ${ev.attack_type || ev.classification || 'UNKNOWN'}
+      Risk Score:     ${ev.risk_score ?? ev.threat_score ?? 0}
+      Source IP:      ${ev.source_ip || ev.domain || 'N/A'}
+      Dest IP:        ${ev.destination_ip || 'N/A'}`).join('\n');
+
+    const content = `
+================================================================================
+                   CIPHER INCIDENT CHAIN REPORT
+================================================================================
+Generated On:  ${new Date().toISOString()}
+Report ID:     RPT-INC-${inc.incident_id?.substring(0, 8).toUpperCase() || 'UNKNOWN'}
+
+[ 1. INCIDENT SUMMARY ]
+--------------------------------------------------------------------------------
+${inc.summary}
+
+[ 2. CORRELATION DIAGNOSTICS ]
+--------------------------------------------------------------------------------
+Incident ID:        ${inc.incident_id}
+Status:             ${inc.status}
+Severity:           ${inc.severity}
+Escalation State:   ${inc.escalation_detected ? 'ESCALATED' : 'Normal'}
+First Seen:         ${inc.first_seen}
+Last Seen:          ${inc.last_seen}
+Correlated Events:  ${inc.event_count}
+Recommended Action: ${inc.recommended_action || 'Monitor traffic'}
+Source IP:          ${inc.source_ip || 'N/A'}
+Destination IP:     ${inc.destination_ip || 'N/A'}
+
+[ 3. ATTACK CATEGORIES ]
+--------------------------------------------------------------------------------
+${(inc.attack_categories || []).map((c: string) => `  - ${c}`).join('\n') || '  (none identified)'}
+
+[ 4. ASSOCIATED SECURITY EVENTS (${events.length}) ]
+--------------------------------------------------------------------------------
+${eventsBlock}
+================================================================================
+END OF REPORT
+================================================================================
+`.trim();
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CIPHER_Incident_${inc.incident_id?.substring(0, 8) || 'Report'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Resolution confirmation dialog (incorporates user's instruction: server-confirmed, non-optimistic)
@@ -374,18 +521,41 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
             </div>
           }
           footer={
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-              <div>
-                {selectedIncident.incident.status === 'OPEN' && (
-                  <button
-                    className="control-btn success"
-                    onClick={() => setIncidentToResolve(selectedIncident.incident)}
-                  >
-                    <CheckCircle size={14} />
-                    <span>Resolve Incident</span>
-                  </button>
-                )}
-              </div>
+            <div style={{ display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center', flexWrap: 'wrap' }}>
+              {/* Resolve — only when OPEN */}
+              {selectedIncident.incident.status === 'OPEN' && (
+                <button
+                  className="control-btn success"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  onClick={() => setIncidentToResolve(selectedIncident.incident)}
+                >
+                  <CheckCircle size={16} />
+                  Resolve Incident
+                </button>
+              )}
+              {/* TXT Download */}
+              <button
+                className="control-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}
+                onClick={() => generateIncidentTxt(selectedIncident)}
+              >
+                <FileText size={16} /> TXT Report
+              </button>
+              {/* PDF / Print */}
+              <button
+                className="control-btn primary"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-cyan)', color: 'white', border: 'none' }}
+                onClick={() => generateIncidentReport(selectedIncident)}
+              >
+                <Printer size={16} /> Print / Save as PDF
+              </button>
+              {popupBlocked && (
+                <span style={{ color: 'var(--accent-gold)', fontSize: '0.78rem', fontWeight: 600 }}>
+                  ⚠ Allow popups to open the PDF
+                </span>
+              )}
+              {/* spacer */}
+              <div style={{ flex: 1 }} />
               <button className="control-btn" onClick={() => setSelectedIncident(null)}>
                 Close
               </button>
