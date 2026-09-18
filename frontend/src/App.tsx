@@ -3,8 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar, NavigationTab } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { OverviewPage } from './pages/OverviewPage';
-import { LiveEventsPage } from './pages/LiveEventsPage';
-import { IncidentsPage } from './pages/IncidentsPage';
+import { SecurityEventsPage } from './pages/SecurityEventsPage';
+import { IncidentChainsPage } from './pages/IncidentChainsPage';
+import { NetworkIDPSPage } from './pages/NetworkIDPSPage';
 
 import { PhishingPage } from './pages/PhishingPage';
 import { EmailPage } from './pages/EmailPage';
@@ -99,15 +100,19 @@ export const App: React.FC = () => {
         };
       case 'events':
         return {
-          title: 'Live Security Events Log',
-          subtitle: 'Unified detection stream across Network IDS, Phishing analyzer, and deterministic rules',
+          title: 'Security Events Log',
+          subtitle: 'Detailed data table showing raw security events',
         };
       case 'incidents':
         return {
-          title: 'Incident Correlation Manager',
-          subtitle: 'Multi-event correlated attack chains and escalation detection',
+          title: 'Incident Chains',
+          subtitle: 'Correlated threats with Risk Score and action resolution',
         };
-
+      case 'network_idps':
+        return {
+          title: 'Network IDPS Analytics',
+          subtitle: 'Dedicated view for network anomaly analysis and active bidirectional flows',
+        };
       case 'phishing':
         return {
           title: 'Phishing Threat Detector',
@@ -197,7 +202,7 @@ export const App: React.FC = () => {
               )}
 
               {currentTab === 'events' && (
-                <LiveEventsPage
+                <SecurityEventsPage
                   onSelectIncident={(incId) => {
                     setSelectedIncidentId(incId);
                     setCurrentTab('incidents');
@@ -207,9 +212,10 @@ export const App: React.FC = () => {
               )}
 
               {currentTab === 'incidents' && (
-                <IncidentsPage initialIncidentId={selectedIncidentId} refreshTrigger={refreshKey} />
+                <IncidentChainsPage initialIncidentId={selectedIncidentId} refreshTrigger={refreshKey} />
               )}
 
+              {currentTab === 'network_idps' && <NetworkIDPSPage />}
 
               {currentTab === 'phishing' && <PhishingPage />}
 
@@ -221,7 +227,7 @@ export const App: React.FC = () => {
 
               {currentTab === 'prevention' && <PreventionPage />}
 
-              {currentTab === 'sensor' && <SensorPage refreshTrigger={refreshKey} />}
+              {currentTab === 'sensor' && <SensorPage />}
 
               {currentTab === 'health' && <SystemHealthPage />}
             </motion.div>
