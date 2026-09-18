@@ -1,7 +1,7 @@
 {
   "name": "cipher-soc-dashboard",
   "private": true,
-  "version": "1.2.0021",
+  "version": "1.2.0022",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -133,7 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
       
       <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-        v1.2.0021
+        v1.2.0022
       </div>
     </aside>
   );

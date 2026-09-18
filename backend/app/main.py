@@ -85,7 +85,7 @@ Local-First, Privacy-Preserving Intrusion Detection and Threat Analysis Engine.
 - **Subsystem 2 (Network IDPS)**: Dual Random Forest ML model (Binary Gate + 9-Class Multiclass) trained on CIC-IDS2017 with deterministic flow heuristics.
 - **Unified Defense**: Standardized threat scoring (0-100), severity classification, evidence-backed explanations, and multi-mode IPS architecture (detect_only, simulate, enforce).
     """,
-    version="1.2.0021",
+    version="1.2.0022",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan
