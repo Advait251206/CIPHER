@@ -3,7 +3,8 @@ import { api } from '../api/client';
 import { CorrelationStatsResponse, SecurityEventItem } from '../api/types';
 import { MetricCard } from '../components/common/MetricCard';
 import { DataGrid } from '../components/common/DataGrid';
-import { Activity, ShieldAlert, Flame, Zap } from 'lucide-react';
+import { Activity, Flame, ShieldAlert } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
 interface OverviewPageProps {
   onNavigate: (tab: any) => void;
@@ -28,6 +29,20 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
     fetchStats();
   }, [refreshTrigger]);
 
+  const severityData = corrStats?.incidents_by_severity 
+    ? Object.entries(corrStats.incidents_by_severity).map(([name, value]) => ({ name, value }))
+    : [];
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity.toUpperCase()) {
+      case 'CRITICAL': return 'var(--crit-color)';
+      case 'HIGH': return 'var(--high-color)';
+      case 'MEDIUM': return 'var(--med-color)';
+      case 'LOW': return 'var(--low-color)';
+      default: return 'var(--border-accent)';
+    }
+  };
+
   return (
     <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
@@ -43,13 +58,13 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
           highlight={true}
         />
         <MetricCard
-          title="Threats Blocked"
-          value={0}
+          title="Avg Correlation Score"
+          value={corrStats?.average_correlation_score ? corrStats.average_correlation_score.toFixed(1) : 0}
           icon={<ShieldAlert size={20} />}
         />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr', gap: '1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Recent Security Events</h3>
           <DataGrid
@@ -57,7 +72,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
               { header: 'Time', accessor: 'timestamp', render: (val) => new Date(val).toLocaleTimeString() },
               { header: 'Type', accessor: 'event_type' },
               { header: 'Severity', accessor: 'severity', render: (val) => (
-                <span style={{ color: val === 'CRITICAL' ? 'var(--crit-color)' : val === 'HIGH' ? 'var(--high-color)' : 'var(--text-primary)' }}>
+                <span style={{ color: getSeverityColor(val), fontWeight: 600 }}>
                   {val}
                 </span>
               )},
@@ -70,14 +85,53 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Quick Actions</h3>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <button style={{ background: 'var(--bg-sidebar)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', padding: '0.75rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <Zap size={16} color="var(--border-accent)" /> Run Manual Scan
-            </button>
-            <button style={{ background: 'var(--bg-sidebar)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', padding: '0.75rem', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <ShieldAlert size={16} /> Enable Lockdown Mode
-            </button>
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Incidents by Severity</h3>
+          <div style={{ 
+            background: 'var(--bg-surface)', 
+            border: '1px solid var(--border-subtle)', 
+            borderRadius: '6px', 
+            padding: '1.5rem', 
+            flex: 1,
+            minHeight: '250px'
+          }}>
+            {severityData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={severityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} 
+                    axisLine={{ stroke: 'var(--border-subtle)' }}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--bg-sidebar)', 
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.8rem',
+                      borderRadius: '4px'
+                    }} 
+                    itemStyle={{ color: 'var(--text-primary)' }}
+                    cursor={{ fill: 'var(--bg-card-hover)' }}
+                  />
+                  <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+                    {severityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getSeverityColor(entry.name)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                No incident data available.
+              </div>
+            )}
           </div>
         </div>
       </div>
