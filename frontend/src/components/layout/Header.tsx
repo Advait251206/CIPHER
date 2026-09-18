@@ -20,13 +20,6 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="header">
       <div className="header-left">
         <div>
-          <div className="breadcrumb-trail">
-            <span>CIPHER SOC</span>
-            <span>/</span>
-            <span>Engine Operations</span>
-            <span>/</span>
-            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{title}</span>
-          </div>
           <h1 className="header-title">{title}</h1>
           <div className="header-subtitle">{subtitle}</div>
         </div>
