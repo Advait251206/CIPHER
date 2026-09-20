@@ -37,12 +37,88 @@ class FlowTracker:
 
     def process_packet(self, packet: Any) -> Optional[BidirectionalFlow]:
         """
-        Extracts L3/L4 metadata from a raw/Scapy packet and updates the corresponding flow.
+        Extracts L3/L4 metadata from a raw/Scapy packet or C++ parsed dictionary and updates the corresponding flow.
         Returns the updated flow, or None if packet is not an IP packet or malformed.
         
         Zero payload storage: only lengths, headers, flags, and timing are recorded.
         """
         try:
+            # Handle C++ parsed dictionary
+            if isinstance(packet, dict):
+                src_ip = packet.get("src_ip")
+                dst_ip = packet.get("dst_ip")
+                src_port = packet.get("src_port", 0)
+                dst_port = packet.get("dst_port", 0)
+                protocol_num = packet.get("proto", 0)
+                
+                if protocol_num == 6:
+                    protocol = "TCP"
+                elif protocol_num == 17:
+                    protocol = "UDP"
+                elif protocol_num == 1:
+                    protocol = "ICMP"
+                else:
+                    protocol = str(protocol_num)
+                
+                packet_len = packet.get("pkt_len", 0)
+                header_len = packet.get("hdr_len", 0)
+                payload_len = packet.get("payload_len", 0)
+                window_size = packet.get("win", 0)
+                pkt_time = packet.get("ts", time.time())
+                
+                # Parse TCP flags string (e.g. "SA" -> SYN, ACK)
+                tcp_flags = None
+                if protocol == "TCP":
+                    flags_str = packet.get("flags", "")
+                    tcp_flags = {
+                        "FIN": "F" in flags_str,
+                        "SYN": "S" in flags_str,
+                        "RST": "R" in flags_str,
+                        "PSH": "P" in flags_str,
+                        "ACK": "A" in flags_str,
+                        "URG": "U" in flags_str,
+                        "ECE": "E" in flags_str,
+                    }
+                
+                # Canonical Flow Key
+                key = FlowKey.from_endpoints(src_ip, src_port, dst_ip, dst_port, protocol)
+                
+                with self._lock:
+                    self.total_packets_processed += 1
+                    
+                    if len(self._flows) >= self.config.max_active_flows and key not in self._flows:
+                        self._evict_oldest_under_lock()
+                        
+                    if key not in self._flows:
+                        flow = BidirectionalFlow(
+                            key=key,
+                            initial_src_ip=src_ip,
+                            initial_src_port=src_port,
+                            initial_dst_ip=dst_ip,
+                            initial_dst_port=dst_port,
+                            protocol=protocol,
+                            start_time=pkt_time
+                        )
+                        self._flows[key] = flow
+                        self.total_flows_created += 1
+                    else:
+                        flow = self._flows[key]
+                        
+                    flow.add_packet(
+                        src_ip=src_ip,
+                        src_port=src_port,
+                        dst_ip=dst_ip,
+                        dst_port=dst_port,
+                        packet_len=packet_len,
+                        header_len=header_len,
+                        timestamp=pkt_time,
+                        tcp_flags=tcp_flags,
+                        window_size=window_size,
+                        payload_len=payload_len
+                    )
+                    return flow
+
+            # Handle traditional Scapy packet
             # 1. Check IP layer (IPv4 primary, IPv6 supported if present)
             has_ip = hasattr(packet, "haslayer") and packet.haslayer("IP")
             has_ipv6 = hasattr(packet, "haslayer") and packet.haslayer("IPv6")
@@ -97,7 +173,26 @@ class FlowTracker:
                 }
 
                 if hasattr(tcp_layer, "payload"):
-                    payload_len = len(tcp_layer.payload)
+                    raw_payload = bytes(tcp_layer.payload)
+                    payload_len = len(raw_payload)
+                    if payload_len > 0:
+                        try:
+                            # Basic string extraction for WAF payload inspection
+                            payload_str = raw_payload.decode("utf-8", errors="ignore")
+                            from app.network.live_sensor.waf_engine import waf_engine
+                            attack_type, enforce_mode = waf_engine.inspect_payload(payload_str)
+                            
+                            if attack_type:
+                                logger.warning(f"[WAF] {attack_type} detected from {src_ip}:{src_port}! Mode: {enforce_mode}")
+                                if enforce_mode == "enforce":
+                                    logger.error(f"[IPS] Active TCP RST fired for {attack_type} against {src_ip}")
+                                    # Extract seq and ack for forged RST
+                                    seq = getattr(tcp_layer, "seq", 0)
+                                    ack = getattr(tcp_layer, "ack", 0)
+                                    # In a real inline IPS, we'd inject a forged RST packet here.
+                                    waf_engine.inject_tcp_rst(src_ip, src_port, dst_ip, dst_port, seq, ack)
+                        except Exception as e:
+                            logger.debug(f"[WAF] Payload decode error: {e}")
 
             elif hasattr(packet, "haslayer") and packet.haslayer("UDP"):
                 protocol = "UDP"

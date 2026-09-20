@@ -157,7 +157,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
       <motion.div variants={itemVariants} className="alert-box warning">
         <AlertTriangle size={18} style={{ flexShrink: 0 }} />
         <div>
-          <strong>Npcap & Scapy Live Capture Architecture:</strong> Live packet capture runs in user space through Scapy/Npcap.
+          <strong>Npcap & High-Performance C++ Capture Architecture:</strong> Live packet capture runs in user space through a custom C++ engine leveraging Npcap.
           Depending on the Windows interface and Npcap configuration, packet capture may require elevated privileges.
           <em> Notice: CIPHER strictly extracts 67 flow header statistical features and does not store or inspect raw packet payloads.</em>
         </div>
@@ -219,7 +219,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
             <div className="telemetry-card-value">
               {sensorStatus?.packets_captured?.toLocaleString() ?? 0}
             </div>
-            <div className="telemetry-card-sub">Raw frames parsed via Scapy</div>
+            <div className="telemetry-card-sub">Raw frames parsed via C++ Engine</div>
           </motion.div>
 
           <motion.div whileHover={{ y: -2 }} className="telemetry-card">
@@ -424,7 +424,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
             <div className="alert-box warning" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
               <AlertTriangle size={16} style={{ flexShrink: 0 }} />
               <div>
-                <strong>Operating System Privilege Notice:</strong> Live packet capture runs through Scapy/Npcap.
+                <strong>Operating System Privilege Notice:</strong> Live packet capture runs through the custom C++ Engine and Npcap.
                 Depending on your Windows network configuration, starting packet capture may require elevated permissions.
               </div>
             </div>

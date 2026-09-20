@@ -59,3 +59,12 @@ Thumbs.db
 .gemini/
 scratch/
 backend/data/trusted_domains.json
+
+# C++ Sensor
+.clangd/
+compile_flags.txt
+npcap-sdk/
+backend/cpp_sensor/*.exe
+backend/cpp_sensor/*.obj
+backend/cpp_sensor/*.pdb
+backend/cpp_sensor/*.ilk

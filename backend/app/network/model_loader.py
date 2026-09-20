@@ -63,6 +63,13 @@ class NetworkModelLoader:
 
             # 2. Load Pipeline
             if os.path.exists(self.pipeline_path):
+                import sys
+                from app.network.feature_extractor import NetworkFeaturePipeline
+                
+                # Workaround for unpickling models trained when the class was in __main__
+                if not hasattr(sys.modules['__main__'], 'NetworkFeaturePipeline'):
+                    setattr(sys.modules['__main__'], 'NetworkFeaturePipeline', NetworkFeaturePipeline)
+                    
                 self.pipeline = joblib.load(self.pipeline_path)
 
             # 3. Load Models

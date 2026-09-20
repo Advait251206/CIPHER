@@ -50,6 +50,29 @@ class CorrelationService:
             from app.rules.engine import get_rule_engine
             rule_matches = get_rule_engine().evaluate(raw_event)
             if rule_matches:
+                # Safelist trusted IPs and ports to prevent DOS/DDOS rule false positives
+                is_trusted = False
+                import ipaddress
+                if norm_event.source_ip:
+                    try:
+                        sip = ipaddress.ip_address(norm_event.source_ip)
+                        for subnet in [
+                            ipaddress.ip_network("140.82.0.0/16"),
+                            ipaddress.ip_network("20.0.0.0/8"),
+                            ipaddress.ip_network("192.168.0.0/16"),
+                            ipaddress.ip_network("10.0.0.0/8"),
+                        ]:
+                            if sip in subnet:
+                                is_trusted = True
+                                break
+                    except: pass
+                if norm_event.source_port in [80, 443, 8080, 8443, 53]:
+                    is_trusted = True
+
+                if is_trusted:
+                    rule_matches = [m for m in rule_matches if m.category not in ("DOS", "DDOS")]
+
+            if rule_matches:
                 matched_ids = [m.rule_id for m in rule_matches]
                 if not isinstance(norm_event.metadata, dict):
                     norm_event.metadata = {}

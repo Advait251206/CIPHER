@@ -142,7 +142,8 @@ class NetworkDetector:
         # ---------------------------------------------------------------------
         # Rule 3: Distributed Denial of Service (DDoS) - Uniform Mass Flood
         # ---------------------------------------------------------------------
-        if (flow_pkts_per_s > 25000 or fwd_pkts_per_s > 25000) and pkt_len_var < 5.0 and fwd_pkts > 100:
+        # Prevent false positives on short ACK bursts (like rapid downloads) by requiring at least 1000 packets and 0.5s duration
+        if (flow_pkts_per_s > 25000 or fwd_pkts_per_s > 25000) and pkt_len_var < 5.0 and fwd_pkts > 1000 and duration > 500000:
             score += 70
             reasons.append(
                 f"High-frequency uniform packet stream with near-zero length variance ({pkt_len_var:.2f}), classic botnet/DDoS flooder pattern"

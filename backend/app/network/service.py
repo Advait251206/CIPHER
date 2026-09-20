@@ -63,8 +63,31 @@ class NetworkService:
         )
 
         is_bcast_mcast = False
+        is_trusted_traffic = False
+        import ipaddress
+        
+        # Check source IP for trusted CDNs / Providers to avoid DDoS false positives
+        if request.source_ip:
+            try:
+                sip = ipaddress.ip_address(request.source_ip)
+                trusted_subnets = [
+                    ipaddress.ip_network("140.82.0.0/16"),   # GitHub
+                    ipaddress.ip_network("20.0.0.0/8"),      # Microsoft/Azure
+                    ipaddress.ip_network("192.168.0.0/16"),  # Local Network
+                    ipaddress.ip_network("10.0.0.0/8"),      # Local Network
+                ]
+                for subnet in trusted_subnets:
+                    if sip in subnet:
+                        is_trusted_traffic = True
+                        break
+            except ValueError:
+                pass
+
+        # If it's reply traffic from a web server (source port 80, 443, etc.), it's likely a download, not a DDoS.
+        if request.source_port in [80, 443, 8080, 8443, 53]:
+            is_trusted_traffic = True
+
         if request.destination_ip:
-            import ipaddress
             try:
                 ip = ipaddress.ip_address(request.destination_ip)
                 if ip.is_multicast or (ip.version == 4 and (str(ip) == "255.255.255.255" or ip.exploded.endswith(".255"))):
@@ -73,12 +96,12 @@ class NetworkService:
                 pass
 
         # 3. Determine Attack Type (Synergy between ML and Heuristics)
-        if is_bcast_mcast and (h_category in ["DOS", "DDOS", "PORT_SCAN"] or ml_predicted_category in ["DOS", "DDOS", "PORT_SCAN"]):
+        if (is_bcast_mcast or is_trusted_traffic) and (h_category in ["DOS", "DDOS", "PORT_SCAN"] or ml_predicted_category in ["DOS", "DDOS", "PORT_SCAN"]):
             attack_type = "BENIGN"
             detection_method = "HEURISTIC"
             h_score = 0
             ml_attack_prob = 0.0
-            h_reasons.append("Flow targets broadcast/multicast IP (ignored for DOS/DDOS heuristics & ML)")
+            h_reasons.append("Traffic targets broadcast/multicast or comes from known trusted provider (safelisted for DOS/DDOS)")
         elif h_score >= 50 and h_category:
             attack_type = h_category
             detection_method = "HEURISTIC" if ml_attack_prob < 0.50 else "HYBRID"

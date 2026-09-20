@@ -112,6 +112,10 @@ app.include_router(rules.router, prefix="/api")
 app.include_router(threat_intel.router, prefix="/api")
 app.include_router(extension.router, prefix="/api")
 
+# New WAF router
+from app.api import waf
+app.include_router(waf.router, prefix="/api")
+
 
 @app.get("/", tags=["Root"])
 def root_redirect():

@@ -1,0 +1,5 @@
+CompileFlags:
+  Add:
+    - "-ID:\\Advait251206\\College\\5th Sem\\IDPS\\Project\\npcap-sdk\\Include"
+    - "-DWPCAP"
+    - "-DHAVE_REMOTE"

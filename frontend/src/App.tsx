@@ -160,7 +160,7 @@ export const App: React.FC = () => {
       case 'sensor':
         return {
           title: 'Network IDS (Live Sensor)',
-          subtitle: 'Real-time Scapy flow aggregation into CIC-compatible 67-feature vectors for ML inference',
+          subtitle: 'Real-time flow aggregation into CIC-compatible 67-feature vectors for ML inference',
         };
       case 'health':
         return {

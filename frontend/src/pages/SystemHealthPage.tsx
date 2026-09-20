@@ -78,7 +78,7 @@ const SYSTEM_DETAILS = {
     title: 'Network IDS Subsystem',
     description: 'Dual Random Forest Gate architecture processing packet flows to identify DDoS, Port Scans, and Brute Force attacks.',
     dataset: 'CICIDS2017 Intrusion Detection Evaluation Dataset',
-    framework: 'Scikit-Learn (Random Forest) / Scapy',
+    framework: 'Scikit-Learn (Random Forest) / C++',
     features: [
       'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets',
       'Total Length of Fwd Packets', 'Total Length of Bwd Packets', 'Fwd Packet Length Max',
@@ -121,7 +121,7 @@ const SYSTEM_DETAILS = {
     title: 'Live Packet Sensor',
     description: 'Raw network interface sniffer that captures, filters, and groups packets into flows for the ML models.',
     dataset: 'Live Network Traffic',
-    framework: 'PyShark / Scapy / pcap',
+    framework: 'PyShark / C++ / pcap',
     features: [
       'Promiscuous Mode Interface Binding',
       'BPF (Berkeley Packet Filter) syntax support',

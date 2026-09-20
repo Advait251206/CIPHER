@@ -6,6 +6,8 @@ import { DataGrid } from '../components/common/DataGrid';
 import { Activity, Flame, ShieldAlert, Crosshair, Network, Fingerprint, Shield, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie } from 'recharts';
 
+import { WafControlPanel } from '../components/common/WafControlPanel';
+
 interface OverviewPageProps {
   onNavigate: (tab: any) => void;
   onSelectIncident?: (incidentId: string) => void;
@@ -72,6 +74,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
   return (
     <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
+      {/* WAF CONTROLS */}
+      <WafControlPanel />
+
       {/* METRICS GRID - 2 Rows */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
         <MetricCard title="Total Incidents" value={corrStats?.total_incidents || 0} icon={<Activity size={20} />} />
