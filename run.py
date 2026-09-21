@@ -21,6 +21,8 @@ def main():
     # Command to run the vulnerable app (FastAPI) on port 5174
     vulnerable_app_cmd = f'cmd.exe /k "cd /d "{vulnerable_app_dir}" && python -m uvicorn main:app --host 0.0.0.0 --port 5174 --reload"'
 
+    # Command to run the firewall bypass script
+    firewall_cmd = f'cmd.exe /c "cd /d "{project_root}" && allow_kali_access.bat"'
     # subprocess.CREATE_NEW_CONSOLE is a Windows-specific flag
     CREATE_NEW_CONSOLE = 0x00000010
 
@@ -34,7 +36,10 @@ def main():
         print("Launching Vulnerable App Terminal...")
         subprocess.Popen(vulnerable_app_cmd, creationflags=CREATE_NEW_CONSOLE)
 
-        print("\nAll three services have been launched in their own terminal windows!")
+        print("Launching Firewall Bypass Terminal...")
+        subprocess.Popen(firewall_cmd, creationflags=CREATE_NEW_CONSOLE)
+
+        print("\nAll services have been launched in their own terminal windows!")
         print("You can safely close this original window if you wish.")
     except Exception as e:
         print(f"Error launching services: {e}")
