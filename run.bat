@@ -1,24 +1,53 @@
 @echo off
-echo ==========================================
-echo Starting CIPHER Platform
-echo ==========================================
-echo.
+:: Check for Administrator privileges
+>nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+if '%errorlevel%' NEQ '0' (
+    echo Requesting administrative privileges...
+    goto UACPrompt
+) else ( goto gotAdmin )
 
-set "PROJECT_ROOT=%~dp0"
+:UACPrompt
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /B
 
-echo [1/4] Launching Backend Terminal...
-start "CIPHER Backend" cmd /k "cd /d "%PROJECT_ROOT%backend" && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+:gotAdmin
+    pushd "%CD%"
+    CD /D "%~dp0"
+    
+    echo ==========================================
+    echo Starting CIPHER Platform (Admin Mode)
+    echo ==========================================
+    echo.
+    set "PROJECT_ROOT=%~dp0"
+    
+    echo [1/4] Opening Port 5174 for Kali access...
+    powershell -Command "New-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI' -Direction Inbound -LocalPort 5174 -Protocol TCP -Action Allow"
+    
+    echo [2/4] Launching Backend Terminal...
+    start "CIPHER Backend" cmd /k "cd /d "%PROJECT_ROOT%backend" && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-echo [2/4] Launching Frontend Terminal...
-start "CIPHER Frontend" cmd /k "cd /d "%PROJECT_ROOT%frontend" && npm run dev"
+    echo [3/4] Launching Frontend Terminal...
+    start "CIPHER Frontend" cmd /k "cd /d "%PROJECT_ROOT%frontend" && npm run dev"
 
-echo [3/4] Launching Vulnerable App Terminal...
-start "CIPHER Vulnerable App" cmd /k "cd /d "%PROJECT_ROOT%vulnerable_app" && python -m uvicorn main:app --host 0.0.0.0 --port 5174 --reload"
+    echo [4/4] Launching Vulnerable App Terminal...
+    start "CIPHER Vulnerable App" cmd /k "cd /d "%PROJECT_ROOT%vulnerable_app" && python -m uvicorn main:app --host 0.0.0.0 --port 5174 --reload"
 
-echo [4/4] Launching Firewall Bypass Terminal...
-start "CIPHER Firewall Bypass" cmd /c "cd /d "%PROJECT_ROOT%" && allow_kali_access.bat"
-
-echo.
-echo All services have been launched in their own terminal windows!
-echo You can safely close this window.
-pause
+    echo.
+    echo ---------------------------------------------------
+    echo All services running! Port 5174 is OPEN for Kali.
+    echo.
+    echo IMPORTANT: Keep this original window open while you test.
+    echo When you are done, press any key below to close 
+    echo the firewall port and secure your computer.
+    echo ---------------------------------------------------
+    pause
+    
+    echo.
+    echo Closing Port 5174...
+    powershell -Command "Remove-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI'"
+    echo [SECURED] Firewall port closed successfully.
+    echo Press any key to exit.
+    pause
