@@ -9,6 +9,7 @@ def main():
     project_root = os.path.dirname(os.path.abspath(__file__))
     backend_dir = os.path.join(project_root, "backend")
     frontend_dir = os.path.join(project_root, "frontend")
+    vulnerable_app_dir = os.path.join(project_root, "vulnerable_app")
 
     # Command to run the backend (FastAPI)
     # Using 'cmd.exe /k' keeps the window open even if the command crashes so you can read the error
@@ -16,6 +17,9 @@ def main():
     
     # Command to run the frontend (Vite)
     frontend_cmd = f'cmd.exe /k "cd /d "{frontend_dir}" && npm run dev"'
+
+    # Command to run the vulnerable app (FastAPI) on port 5174
+    vulnerable_app_cmd = f'cmd.exe /k "cd /d "{vulnerable_app_dir}" && python -m uvicorn main:app --host 0.0.0.0 --port 5174 --reload"'
 
     # subprocess.CREATE_NEW_CONSOLE is a Windows-specific flag
     CREATE_NEW_CONSOLE = 0x00000010
@@ -27,7 +31,10 @@ def main():
         print("Launching Frontend Terminal...")
         subprocess.Popen(frontend_cmd, creationflags=CREATE_NEW_CONSOLE)
 
-        print("\nBoth services have been launched in their own terminal windows!")
+        print("Launching Vulnerable App Terminal...")
+        subprocess.Popen(vulnerable_app_cmd, creationflags=CREATE_NEW_CONSOLE)
+
+        print("\nAll three services have been launched in their own terminal windows!")
         print("You can safely close this original window if you wish.")
     except Exception as e:
         print(f"Error launching services: {e}")
