@@ -16,6 +16,21 @@ struct eth_header {
     u_short ether_type;
 };
 
+// ARP header
+#pragma pack(push, 1)
+struct arp_header {
+    u_short hw_type;
+    u_short proto_type;
+    u_char hw_len;
+    u_char proto_len;
+    u_short opcode;
+    u_char sender_mac[6];
+    u_char sender_ip[4];
+    u_char target_mac[6];
+    u_char target_ip[4];
+};
+#pragma pack(pop)
+
 // IPv4 header
 struct ip_header {
     u_char  ver_ihl;        // Version (4 bits) + Internet header length (4 bits)
@@ -119,10 +134,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Compile filter for IP traffic
+    // Compile filter for IP and ARP traffic
     u_int netmask = 0xffffff;
     struct bpf_program fcode;
-    if (pcap_compile(adhandle, &fcode, (char *)"ip", 1, netmask) >= 0) {
+    if (pcap_compile(adhandle, &fcode, (char *)"ip or arp", 1, netmask) >= 0) {
         pcap_setfilter(adhandle, &fcode);
     }
 
@@ -138,65 +153,94 @@ int main(int argc, char **argv) {
 
 void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data) {
     struct eth_header *eh = (struct eth_header *)pkt_data;
-    if (ntohs(eh->ether_type) != 0x0800) return; // Only IPv4
+    u_short ether_type = ntohs(eh->ether_type);
 
-    struct ip_header *ih = (struct ip_header *)(pkt_data + 14); // Ethernet header is 14 bytes
-    int ip_len = (ih->ver_ihl & 0xf) * 4;
-    
-    std::string src_ip = inet_ntoa(ih->saddr);
-    std::string dst_ip = inet_ntoa(ih->daddr);
-    
-    int src_port = 0, dst_port = 0;
-    int hdr_len = 14 + ip_len;
-    int payload_len = 0;
-    int win = 0;
-    std::string flags = "";
-    
-    if (ih->proto == IPPROTO_TCP) {
-        struct tcp_header *th = (struct tcp_header *)((u_char*)ih + ip_len);
-        src_port = ntohs(th->sport);
-        dst_port = ntohs(th->dport);
+    if (ether_type == 0x0806) {
+        // Handle ARP
+        if (header->len < 14 + sizeof(struct arp_header)) return;
+        struct arp_header *ah = (struct arp_header *)(pkt_data + 14);
         
-        int tcp_hlen = ((th->data_res >> 4) & 0x0F) * 4;
-        hdr_len += tcp_hlen;
-        payload_len = ntohs(ih->tlen) - ip_len - tcp_hlen;
-        win = ntohs(th->win);
+        char smac[18], dmac[18];
+        snprintf(smac, sizeof(smac), "%02x:%02x:%02x:%02x:%02x:%02x", ah->sender_mac[0], ah->sender_mac[1], ah->sender_mac[2], ah->sender_mac[3], ah->sender_mac[4], ah->sender_mac[5]);
+        snprintf(dmac, sizeof(dmac), "%02x:%02x:%02x:%02x:%02x:%02x", ah->target_mac[0], ah->target_mac[1], ah->target_mac[2], ah->target_mac[3], ah->target_mac[4], ah->target_mac[5]);
         
-        // Extract flags
-        if (th->flags & 0x01) flags += "F";
-        if (th->flags & 0x02) flags += "S";
-        if (th->flags & 0x04) flags += "R";
-        if (th->flags & 0x08) flags += "P";
-        if (th->flags & 0x10) flags += "A";
-        if (th->flags & 0x20) flags += "U";
-        if (th->flags & 0x40) flags += "E";
-        if (th->flags & 0x80) flags += "C";
-    } else if (ih->proto == IPPROTO_UDP) {
-        struct udp_header *uh = (struct udp_header *)((u_char*)ih + ip_len);
-        src_port = ntohs(uh->sport);
-        dst_port = ntohs(uh->dport);
-        hdr_len += 8;
-        payload_len = ntohs(ih->tlen) - ip_len - 8;
-    } else {
-        return; // Ignore non-TCP/UDP for IDS
+        std::string src_ip = std::to_string(ah->sender_ip[0]) + "." + std::to_string(ah->sender_ip[1]) + "." + std::to_string(ah->sender_ip[2]) + "." + std::to_string(ah->sender_ip[3]);
+        std::string dst_ip = std::to_string(ah->target_ip[0]) + "." + std::to_string(ah->target_ip[1]) + "." + std::to_string(ah->target_ip[2]) + "." + std::to_string(ah->target_ip[3]);
+        
+        double timestamp = header->ts.tv_sec + (header->ts.tv_usec / 1000000.0);
+        
+        std::cout << "{\"type\":\"arp\",\"opcode\":" << ntohs(ah->opcode) 
+                  << ",\"src_mac\":\"" << smac << "\",\"dst_mac\":\"" << dmac 
+                  << "\",\"src_ip\":\"" << src_ip << "\",\"dst_ip\":\"" << dst_ip 
+                  << "\",\"ts\":" << std::fixed << std::setprecision(6) << timestamp 
+                  << "}\n";
+        return;
+    } 
+    else if (ether_type == 0x0800) {
+        // Handle IPv4
+        struct ip_header *ih = (struct ip_header *)(pkt_data + 14); // Ethernet header is 14 bytes
+        int ip_len = (ih->ver_ihl & 0xf) * 4;
+        
+        std::string src_ip = inet_ntoa(ih->saddr);
+        std::string dst_ip = inet_ntoa(ih->daddr);
+        
+        int src_port = 0, dst_port = 0;
+        int hdr_len = 14 + ip_len;
+        int payload_len = 0;
+        int win = 0;
+        std::string flags = "";
+        
+        if (ih->proto == IPPROTO_TCP) {
+            struct tcp_header *th = (struct tcp_header *)((u_char*)ih + ip_len);
+            src_port = ntohs(th->sport);
+            dst_port = ntohs(th->dport);
+            
+            int tcp_hlen = ((th->data_res >> 4) & 0x0F) * 4;
+            hdr_len += tcp_hlen;
+            payload_len = ntohs(ih->tlen) - ip_len - tcp_hlen;
+            win = ntohs(th->win);
+            
+            // Extract flags
+            if (th->flags & 0x01) flags += "F";
+            if (th->flags & 0x02) flags += "S";
+            if (th->flags & 0x04) flags += "R";
+            if (th->flags & 0x08) flags += "P";
+            if (th->flags & 0x10) flags += "A";
+            if (th->flags & 0x20) flags += "U";
+            if (th->flags & 0x40) flags += "E";
+            if (th->flags & 0x80) flags += "C";
+        } else if (ih->proto == IPPROTO_UDP) {
+            struct udp_header *uh = (struct udp_header *)((u_char*)ih + ip_len);
+            src_port = ntohs(uh->sport);
+            dst_port = ntohs(uh->dport);
+            hdr_len += 8;
+            payload_len = ntohs(ih->tlen) - ip_len - 8;
+        } else if (ih->proto == IPPROTO_ICMP) {
+            src_port = 0;
+            dst_port = 0;
+            hdr_len += 8; // ICMP base header
+            payload_len = ntohs(ih->tlen) - ip_len - 8;
+        } else {
+            return; // Ignore non-TCP/UDP/ICMP for IDS
+        }
+        
+        // Prevent negative payload
+        if (payload_len < 0) payload_len = 0;
+        
+        double timestamp = header->ts.tv_sec + (header->ts.tv_usec / 1000000.0);
+        
+        // Fast JSON serialization to stdout
+        std::cout << "{\"type\":\"ipv4\",\"src_ip\":\"" << src_ip << "\","
+                  << "\"dst_ip\":\"" << dst_ip << "\","
+                  << "\"src_port\":" << src_port << ","
+                  << "\"dst_port\":" << dst_port << ","
+                  << "\"proto\":" << (int)ih->proto << ","
+                  << "\"pkt_len\":" << header->len << ","
+                  << "\"hdr_len\":" << hdr_len << ","
+                  << "\"payload_len\":" << payload_len << ","
+                  << "\"win\":" << win << ","
+                  << "\"flags\":\"" << flags << "\","
+                  << "\"ts\":" << std::fixed << std::setprecision(6) << timestamp
+                  << "}\n";
     }
-    
-    // Prevent negative payload
-    if (payload_len < 0) payload_len = 0;
-    
-    double timestamp = header->ts.tv_sec + (header->ts.tv_usec / 1000000.0);
-    
-    // Fast JSON serialization to stdout
-    std::cout << "{\"src_ip\":\"" << src_ip << "\","
-              << "\"dst_ip\":\"" << dst_ip << "\","
-              << "\"src_port\":" << src_port << ","
-              << "\"dst_port\":" << dst_port << ","
-              << "\"proto\":" << (int)ih->proto << ","
-              << "\"pkt_len\":" << header->len << ","
-              << "\"hdr_len\":" << hdr_len << ","
-              << "\"payload_len\":" << payload_len << ","
-              << "\"win\":" << win << ","
-              << "\"flags\":\"" << flags << "\","
-              << "\"ts\":" << std::fixed << std::setprecision(6) << timestamp
-              << "}\n";
 }

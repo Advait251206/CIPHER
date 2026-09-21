@@ -157,9 +157,11 @@ class PacketCapture:
         self,
         on_packet: Callable[[Any], None],
         interface: Optional[str] = None,
-        bpf_filter: Optional[str] = None
+        bpf_filter: Optional[str] = None,
+        on_arp: Optional[Callable[[Any], None]] = None
     ):
         self.on_packet = on_packet
+        self.on_arp = on_arp
         self.interface_name = interface
         self.bpf_filter = bpf_filter
 
@@ -258,7 +260,11 @@ class PacketCapture:
         """Non-blocking internal wrapper tracking packet count and handling exceptions."""
         try:
             self.packets_captured += 1
-            self.on_packet(pkt)
+            if pkt.get("type") == "arp":
+                if self.on_arp:
+                    self.on_arp(pkt)
+            else:
+                self.on_packet(pkt)
         except Exception as e:
             self.errors += 1
             logger.debug(f"[PACKET_CAPTURE] Packet processing callback error: {e}")

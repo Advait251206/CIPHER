@@ -22,6 +22,8 @@ from app.network.live_sensor.packet_capture import (
 from app.network.live_sensor.feature_builder import LiveFeatureBuilder
 from app.network.service import NetworkService
 from app.network.schemas import NetworkFlowAnalyzeRequest
+from app.network.live_sensor.arp_engine import ARPEngine
+from app.correlation.service import CorrelationService
 
 logger = logging.getLogger("cipher.network.live_sensor")
 
@@ -45,6 +47,9 @@ class LiveSensorService:
         self._worker_thread: Optional[threading.Thread] = None
         self._running = False
         self._lock = threading.RLock()
+        
+        self.correlation_service = CorrelationService()
+        self.arp_engine = ARPEngine(self.correlation_service)
 
         # Telemetry counters
         self.interface: Optional[str] = None
@@ -136,7 +141,8 @@ class LiveSensorService:
             self._packet_capture = PacketCapture(
                 on_packet=self.flow_tracker.process_packet,
                 interface=interface,
-                bpf_filter=bpf_filter
+                bpf_filter=bpf_filter,
+                on_arp=self.arp_engine.process_arp
             )
 
             # Start capture engine
