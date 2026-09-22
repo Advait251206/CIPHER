@@ -70,9 +70,15 @@ def home():
             </div>
 
             <!-- Right Side: Forms -->
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col">
+                <!-- Toggle Tabs -->
+                <div class="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800 w-full mb-6 shadow-lg">
+                    <button id="tab-login" type="button" onclick="showForm('login')" class="flex-1 py-2 text-sm font-medium rounded-md bg-zinc-800 text-white shadow-sm transition-all focus:outline-none">Sign In</button>
+                    <button id="tab-signup" type="button" onclick="showForm('signup')" class="flex-1 py-2 text-sm font-medium rounded-md text-zinc-400 hover:text-white transition-all focus:outline-none">Create Account</button>
+                </div>
+
                 <!-- Login Card -->
-                <div class="bg-card border border-border rounded-xl p-6 shadow-xl">
+                <div id="form-login" class="bg-card border border-border rounded-xl p-6 shadow-xl block">
                     <h2 class="text-xl font-semibold mb-1">Sign In</h2>
                     <p class="text-zinc-400 text-sm mb-5">Enter your credentials to access the dashboard.</p>
                     <form action="/login" method="post" class="space-y-4">
@@ -89,7 +95,7 @@ def home():
                 </div>
 
                 <!-- Signup Card -->
-                <div class="bg-card border border-border rounded-xl p-6 shadow-xl">
+                <div id="form-signup" class="bg-card border border-border rounded-xl p-6 shadow-xl hidden">
                     <h2 class="text-xl font-semibold mb-1">Create Account</h2>
                     <p class="text-zinc-400 text-sm mb-5">Register a new user profile in the database.</p>
                     <form action="/signup" method="post" class="space-y-4">
@@ -116,6 +122,39 @@ def home():
                 </div>
             </div>
         </div>
+        
+        <script>
+            function showForm(type) {
+                const loginForm = document.getElementById('form-login');
+                const signupForm = document.getElementById('form-signup');
+                const loginTab = document.getElementById('tab-login');
+                const signupTab = document.getElementById('tab-signup');
+                
+                if (type === 'login') {
+                    loginForm.classList.remove('hidden');
+                    loginForm.classList.add('block');
+                    signupForm.classList.remove('block');
+                    signupForm.classList.add('hidden');
+                    
+                    loginTab.classList.add('bg-zinc-800', 'text-white', 'shadow-sm');
+                    loginTab.classList.remove('text-zinc-400');
+                    
+                    signupTab.classList.remove('bg-zinc-800', 'text-white', 'shadow-sm');
+                    signupTab.classList.add('text-zinc-400');
+                } else {
+                    signupForm.classList.remove('hidden');
+                    signupForm.classList.add('block');
+                    loginForm.classList.remove('block');
+                    loginForm.classList.add('hidden');
+                    
+                    signupTab.classList.add('bg-zinc-800', 'text-white', 'shadow-sm');
+                    signupTab.classList.remove('text-zinc-400');
+                    
+                    loginTab.classList.remove('bg-zinc-800', 'text-white', 'shadow-sm');
+                    loginTab.classList.add('text-zinc-400');
+                }
+            }
+        </script>
     </body>
     </html>
     """
