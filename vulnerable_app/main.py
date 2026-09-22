@@ -38,11 +38,11 @@ def home():
                 theme: {
                     extend: {
                         colors: {
-                            background: '#09090b',
-                            card: '#18181b',
-                            border: '#27272a',
-                            primary: '#3b82f6',
-                            primaryHover: '#2563eb'
+                            background: '#000000',
+                            card: '#0a0a0a',
+                            border: '#333333',
+                            primary: '#d4af37',
+                            primaryHover: '#b5952f'
                         }
                     }
                 }
@@ -176,9 +176,9 @@ def signup(username: str = Form(...), password: str = Form(...), full_name: str 
     except Exception as e:
         # VULNERABILITY 2: Error-based SQLi (Leaking database structure)
         return f"""
-        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script></head>
-        <body class="bg-[#09090b] text-zinc-100 min-h-screen flex items-center justify-center p-6">
-            <div class="max-w-2xl w-full bg-[#18181b] border border-red-500/30 rounded-xl p-6 shadow-xl">
+        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={{darkMode:'class',theme:{{extend:{{colors:{{background:'#000000',card:'#0a0a0a',border:'#333333',primary:'#d4af37',primaryHover:'#b5952f'}}}}}}}}</script></head>
+        <body class="bg-background text-zinc-100 min-h-screen flex items-center justify-center p-6">
+            <div class="max-w-2xl w-full bg-card border border-red-500/30 rounded-xl p-6 shadow-xl">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-2 bg-red-500/10 text-red-500 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
                     <h3 class="text-xl font-bold text-red-500">Database Error (SQLi)</h3>
@@ -196,15 +196,15 @@ def signup(username: str = Form(...), password: str = Form(...), full_name: str 
         conn.close()
         
     return f"""
-    <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script></head>
-    <body class="bg-[#09090b] text-zinc-100 min-h-screen flex items-center justify-center p-6">
-        <div class="max-w-md w-full bg-[#18181b] border border-green-500/30 rounded-xl p-8 shadow-xl text-center">
+    <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={{darkMode:'class',theme:{{extend:{{colors:{{background:'#000000',card:'#0a0a0a',border:'#333333',primary:'#d4af37',primaryHover:'#b5952f'}}}}}}}}</script></head>
+    <body class="bg-background text-zinc-100 min-h-screen flex items-center justify-center p-6">
+        <div class="max-w-md w-full bg-card border border-green-500/30 rounded-xl p-8 shadow-xl text-center">
             <div class="mx-auto w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-6">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             </div>
             <h3 class="text-2xl font-bold mb-2">Registration Successful</h3>
             <p class="text-zinc-400 mb-8">Your account has been created in the database.</p>
-            <a href="/" class="block w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-colors text-sm">Return to Login</a>
+            <a href="/" class="block w-full bg-primary hover:bg-primaryHover text-white font-medium py-2.5 rounded-lg transition-colors text-sm">Return to Login</a>
         </div>
     </body></html>
     """
@@ -223,9 +223,9 @@ def login(username: str = Form(...), password: str = Form(...)):
         user = c.fetchone()
     except Exception as e:
         return f"""
-        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script></head>
-        <body class="bg-[#09090b] text-zinc-100 min-h-screen flex items-center justify-center p-6">
-            <div class="max-w-2xl w-full bg-[#18181b] border border-red-500/30 rounded-xl p-6 shadow-xl">
+        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={{darkMode:'class',theme:{{extend:{{colors:{{background:'#000000',card:'#0a0a0a',border:'#333333',primary:'#d4af37',primaryHover:'#b5952f'}}}}}}}}</script></head>
+        <body class="bg-background text-zinc-100 min-h-screen flex items-center justify-center p-6">
+            <div class="max-w-2xl w-full bg-card border border-red-500/30 rounded-xl p-6 shadow-xl">
                 <div class="flex items-center gap-3 mb-4">
                     <div class="p-2 bg-red-500/10 text-red-500 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
                     <h3 class="text-xl font-bold text-red-500">Database Error (SQLi)</h3>
@@ -251,20 +251,20 @@ def login(username: str = Form(...), password: str = Form(...)):
         # Rendering user input directly into HTML without escaping.
         # If full_name was set to `<script>alert('XSS')</script>` during signup, it executes here.
         html = f"""
-        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script></head>
-        <body class="bg-[#09090b] text-zinc-100 min-h-screen p-8">
+        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={{darkMode:'class',theme:{{extend:{{colors:{{background:'#000000',card:'#0a0a0a',border:'#333333',primary:'#d4af37',primaryHover:'#b5952f'}}}}}}}}</script></head>
+        <body class="bg-background text-zinc-100 min-h-screen p-8">
             <div class="max-w-4xl mx-auto">
-                <header class="flex items-center justify-between mb-8 pb-6 border-b border-zinc-800">
+                <header class="flex items-center justify-between mb-8 pb-6 border-b border-border">
                     <div class="flex items-center gap-3">
-                        <div class="p-1.5 bg-green-500/10 text-green-500 rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                        <div class="p-1.5 bg-primary/10 text-primary rounded-lg"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
                         <h2 class="text-2xl font-bold tracking-tight">User Dashboard</h2>
                     </div>
                     <a href="/" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-md text-sm font-medium transition-colors">Logout</a>
                 </header>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="md:col-span-1">
-                        <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 shadow-lg">
-                            <div class="w-20 h-20 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center text-3xl font-bold mb-4 mx-auto">
+                        <div class="bg-card border border-border rounded-xl p-6 shadow-lg">
+                            <div class="w-20 h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-4 mx-auto">
                                 {(full_name[0].upper() if len(full_name) > 0 else '?') if full_name else '?'}
                             </div>
                             <div class="text-center">
@@ -274,7 +274,7 @@ def login(username: str = Form(...), password: str = Form(...)):
                         </div>
                     </div>
                     <div class="md:col-span-2">
-                        <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 shadow-lg h-full">
+                        <div class="bg-card border border-border rounded-xl p-6 shadow-lg h-full">
                             <h3 class="text-lg font-medium mb-4 text-zinc-200">Recent Activity</h3>
                             <div class="space-y-4">
                                 <div class="flex gap-4 items-start">
@@ -302,9 +302,9 @@ def login(username: str = Form(...), password: str = Form(...)):
     else:
         # VULNERABILITY 5: No Rate Limiting (Allows Brute Force)
         return f"""
-        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script></head>
-        <body class="bg-[#09090b] text-zinc-100 min-h-screen flex items-center justify-center p-6">
-            <div class="max-w-md w-full bg-[#18181b] border border-red-500/30 rounded-xl p-8 shadow-xl text-center">
+        <!DOCTYPE html><html lang="en" class="dark"><head><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={{darkMode:'class',theme:{{extend:{{colors:{{background:'#000000',card:'#0a0a0a',border:'#333333',primary:'#d4af37',primaryHover:'#b5952f'}}}}}}}}</script></head>
+        <body class="bg-background text-zinc-100 min-h-screen flex items-center justify-center p-6">
+            <div class="max-w-md w-full bg-card border border-red-500/30 rounded-xl p-8 shadow-xl text-center">
                 <div class="mx-auto w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-6">
                     <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
