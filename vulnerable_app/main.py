@@ -117,7 +117,7 @@ def home():
                             <label class="text-sm font-medium text-zinc-300">Email Address</label>
                             <input type="text" name="email" class="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors">
                         </div>
-                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-2 rounded-md transition-colors text-sm border border-zinc-700 mt-2">Register</button>
+                        <button type="submit" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 rounded-md transition-colors text-sm mt-2">Register</button>
                     </form>
                 </div>
             </div>
