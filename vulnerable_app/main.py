@@ -61,9 +61,7 @@ def home():
                     Live Target Environment
                 </div>
                 <h1 class="text-4xl font-bold tracking-tight mb-4">Vulnerable App</h1>
-                <p class="text-zinc-400 leading-relaxed mb-6">
-                    This application is intentionally vulnerable to <span class="text-zinc-200 font-semibold">SQL Injection (SQLi)</span>, <span class="text-zinc-200 font-semibold">Cross-Site Scripting (XSS)</span>, and <span class="text-zinc-200 font-semibold">Brute Force attacks</span>. 
-                </p>
+
                 <p class="text-zinc-500 text-sm">
                     Use this environment to safely trigger and analyze alerts in the CIPHER SOC Dashboard.
                 </p>
