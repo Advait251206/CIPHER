@@ -618,6 +618,21 @@ class Database:
 
             return res
 
+    def delete_incidents(self, incident_ids: List[str]) -> bool:
+        """Deletes multiple incidents and their associated records."""
+        if not incident_ids:
+            return False
+            
+        placeholders = ",".join("?" * len(incident_ids))
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(f"DELETE FROM incident_events WHERE incident_id IN ({placeholders})", incident_ids)
+            cursor.execute(f"DELETE FROM incidents WHERE incident_id IN ({placeholders})", incident_ids)
+            conn.commit()
+            return True
+
+            return res
+
     def list_incidents(
         self,
         limit: int = 50,

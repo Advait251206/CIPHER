@@ -239,6 +239,19 @@ def unblock_ip(ip: str):
     return {"status": "unblocked", "ip": ip}
 
 
+@router.post("/blocklist/{ip}", summary="Block an IP")
+def block_ip(ip: str):
+    """Manually adds an IP to the active blocklist."""
+    network_service.prevention_engine.blocklist.block_ip(
+        ip=ip,
+        reason="Manually blocked by SOC analyst via Dashboard.",
+        attack_type="MANUAL_BLOCK",
+        threat_score=100,
+        duration_minutes=60
+    )
+    return {"status": "blocked", "ip": ip}
+
+
 @router.get("/interfaces", response_model=NetworkInterfacesResponse, summary="List Available Network Interfaces")
 def list_network_interfaces():
     """Returns local network interfaces available for packet capture."""

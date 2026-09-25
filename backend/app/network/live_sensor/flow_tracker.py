@@ -45,8 +45,13 @@ class FlowTracker:
         try:
             # Handle C++ parsed dictionary
             if isinstance(packet, dict):
-                src_ip = packet.get("src_ip")
-                dst_ip = packet.get("dst_ip")
+                src_ip = packet.get("src_ip", "")
+                dst_ip = packet.get("dst_ip", "")
+                
+                # Ignore IPv6 traffic to prevent false positive noise
+                if ":" in str(src_ip) or ":" in str(dst_ip):
+                    return None
+                    
                 src_port = packet.get("src_port", 0)
                 dst_port = packet.get("dst_port", 0)
                 protocol_num = packet.get("proto", 0)
@@ -119,25 +124,18 @@ class FlowTracker:
                     return flow
 
             # Handle traditional Scapy packet
-            # 1. Check IP layer (IPv4 primary, IPv6 supported if present)
+            # 1. Check IP layer (IPv4 primary, IPv6 ignored to prevent false positives)
             has_ip = hasattr(packet, "haslayer") and packet.haslayer("IP")
-            has_ipv6 = hasattr(packet, "haslayer") and packet.haslayer("IPv6")
 
-            if not (has_ip or has_ipv6):
+            if not has_ip:
                 return None
 
-            if has_ip:
-                ip_layer = packet["IP"]
-                src_ip = ip_layer.src
-                dst_ip = ip_layer.dst
-                raw_ihl = getattr(ip_layer, "ihl", 5)
-                ihl = raw_ihl if raw_ihl is not None else 5
-                ip_header_len = int(ihl) * 4
-            else:
-                ip_layer = packet["IPv6"]
-                src_ip = ip_layer.src
-                dst_ip = ip_layer.dst
-                ip_header_len = 40
+            ip_layer = packet["IP"]
+            src_ip = ip_layer.src
+            dst_ip = ip_layer.dst
+            raw_ihl = getattr(ip_layer, "ihl", 5)
+            ihl = raw_ihl if raw_ihl is not None else 5
+            ip_header_len = int(ihl) * 4
 
             # 2. Check Transport Layer (TCP, UDP, or ICMP)
             protocol = "OTHER"
@@ -153,13 +151,13 @@ class FlowTracker:
                 tcp_layer = packet["TCP"]
                 src_port = int(tcp_layer.sport)
                 dst_port = int(tcp_layer.dport)
+                
                 raw_dataofs = getattr(tcp_layer, "dataofs", 5)
                 dataofs = raw_dataofs if raw_dataofs is not None else 5
                 tcp_header_len = int(dataofs) * 4
                 header_len += tcp_header_len
                 raw_win = getattr(tcp_layer, "window", 0)
                 window_size = int(raw_win) if raw_win is not None else 0
-
                 # Bitmask flag extraction: FIN(0x01), SYN(0x02), RST(0x04), PSH(0x08), ACK(0x10), URG(0x20), ECE(0x40)
                 raw_flags = int(tcp_layer.flags)
                 tcp_flags = {
@@ -175,7 +173,10 @@ class FlowTracker:
                 if hasattr(tcp_layer, "payload"):
                     raw_payload = bytes(tcp_layer.payload)
                     payload_len = len(raw_payload)
-                    if payload_len > 0:
+                    
+                    # RESTRICT WAF to INCOMING requests to the Vulnerable App (5174) or Backend (8000).
+                    # Do not inspect responses (src_port) to avoid false positives on CSS/JS files.
+                    if payload_len > 0 and dst_port in [5174, 8000]:
                         try:
                             # Basic string extraction for WAF payload inspection
                             payload_str = raw_payload.decode("utf-8", errors="ignore")
@@ -184,6 +185,55 @@ class FlowTracker:
                             
                             if attack_type:
                                 logger.warning(f"[WAF] {attack_type} detected from {src_ip}:{src_port}! Mode: {enforce_mode}")
+                                
+                                # Log the WAF detection as an incident in the database
+                                try:
+                                    import uuid
+                                    from datetime import datetime, timezone
+                                    from app.database.database import Database
+                                    from app.correlation.service import get_correlation_service
+                                    
+                                    event_id = str(uuid.uuid4())
+                                    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                                    
+                                    event_record = {
+                                        "event_id": event_id,
+                                        "timestamp": timestamp,
+                                        "event_type": "WEB_ATTACK",
+                                        "attack_type": attack_type,
+                                        "classification": "Web Application Attack",
+                                        "risk_score": 85,
+                                        "confidence": "HIGH",
+                                        "severity": "HIGH",
+                                        "ml_score": 0.0,
+                                        "heuristic_score": 100,
+                                        "domain": src_ip,
+                                        "source_ip": src_ip,
+                                        "destination_ip": dst_ip,
+                                        "source_port": src_port,
+                                        "destination_port": dst_port,
+                                        "protocol": "TCP",
+                                        "detection_method": "WAF_SIGNATURE",
+                                        "reasons": [f"WAF signature matched for {attack_type}"],
+                                        "recommendation": f"WAF Engine triggered on malicious HTTP payload. Connection was {'blocked' if enforce_mode == 'enforce' else 'monitored'}.",
+                                        "action": "BLOCK" if enforce_mode == "enforce" else "LOG",
+                                        "status": "BLOCKED" if enforce_mode == "enforce" else "NEW",
+                                        "model_version": "waf_v1",
+                                        "source": "live_sensor",
+                                        "metadata": {
+                                            "prevention_mode": enforce_mode,
+                                            "applied_action": "BLOCK" if enforce_mode == "enforce" else "LOG"
+                                        }
+                                    }
+                                    
+                                    Database().save_event(event_record)
+                                    try:
+                                        get_correlation_service().process_event(event_record)
+                                    except Exception as corr_err:
+                                        logger.warning(f"Correlation failed for WAF event {event_id}: {corr_err}")
+                                except Exception as log_e:
+                                    logger.error(f"[WAF] Failed to log incident to DB: {log_e}")
+
                                 if enforce_mode == "enforce":
                                     logger.error(f"[IPS] Active TCP RST fired for {attack_type} against {src_ip}")
                                     # Extract seq and ack for forged RST
@@ -191,6 +241,20 @@ class FlowTracker:
                                     ack = getattr(tcp_layer, "ack", 0)
                                     # In a real inline IPS, we'd inject a forged RST packet here.
                                     waf_engine.inject_tcp_rst(src_ip, src_port, dst_ip, dst_port, seq, ack)
+                                    
+                                    # Automatically block the IP at the network level
+                                    try:
+                                        from app.network.service import NetworkService
+                                        NetworkService().prevention_engine.blocklist.block_ip(
+                                            ip=src_ip,
+                                            reason=f"WAF Engine Auto-Blocked: {attack_type}",
+                                            attack_type=attack_type,
+                                            threat_score=100,
+                                            duration_minutes=1440
+                                        )
+                                        logger.info(f"[IPS] Source IP {src_ip} automatically added to Blocklist.")
+                                    except Exception as block_e:
+                                        logger.error(f"[IPS] Auto-block failed: {block_e}")
                         except Exception as e:
                             logger.debug(f"[WAF] Payload decode error: {e}")
 

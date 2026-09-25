@@ -8,7 +8,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Modal } from '../components/common/Modal';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye, FileText, Printer } from 'lucide-react';
+import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye, FileText, Printer, Trash2, Square, CheckSquare } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -45,6 +45,11 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [severityFilter, setSeverityFilter] = useState<string>('');
   const [sourceIpFilter, setSourceIpFilter] = useState<string>('');
+
+  // Selection & Deletion
+  const [selectedIncidentIds, setSelectedIncidentIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Detail Modal
   const [selectedIncident, setSelectedIncident] = useState<IncidentDetailResponse | null>(null);
@@ -600,6 +605,8 @@ END OF REPORT
   const [isResolving, setIsResolving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [isAddingSig, setIsAddingSig] = useState(false);
 
   const fetchIncidents = async () => {
     try {
@@ -666,6 +673,79 @@ END OF REPORT
       setActionError(err.message || 'Failed to resolve incident on server.');
     } finally {
       setIsResolving(false);
+    }
+  };
+
+  const handleBlockSourceIp = async () => {
+    if (!selectedIncident?.incident.source_ip) return;
+    try {
+      setIsBlocking(true);
+      setActionError(null);
+      await api.network.blockIp(selectedIncident.incident.source_ip);
+      setActionSuccess(`Source IP ${selectedIncident.incident.source_ip} successfully blocked at network level.`);
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to block IP.');
+    } finally {
+      setIsBlocking(false);
+    }
+  };
+
+  const handleAddWafSignature = async () => {
+    try {
+      setIsAddingSig(true);
+      setActionError(null);
+      await api.threatIntel.create({
+        ioc_type: 'IP',
+        indicator: selectedIncident?.incident.source_ip || 'UNKNOWN',
+        category: 'WAF_SIGNATURE',
+        description: 'Auto-extracted WAF block signature from incident.',
+        severity: 'CRITICAL',
+        confidence: 100
+      });
+      setActionSuccess(`Payload signature extracted and pushed to WAF Enforce mode! This attack will never work again from ANY IP.`);
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to push WAF signature.');
+    } finally {
+      setIsAddingSig(false);
+    }
+  };
+
+  const toggleSelection = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // prevent row click
+    const newSelection = new Set(selectedIncidentIds);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedIncidentIds(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIncidentIds.size === incidents.length && incidents.length > 0) {
+      setSelectedIncidentIds(new Set());
+    } else {
+      setSelectedIncidentIds(new Set(incidents.map((i) => i.incident_id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIncidentIds.size === 0) return;
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    try {
+      setIsDeleting(true);
+      await api.incidents.delete(Array.from(selectedIncidentIds));
+      setSelectedIncidentIds(new Set());
+      await fetchIncidents();
+      setActionSuccess(`Successfully deleted selected incident(s).`);
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to delete incidents.');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -738,6 +818,48 @@ END OF REPORT
           <button className="control-btn primary" onClick={fetchIncidents}>
             Filter
           </button>
+
+          {incidents.length > 0 && (
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="control-btn"
+                onClick={toggleSelectAll}
+                style={{
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  background: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-main)'
+                }}
+              >
+                {selectedIncidentIds.size === incidents.length ? (
+                  <><CheckSquare size={16} color="var(--accent-gold)" /> Deselect All</>
+                ) : (
+                  <><Square size={16} color="var(--text-muted)" /> Select All</>
+                )}
+              </button>
+
+              {selectedIncidentIds.size > 0 && (
+                <button 
+                  className="control-btn" 
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem',
+                    background: 'var(--crit-bg)',
+                    color: 'var(--crit-color)',
+                    border: '1px solid var(--crit-border)'
+                  }}
+                >
+                  <Trash2 size={16} />
+                  {isDeleting ? 'Deleting...' : `Delete Selected (${selectedIncidentIds.size})`}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -790,6 +912,18 @@ END OF REPORT
             <table className="data-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <div
+                      onClick={toggleSelectAll}
+                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {selectedIncidentIds.size === incidents.length && incidents.length > 0 ? (
+                        <CheckSquare size={16} color="var(--accent-gold)" />
+                      ) : (
+                        <Square size={16} color="var(--text-muted)" />
+                      )}
+                    </div>
+                  </th>
                   <th>Status</th>
                   <th>Severity</th>
                   <th>Incident ID</th>
@@ -808,7 +942,15 @@ END OF REPORT
                     key={inc.incident_id}
                     className="clickable-row"
                     onClick={() => handleOpenDetail(inc.incident_id)}
+                    style={{ background: selectedIncidentIds.has(inc.incident_id) ? 'var(--bg-surface-elevated)' : '' }}
                   >
+                    <td onClick={(e) => toggleSelection(e, inc.incident_id)} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                      {selectedIncidentIds.has(inc.incident_id) ? (
+                        <CheckSquare size={16} color="var(--accent-gold)" />
+                      ) : (
+                        <Square size={16} color="var(--text-muted)" />
+                      )}
+                    </td>
                     <td>
                       <span
                         className="mono"
@@ -931,6 +1073,26 @@ END OF REPORT
                   Resolve Incident
                 </button>
               )}
+              {selectedIncident.incident.source_ip && (
+                <button
+                  className="control-btn"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#dc2626', color: 'white', border: 'none' }}
+                  onClick={handleBlockSourceIp}
+                  disabled={isBlocking}
+                >
+                  <ShieldAlert size={16} />
+                  {isBlocking ? 'Blocking...' : 'Block Source IP'}
+                </button>
+              )}
+              <button
+                className="control-btn"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0f172a', color: 'white', border: '1px solid #334155' }}
+                onClick={handleAddWafSignature}
+                disabled={isAddingSig}
+              >
+                <GitBranch size={16} />
+                {isAddingSig ? 'Adding...' : 'Never work again from any IP'}
+              </button>
               {/* TXT Download */}
               <button
                 className="control-btn"
@@ -1082,6 +1244,18 @@ END OF REPORT
         }
         confirmLabel="Resolve Incident"
         isLoading={isResolving}
+      />
+
+      {/* Confirmation Dialog for Deletion */}
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDeleteSelected}
+        title="Delete Selected Incidents"
+        message={`Are you sure you want to permanently delete ${selectedIncidentIds.size} selected incident(s)? This action cannot be undone.`}
+        confirmLabel="Delete"
+        isDestructive={true}
+        isLoading={isDeleting}
       />
     </motion.div>
   );

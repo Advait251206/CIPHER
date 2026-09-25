@@ -105,6 +105,28 @@ def resolve_incident(incident_id: str):
     )
 
 
+from pydantic import BaseModel
+
+class BulkDeleteRequest(BaseModel):
+    incident_ids: List[str]
+
+@router.delete("/incidents", summary="Delete Multiple Incidents")
+def delete_incidents(request: BulkDeleteRequest):
+    """
+    Deletes a list of incidents from the database and active correlation memory.
+    """
+    corr_svc = get_correlation_service()
+    success = corr_svc.delete_incidents(request.incident_ids)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete some or all specified incidents."
+        )
+
+    return {"message": f"Successfully deleted {len(request.incident_ids)} incidents.", "deleted_count": len(request.incident_ids)}
+
+
+
 @router.get("/correlation/stats", response_model=CorrelationStatsResponse, summary="Get Correlation Engine Statistics")
 def get_correlation_stats():
     """

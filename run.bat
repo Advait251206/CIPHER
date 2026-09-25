@@ -30,7 +30,7 @@ if '%errorlevel%' NEQ '0' (
     start "CIPHER Backend" cmd /k "cd /d "%PROJECT_ROOT%backend" && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
     echo [3/4] Launching Frontend Terminal...
-    start "CIPHER Frontend" cmd /k "cd /d "%PROJECT_ROOT%frontend" && npm run dev"
+    start "CIPHER Frontend" cmd /c "cd /d "%PROJECT_ROOT%frontend" && npm run dev"
 
     echo [4/4] Launching Vulnerable App Terminal...
     start "CIPHER Vulnerable App" cmd /k "cd /d "%PROJECT_ROOT%vulnerable_app" && python -m uvicorn main:app --host 0.0.0.0 --port 5174 --reload"
@@ -45,9 +45,14 @@ if '%errorlevel%' NEQ '0' (
     echo ---------------------------------------------------
     pause
     
-    echo.
     echo Closing Port 5174...
     powershell -Command "Remove-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI'"
-    echo [SECURED] Firewall port closed successfully.
+    
+    echo Closing CIPHER terminals...
+    taskkill /FI "WindowTitle eq CIPHER Backend*" /T /F >nul 2>&1
+    taskkill /FI "WindowTitle eq CIPHER Vulnerable App*" /T /F >nul 2>&1
+    taskkill /IM node.exe /T /F >nul 2>&1
+    
+    echo [SECURED] Firewall port closed and terminals stopped.
     echo Press any key to exit.
     pause

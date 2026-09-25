@@ -94,6 +94,10 @@ class IncidentManager:
             updates={"status": "RESOLVED", "updated_at": now_iso}
         )
 
+    def delete_incidents(self, incident_ids: List[str]) -> bool:
+        """Deletes multiple incidents from the database."""
+        return self.db.delete_incidents(incident_ids)
+
     def get_incident(self, incident_id: str) -> Optional[Dict[str, Any]]:
         return self.db.get_incident(incident_id)
 

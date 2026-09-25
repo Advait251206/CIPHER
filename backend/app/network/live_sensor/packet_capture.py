@@ -149,8 +149,7 @@ import os
 class PacketCapture:
     """
     Controls live packet sniffing lifecycle in a non-blocking background thread.
-    Zero payload persistence: packet callbacks immediately extract flow metadata.
-    Uses the highly optimized C++ Npcap sensor executable.
+    Uses Python Scapy to capture raw packets so the WAF can inspect payloads.
     """
 
     def __init__(
@@ -166,8 +165,7 @@ class PacketCapture:
         self.bpf_filter = bpf_filter
 
         self._resolved_iface = None
-        self._process: Optional[subprocess.Popen] = None
-        self._reader_thread: Optional[threading.Thread] = None
+        self._sniffer: Optional[AsyncSniffer] = None
         self._is_running = False
         self.packets_captured = 0
         self.errors = 0
@@ -175,7 +173,7 @@ class PacketCapture:
 
     @property
     def is_running(self) -> bool:
-        return self._is_running and (self._process is not None and self._process.poll() is None)
+        return self._is_running and (self._sniffer is not None and self._sniffer.running)
 
     def start(self):
         """Validates settings and starts the Scapy AsyncSniffer background thread."""
@@ -203,66 +201,46 @@ class PacketCapture:
             validate_bpf_filter(self.bpf_filter, self._resolved_iface)
 
         logger.info(
-            f"[SENSOR] Starting C++ capture on interface '{getattr(self._resolved_iface, 'name', self.interface_name)}' "
+            f"[SENSOR] Starting Python Scapy capture on interface '{getattr(self._resolved_iface, 'name', self.interface_name)}' "
         )
 
-        sensor_exe = os.path.join(os.path.dirname(__file__), "..", "..", "..", "cpp_sensor", "sensor.exe")
-        target_iface = getattr(self._resolved_iface, "network_name", getattr(self._resolved_iface, "name", self.interface_name))
-
         try:
-            self._process = subprocess.Popen(
-                [sensor_exe, target_iface],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+            self._sniffer = AsyncSniffer(
+                iface=self._resolved_iface,
+                filter=self.bpf_filter,
+                prn=self._on_packet_wrapper,
+                store=False
             )
-            
+            self._sniffer.start()
             self._is_running = True
             self.start_time = time.time()
             self.packets_captured = 0
             self.errors = 0
             
-            self._reader_thread = threading.Thread(target=self._read_stdout_loop, daemon=True)
-            self._reader_thread.start()
-            
         except Exception as e:
             self._is_running = False
-            self._process = None
-            logger.error(f"[PACKET_CAPTURE] Failed to start C++ sniffer: {e}")
-            raise RuntimeError(f"Failed to start C++ packet capture: {e}")
-
-    def _read_stdout_loop(self):
-        """Reads JSON lines from the C++ sensor process."""
-        if not self._process or not self._process.stdout:
-            return
-            
-        while self._is_running and self._process.poll() is None:
-            line = self._process.stdout.readline()
-            if not line:
-                break
-                
-            line = line.strip()
-            if not line:
-                continue
-                
-            if line.startswith("{"):
-                try:
-                    parsed = json.loads(line)
-                    self._on_packet_wrapper(parsed)
-                except Exception as e:
-                    self.errors += 1
-                    logger.debug(f"[PACKET_CAPTURE] JSON parse error: {e}")
-            else:
-                logger.info(f"[CPP_SENSOR] {line}")
+            self._sniffer = None
+            logger.error(f"[PACKET_CAPTURE] Failed to start Python sniffer: {e}")
+            raise RuntimeError(f"Failed to start Python packet capture: {e}")
 
     def _on_packet_wrapper(self, pkt: Any):
         """Non-blocking internal wrapper tracking packet count and handling exceptions."""
         try:
             self.packets_captured += 1
-            if pkt.get("type") == "arp":
+            if pkt.haslayer("ARP"):
                 if self.on_arp:
-                    self.on_arp(pkt)
+                    # Convert scapy ARP to the dict format expected by arp_engine
+                    arp_layer = pkt["ARP"]
+                    pkt_dict = {
+                        "type": "arp",
+                        "opcode": arp_layer.op,
+                        "src_mac": arp_layer.hwsrc,
+                        "dst_mac": arp_layer.hwdst,
+                        "src_ip": arp_layer.psrc,
+                        "dst_ip": arp_layer.pdst,
+                        "ts": float(pkt.time)
+                    }
+                    self.on_arp(pkt_dict)
             else:
                 self.on_packet(pkt)
         except Exception as e:
@@ -270,23 +248,19 @@ class PacketCapture:
             logger.debug(f"[PACKET_CAPTURE] Packet processing callback error: {e}")
 
     def stop(self):
-        """Gracefully stops the C++ sensor process."""
-        if not self._is_running or self._process is None:
+        """Gracefully stops the Python sensor process."""
+        if not self._is_running or self._sniffer is None:
             self._is_running = False
             return
 
-        logger.info("[SENSOR] Stopping C++ packet capture...")
+        logger.info("[SENSOR] Stopping Python packet capture...")
         self._is_running = False
         
         try:
-            self._process.terminate()
-            self._process.wait(timeout=2.0)
+            self._sniffer.stop()
+            self._sniffer.join(timeout=2.0)
         except Exception as e:
             logger.warning(f"[PACKET_CAPTURE] Warning while stopping sniffer: {e}")
-            try:
-                self._process.kill()
-            except:
-                pass
         finally:
-            self._process = None
+            self._sniffer = None
             logger.info(f"[SENSOR] Stopped. Captured {self.packets_captured} packets.")

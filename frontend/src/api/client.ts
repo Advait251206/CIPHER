@@ -187,6 +187,11 @@ export const api = {
       request<IncidentResolveResponse>(`/incidents/${encodeURIComponent(id)}/resolve`, {
         method: 'POST',
       }),
+    delete: (ids: string[]) =>
+      request<{message: string, deleted_count: number}>('/incidents', {
+        method: 'DELETE',
+        body: JSON.stringify({ incident_ids: ids })
+      }),
     getStats: () => request<CorrelationStatsResponse>('/correlation/stats'),
   },
 
@@ -198,6 +203,10 @@ export const api = {
     listRules: () => request<NetworkRulesResponse>('/network/rules'),
     getBlocklist: (status: string = 'ACTIVE') =>
       request<BlocklistEntry[]>('/network/blocklist', { params: { status } }),
+    blockIp: (ip: string) =>
+      request<{ status: string; ip: string }>(`/network/blocklist/${encodeURIComponent(ip)}`, {
+        method: 'POST',
+      }),
     unblockIp: (ip: string) =>
       request<{ status: string; ip: string }>(`/network/blocklist/${encodeURIComponent(ip)}`, {
         method: 'DELETE',

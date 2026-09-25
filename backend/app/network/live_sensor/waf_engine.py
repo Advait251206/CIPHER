@@ -21,8 +21,9 @@ class WAFEngine:
         self.sqli_patterns = [
             re.compile(r"(?i)(UNION\s+ALL\s+SELECT|UNION\s+SELECT)", re.IGNORECASE),
             re.compile(r"(?i)(\b(OR|AND)\s+['\"]?\d+['\"]?\s*=\s*['\"]?\d+['\"]?)", re.IGNORECASE),
+            re.compile(r"(?i)(\b(OR|AND)\s+%27\d+%27\s*(%3D|=)\s*%27\d+%27)", re.IGNORECASE), # URL Encoded OR '1'='1'
             re.compile(r"(?i)(\bSELECT\b.*\bFROM\b)", re.IGNORECASE),
-            re.compile(r"(?i)(--\s*$|#\s*$|/\*.*\*/)", re.IGNORECASE),
+            re.compile(r"(?i)(--\s*|#\s*|/\*.*\*/|%2D%2D)", re.IGNORECASE), # Catch -- anywhere, not just at the end
             re.compile(r"(?i)(\bDROP\s+TABLE\b|\bINSERT\s+INTO\b|\bUPDATE\b.*\bSET\b)", re.IGNORECASE)
         ]
         

@@ -191,6 +191,12 @@ class CorrelationService:
         self.correlator.resolve_chain(incident_id)
         return self.incident_mgr.resolve_incident(incident_id)
 
+    def delete_incidents(self, incident_ids: List[str]) -> bool:
+        """Deletes multiple incidents and their events from the system."""
+        for iid in incident_ids:
+            self.correlator.resolve_chain(iid)
+        return self.incident_mgr.delete_incidents(incident_ids)
+
     def get_correlation_stats(self) -> Dict[str, Any]:
         return self.incident_mgr.get_correlation_stats()
 
