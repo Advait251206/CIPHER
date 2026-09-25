@@ -8,6 +8,8 @@ import { ErrorState } from '../components/common/ErrorState';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { ShieldAlert, Lock, Unlock, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, codeTag, controlBtn, dataTable, modeBadge, mono, navBadge, pageBody, tableContainer } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -97,58 +99,50 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {actionNotice && (
-        <motion.div variants={itemVariants} className="alert-box success">
+        <motion.div variants={itemVariants} className={alertBox('success')}>
           <CheckCircle size={16} />
           <span>{actionNotice}</span>
         </motion.div>
       )}
 
       {/* Mode Governance Warning */}
-      <motion.div variants={itemVariants} className="alert-box info">
-        <Lock size={18} style={{ flexShrink: 0 }} />
+      <motion.div variants={itemVariants} className={alertBox('info')}>
+        <Lock size={18} className="shrink-0" />
         <div>
-          <strong>Server-Enforced IPS Architecture:</strong> Prevention mode is strictly controlled via backend configuration (<code>CIPHER_PREVENTION_MODE</code>).
+          <strong>Server-Enforced IPS Architecture:</strong> Prevention mode is strictly controlled via backend configuration (<code className={codeTag}>CIPHER_PREVENTION_MODE</code>).
           The dashboard displays authoritative server state and does not execute raw host firewall commands directly.
         </div>
       </motion.div>
 
       {/* Prevention Modes Breakdown Card */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-header">
-          <div className="card-title">
-            <ShieldAlert size={18} color="var(--crit-color)" />
+      <motion.div variants={itemVariants} className={cn(card, 'mb-6')}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <ShieldAlert size={18} color="var(--color-crit)" />
             <span>Operational Prevention Mode</span>
           </div>
-          <span className={`mode-badge ${mode}`}>{mode.replace('_', ' ')}</span>
+          <span className={modeBadge(mode)}>{mode.replace('_', ' ')}</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginTop: '0.75rem' }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4 mt-3">
           <motion.div
             onClick={() => onSetMode && mode !== 'detect_only' && onSetMode('detect_only')}
             whileHover={{ y: -3, scale: 1.01 }}
-            style={{
-              padding: '1.25rem',
-              borderRadius: '8px',
-              background: mode === 'detect_only' ? 'linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(22, 163, 74, 0.15) 100%)' : 'var(--bg-surface-elevated)',
-              border: `1.5px solid ${mode === 'detect_only' ? 'var(--benign-color)' : 'var(--border-subtle)'}`,
-              boxShadow: mode === 'detect_only' ? '0 4px 12px rgba(22, 163, 74, 0.15)' : 'none',
-              transition: 'all 0.2s ease',
-              cursor: mode === 'detect_only' ? 'default' : 'pointer',
-            }}
+            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'detect_only' ? '[background:linear-gradient(135deg,rgba(22,163,74,0.1)_0%,rgba(22,163,74,0.15)_100%)]' : 'bg-elevated'), (mode === 'detect_only' ? '[box-shadow:0_4px_12px_rgba(22,163,74,0.15)]' : '[box-shadow:none]'), (mode === 'detect_only' ? 'cursor-default' : 'cursor-pointer'), 'border-[1.5px]', mode === 'detect_only' ? 'border-benign' : 'border-line')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span className="mono" style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--low-color)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={cn(mono, 'font-extrabold text-[0.85rem] text-low')}>
                 1. DETECT ONLY
               </span>
-              {mode === 'detect_only' && <span className="nav-badge active" style={{ fontSize: '0.68rem' }}>ACTIVE MODE</span>}
+              {mode === 'detect_only' && <span className={navBadge('active', 'text-[0.68rem]')}>ACTIVE MODE</span>}
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+            <p className="text-[0.8rem] text-fg-2 leading-[1.5] m-0">
               Passively records security anomalies and logs alerts. Safe default for evaluation without host network disruption.
             </p>
           </motion.div>
@@ -156,23 +150,15 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
           <motion.div
             onClick={() => onSetMode && mode !== 'enforce' && onSetMode('enforce')}
             whileHover={{ y: -3, scale: 1.01 }}
-            style={{
-              padding: '1.25rem',
-              borderRadius: '8px',
-              background: mode === 'enforce' ? 'linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%)' : 'var(--bg-surface-elevated)',
-              border: `1.5px solid ${mode === 'enforce' ? 'var(--crit-color)' : 'var(--border-subtle)'}`,
-              boxShadow: mode === 'enforce' ? '0 4px 12px rgba(220, 38, 38, 0.15)' : 'none',
-              transition: 'all 0.2s ease',
-              cursor: mode === 'enforce' ? 'default' : 'pointer',
-            }}
+            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'enforce' ? '[background:linear-gradient(135deg,rgba(220,38,38,0.1)_0%,rgba(220,38,38,0.15)_100%)]' : 'bg-elevated'), (mode === 'enforce' ? '[box-shadow:0_4px_12px_rgba(220,38,38,0.15)]' : '[box-shadow:none]'), (mode === 'enforce' ? 'cursor-default' : 'cursor-pointer'), 'border-[1.5px]', mode === 'enforce' ? 'border-crit' : 'border-line')}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span className="mono" style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--crit-color)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={cn(mono, 'font-extrabold text-[0.85rem] text-crit')}>
                 2. ENFORCE
               </span>
-              {mode === 'enforce' && <span className="nav-badge danger" style={{ fontSize: '0.68rem' }}>ACTIVE MODE</span>}
+              {mode === 'enforce' && <span className={navBadge('danger', 'text-[0.68rem]')}>ACTIVE MODE</span>}
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+            <p className="text-[0.8rem] text-fg-2 leading-[1.5] m-0">
               Actively applies temporary blocks with automatic sliding-window TTL expiration on confirmed malicious source IPs.
             </p>
           </motion.div>
@@ -180,13 +166,13 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
       </motion.div>
 
       {/* Active Blocklist Table */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-header">
-          <div className="card-title">
-            <Lock size={16} color="var(--crit-color)" />
+      <div className={cn(card, 'mb-6')}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Lock size={16} color="var(--color-crit)" />
             <span>Active Blocklist ({activeBlocks.length})</span>
           </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <span className="text-[0.75rem] text-fg-muted">
             Temporary IP blocks with automated sliding-window expiration
           </span>
         </div>
@@ -201,8 +187,8 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
             description="All monitored hosts are permitted. When threats trigger block conditions under enforce or simulate modes, entries appear here."
           />
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div className={tableContainer}>
+            <table className={dataTable}>
               <thead>
                 <tr>
                   <th>IP Address</th>
@@ -216,19 +202,19 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
               <tbody>
                 {activeBlocks.map((b) => (
                   <tr key={b.ip}>
-                    <td className="mono" style={{ fontWeight: 700, color: 'var(--crit-color)' }}>
+                    <td className={cn(mono, 'font-bold! text-crit!')}>
                       {b.ip}
                     </td>
                     <td>{b.reason}</td>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>{b.blocked_at}</td>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>{b.expires_at || 'Indefinite'}</td>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>{b.blocked_at}</td>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>{b.expires_at || 'Indefinite'}</td>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>
                       {b.ttl_remaining_seconds !== undefined ? `${b.ttl_remaining_seconds}s` : 'N/A'}
                     </td>
                     <td>
                       <button
-                        className="control-btn"
-                        style={{ padding: '3px 8px', fontSize: '0.75rem' }}
+                        className={cn(controlBtn(), 'py-[3px] px-[8px] text-[0.75rem]')}
+
                         onClick={() => setIpToUnblock(b.ip)}
                         title="Remove IP from blocklist"
                       >
@@ -246,15 +232,15 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
 
       {/* Prevention Events Log */}
       {preventionEvents.length > 0 && (
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              <Clock size={16} color="var(--accent-cyan)" />
+        <div className={card}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Clock size={16} color="var(--color-accent)" />
               <span>Recent Prevention Actions Log</span>
             </div>
           </div>
-          <div className="table-container">
-            <table className="data-table">
+          <div className={tableContainer}>
+            <table className={dataTable}>
               <thead>
                 <tr>
                   <th>Timestamp</th>
@@ -267,11 +253,11 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
               <tbody>
                 {preventionEvents.map((pe) => (
                   <tr key={pe.event_id}>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>{pe.timestamp}</td>
-                    <td className="mono">{pe.source_ip || 'N/A'}</td>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>{pe.timestamp}</td>
+                    <td className={mono}>{pe.source_ip || 'N/A'}</td>
                     <td>{pe.attack_type || pe.classification}</td>
                     <td><SeverityBadge severity={pe.severity} size="sm" /></td>
-                    <td className="mono" style={{ fontWeight: 700, color: 'var(--crit-color)' }}>
+                    <td className={cn(mono, 'font-bold! text-crit!')}>
                       {pe.action || pe.metadata?.prevention_action || 'BLOCK'}
                     </td>
                   </tr>
@@ -291,9 +277,9 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
         message={
           <div>
             <p>
-              Are you sure you want to manually unblock IP <strong className="mono">{ipToUnblock}</strong>?
+              Are you sure you want to manually unblock IP <strong className={mono}>{ipToUnblock}</strong>?
             </p>
-            <p style={{ marginTop: '0.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+            <p className="mt-2 text-[0.82rem] text-fg-muted">
               This will remove the address from the active blocklist cache and restore network accessibility.
             </p>
           </div>

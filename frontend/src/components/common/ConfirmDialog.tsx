@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Modal } from './Modal';
+import { controlBtn } from '../../ui/classes';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -30,18 +31,18 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <AlertTriangle size={20} color={isDestructive ? 'var(--crit-color)' : 'var(--med-color)'} />
+        <div className="flex items-center gap-2">
+          <AlertTriangle size={20} color={isDestructive ? 'var(--color-crit)' : 'var(--color-med)'} />
           <span>{title}</span>
         </div>
       }
       footer={
         <>
-          <button className="control-btn" onClick={onClose} disabled={isLoading}>
+          <button className={controlBtn()} onClick={onClose} disabled={isLoading}>
             {cancelLabel}
           </button>
           <button
-            className={`control-btn ${isDestructive ? 'danger' : 'primary'}`}
+            className={controlBtn(isDestructive ? 'danger' : 'primary')}
             onClick={onConfirm}
             disabled={isLoading}
           >
@@ -50,7 +51,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </>
       }
     >
-      <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+      <div className="text-[0.88rem] leading-[1.6] text-fg-2">
         {message}
       </div>
     </Modal>

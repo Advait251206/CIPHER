@@ -19,7 +19,7 @@ The **CIPHER SOC Dashboard** is a modern, responsive single-page application eng
 2. **Live Events** (`LiveEventsPage.tsx`): Unified security event stream, filtering, auto-refresh, and structured evidence modals.
 3. **Incidents** (`IncidentsPage.tsx`): Correlated multi-stage attack chains, escalation badges, event timeline, and resolution workflows.
 4. **Network IDS** (`NetworkIdsPage.tsx`): Dual Random Forest model metrics, feature importances, and interactive flow evaluation sandbox.
-5. **Phishing** (`PhishingPage.tsx`): URL analysis interface with presets, 28-feature lexical inspection, risk gauge, and security guidance.
+5. **Phishing** (`PhishingPage.tsx`): URL analysis interface with presets, 15-feature lexical inspection, risk gauge, and security guidance.
 6. **Threat Intelligence** (`ThreatIntelPage.tsx`): SQLite IOC repository management, instant indicator search, active/disabled toggles, and bulk import.
 7. **Detection Rules** (`DetectionRulesPage.tsx`): 14 heuristic and signature rules, live toggle controls, and rule evaluation sandbox.
 8. **Prevention** (`PreventionPage.tsx`): Authoritative IPS mode governance (`detect_only`, `simulate`, `enforce`) and active blocklist table.

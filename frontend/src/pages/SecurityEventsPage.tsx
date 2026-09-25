@@ -8,6 +8,8 @@ import { ErrorState } from '../components/common/ErrorState';
 import { EventDetailModal } from '../components/events/EventDetailModal';
 import { Filter, Search, ChevronLeft, ChevronRight, Shield, Database } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { card, cardHeader, cardTitle, controlBtn, dataTable, formGroup, formInput, formLabel, formSelect, mono, pageBody, tableContainer } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -84,41 +86,35 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Filters Bar */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
-        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
-          <div className="form-group" style={{ flex: '1 1 200px', margin: 0 }}>
-            <label className="form-label">Search Source IP / Domain</label>
-            <div style={{ position: 'relative' }}>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
+        <form onSubmit={handleSearchSubmit} className="flex flex-wrap gap-4 items-end">
+          <div className={cn(formGroup, 'flex-[1_1_200px] m-0')}>
+            <label className={formLabel}>Search Source IP / Domain</label>
+            <div className="relative">
               <input
                 type="text"
-                className="form-input"
+                className={formInput}
                 placeholder="e.g. 192.168.1.100 or bad-domain.xyz"
                 value={searchSource}
                 onChange={(e) => setSearchSource(e.target.value)}
               />
               <Search
                 size={14}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)',
-                }}
+                className="absolute top-[50%] right-[10px] transform-[translateY(-50%)] text-fg-muted"
               />
             </div>
           </div>
 
-          <div className="form-group" style={{ width: '180px', margin: 0 }}>
-            <label className="form-label">Severity Level</label>
+          <div className={cn(formGroup, 'w-[180px] m-0')}>
+            <label className={formLabel}>Severity Level</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={severityFilter}
               onChange={(e) => {
                 setSeverityFilter(e.target.value);
@@ -133,10 +129,10 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
             </select>
           </div>
 
-          <div className="form-group" style={{ width: '180px', margin: 0 }}>
-            <label className="form-label">Event Source Type</label>
+          <div className={cn(formGroup, 'w-[180px] m-0')}>
+            <label className={formLabel}>Event Source Type</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={eventTypeFilter}
               onChange={(e) => {
                 setEventTypeFilter(e.target.value);
@@ -150,15 +146,15 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" className="control-btn primary">
+          <div className="flex gap-2">
+            <button type="submit" className={controlBtn('primary')}>
               <Filter size={14} />
               <span>Apply Filters</span>
             </button>
             {(severityFilter || eventTypeFilter || searchSource) && (
               <button
                 type="button"
-                className="control-btn"
+                className={controlBtn()}
                 onClick={() => {
                   setSeverityFilter('');
                   setEventTypeFilter('');
@@ -174,13 +170,13 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
       </motion.div>
 
       {/* Events Table or States */}
-      <motion.div variants={itemVariants} className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <Shield size={18} color="var(--accent-cyan)" />
+      <motion.div variants={itemVariants} className={card}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Shield size={18} color="var(--color-accent)" />
             <span>Live Security Events Stream</span>
           </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <span className="text-[0.78rem] text-fg-muted">
             Showing {events.length} records (Page {Math.floor(offset / limit) + 1})
           </span>
         </div>
@@ -190,28 +186,18 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
         ) : error ? (
           <ErrorState title="Failed to Query Events" error={error} onRetry={fetchEvents} />
         ) : events.length === 0 ? (
-          <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+          <div className="py-12 px-6 text-center">
             <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'var(--benign-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem auto',
-                border: '1px solid var(--benign-border)',
-              }}
+              className="w-[48px] h-[48px] rounded-[50%] bg-benign-bg flex items-center justify-center mt-0 mx-auto mb-4 border border-benign"
             >
-              <Shield size={24} color="var(--benign-color)" />
+              <Shield size={24} color="var(--color-benign)" />
             </div>
-            <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
+            <div className="font-bold text-[1rem] mb-[0.35rem] text-fg">
               {severityFilter || searchSource || eventTypeFilter
                 ? 'No Security Events Match Filters'
                 : 'Zero Anomalous Events in Buffer'}
             </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.84rem', maxWidth: '420px', margin: '0 auto' }}>
+            <div className="text-fg-muted text-[0.84rem] max-w-[420px] my-0 mx-auto">
               {severityFilter || searchSource || eventTypeFilter
                 ? 'Try clearing or relaxing your query parameters to see more records.'
                 : 'The local event buffer is clean. Start the Live Sensor in the Network IDS tab to capture real-time traffic.'}
@@ -219,8 +205,8 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
           </div>
         ) : (
           <>
-            <div className="table-container">
-              <table className="data-table">
+            <div className={tableContainer}>
+              <table className={dataTable}>
                 <thead>
                   <tr>
                     <th>Timestamp</th>
@@ -253,40 +239,40 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
                       <tr
                         key={ev.event_id}
                         onClick={() => setSelectedEvent(ev)}
-                        style={{ cursor: 'pointer' }}
+                        className="cursor-pointer"
                         title="Click to view full evidence details"
                       >
-                        <td className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <td className={cn(mono, 'text-[0.75rem]! text-fg-muted!')}>
                           {ev.timestamp.replace('T', ' ').replace('Z', '')}
                         </td>
                         <td>
                           <SeverityBadge severity={ev.severity} size="sm" />
                         </td>
                         <td>
-                          <span style={{ fontWeight: 600 }}>
+                          <span className="font-semibold">
                             {ev.attack_type || ev.classification}
                           </span>
                         </td>
-                        <td className="mono" style={{ fontWeight: 700 }}>
+                        <td className={cn(mono, 'font-bold!')}>
                           {ev.risk_score}
                         </td>
-                        <td className="mono" style={{ fontSize: '0.75rem' }}>
+                        <td className={cn(mono, 'text-[0.75rem]!')}>
                           {(ev.confidence * 100).toFixed(0)}%
                         </td>
-                        <td className="mono">{ev.source_ip || ev.domain || 'N/A'}</td>
-                        <td className="mono">{ev.destination_ip || 'N/A'}</td>
+                        <td className={mono}>{ev.source_ip || ev.domain || 'N/A'}</td>
+                        <td className={mono}>{ev.destination_ip || 'N/A'}</td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                            <span className="mono" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          <div className="flex items-center gap-[0.35rem] flex-wrap">
+                            <span className={cn(mono, 'text-[0.7rem] text-fg-muted')}>
                               {ev.detection_method || ev.source}
                             </span>
                             {ruleId && (
-                              <span className="mono" style={{ fontSize: '0.65rem', background: 'rgba(56, 189, 248, 0.15)', color: 'var(--low-color)', padding: '1px 4px', borderRadius: '3px' }}>
+                              <span className={cn(mono, 'text-[0.65rem] bg-[rgba(56,189,248,0.15)] text-low py-[1px] px-[4px] rounded-[3px]')}>
                                 {ruleId}
                               </span>
                             )}
                             {hasIoc && (
-                              <span className="mono" style={{ fontSize: '0.65rem', background: 'var(--crit-bg)', color: 'var(--crit-color)', padding: '1px 4px', borderRadius: '3px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <span className={cn(mono, 'text-[0.65rem] bg-crit-bg text-crit py-[1px] px-[4px] rounded-[3px] flex items-center gap-[2px]')}>
                                 <Database size={10} /> IOC
                               </span>
                             )}
@@ -294,12 +280,8 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
                         </td>
                         <td>
                           <span
-                            className="mono"
-                            style={{
-                              fontSize: '0.75rem',
-                              fontWeight: 600,
-                              color: ev.action === 'BLOCK' ? 'var(--crit-color)' : 'var(--text-secondary)',
-                            }}
+                            className={cn(mono, 'text-[0.75rem] font-semibold', (ev.action === 'BLOCK' ? 'text-crit' : 'text-fg-2'))}
+
                           >
                             {ev.action || 'ALERT'}
                           </span>
@@ -312,9 +294,9 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
             </div>
 
             {/* Pagination Controls */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '0 0.5rem' }}>
+            <div className="flex justify-between items-center mt-4 py-0 px-2">
               <button
-                className="control-btn"
+                className={controlBtn()}
                 disabled={offset === 0}
                 onClick={() => setOffset(Math.max(0, offset - limit))}
               >
@@ -322,12 +304,12 @@ export const SecurityEventsPage: React.FC<SecurityEventsPageProps> = ({ onSelect
                 <span>Previous Page</span>
               </button>
 
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+              <span className="text-[0.78rem] text-fg-muted font-mono">
                 Offset: {offset} | Page {Math.floor(offset / limit) + 1}
               </span>
 
               <button
-                className="control-btn"
+                className={controlBtn()}
                 disabled={events.length < limit}
                 onClick={() => setOffset(offset + limit)}
               >

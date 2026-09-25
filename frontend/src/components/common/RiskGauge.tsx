@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../../lib/cn';
 
 interface RiskGaugeProps {
   score: number;
@@ -6,6 +7,16 @@ interface RiskGaugeProps {
   label?: string;
   size?: 'sm' | 'md' | 'lg';
 }
+
+const tone = {
+  CRITICAL: { text: 'text-crit', bar: 'bg-crit' },
+  HIGH: { text: 'text-high', bar: 'bg-high' },
+  MEDIUM: { text: 'text-med', bar: 'bg-med' },
+  LOW: { text: 'text-low', bar: 'bg-low' },
+  BENIGN: { text: 'text-benign', bar: 'bg-benign' },
+};
+
+const trackHeight = { sm: 'h-[6px]', md: 'h-[8px]', lg: 'h-[12px]' };
 
 export const RiskGauge: React.FC<RiskGaugeProps> = ({
   score,
@@ -16,15 +27,7 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
   const clamped = Math.max(0, Math.min(maxScore, score));
   const percent = Math.round((clamped / maxScore) * 100);
 
-  const getColor = () => {
-    if (clamped >= 85) return 'var(--crit-color)';
-    if (clamped >= 60) return 'var(--high-color)';
-    if (clamped >= 35) return 'var(--med-color)';
-    if (clamped > 0) return 'var(--low-color)';
-    return 'var(--benign-color)';
-  };
-
-  const getSeverityLabel = () => {
+  const getSeverityLabel = (): keyof typeof tone => {
     if (clamped >= 85) return 'CRITICAL';
     if (clamped >= 60) return 'HIGH';
     if (clamped >= 35) return 'MEDIUM';
@@ -32,35 +35,27 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({
     return 'BENIGN';
   };
 
+  const severity = getSeverityLabel();
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+    <div className="flex w-full flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[0.72rem] text-fg-muted uppercase">
           {label}
         </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.85rem', color: getColor() }}>
-          {clamped} / {maxScore} ({getSeverityLabel()})
+        <span className={cn('font-mono text-[0.85rem] font-bold', tone[severity].text)}>
+          {clamped} / {maxScore} ({severity})
         </span>
       </div>
       <div
-        style={{
-          width: '100%',
-          height: size === 'sm' ? '6px' : size === 'lg' ? '12px' : '8px',
-          background: 'var(--bg-surface-elevated)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: '9999px',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
+        className={cn(
+          'relative w-full overflow-hidden rounded-[9999px] border border-line bg-elevated',
+          trackHeight[size]
+        )}
       >
         <div
-          style={{
-            height: '100%',
-            width: `${percent}%`,
-            background: getColor(),
-            borderRadius: '9999px',
-            transition: 'width 0.3s ease',
-          }}
+          className={cn('h-full rounded-[9999px] [transition:width_0.3s_ease]', tone[severity].bar)}
+          style={{ width: `${percent}%` }}
         />
       </div>
     </div>

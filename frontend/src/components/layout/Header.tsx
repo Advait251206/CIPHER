@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Shield, ShieldAlert } from 'lucide-react';
 import { Severity } from '../../api/types';
 import { SeverityBadge } from '../common/SeverityBadge';
+import { controlBtn, liveIndicator } from '../../ui/classes';
 
 interface HeaderProps {
   title: string;
@@ -29,22 +30,21 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="header">
-      <div className="header-left">
+    <header className="sticky top-0 z-5 flex items-center justify-between border-b border-b-line bg-surface px-9 py-[0.85rem] lte-768:flex-col lte-768:items-start lte-768:gap-3">
+      <div className="flex items-center gap-6">
         <div>
-          <h1 className="header-title">{title}</h1>
-          <div className="header-subtitle">{subtitle}</div>
+          <h1 className="text-[1.3rem] leading-[1.2] font-extrabold tracking-[-0.015em] text-fg">{title}</h1>
+          <div className="text-[0.8rem] text-fg-muted">{subtitle}</div>
         </div>
       </div>
 
-      <div className="header-right">
+      <div className="flex items-center gap-[0.85rem]">
         {/* Prevention Mode Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingRight: '0.75rem', borderRight: '1px solid var(--border-subtle)' }}>
-          <button 
+        <div className="flex items-center gap-2 border-r border-r-line pr-3">
+          <button
             onClick={handleToggle}
             disabled={isToggling}
-            className={`control-btn ${preventionMode === 'enforce' ? 'danger' : 'success'}`}
-            style={{ padding: '0.35rem 0.6rem', fontSize: '0.7rem' }}
+            className={controlBtn(preventionMode === 'enforce' ? 'danger' : 'success', 'px-[0.6rem] py-[0.35rem] text-[0.7rem]')}
             title="Toggle Prevention Mode"
           >
             {preventionMode === 'enforce' ? (
@@ -55,16 +55,16 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', paddingRight: '0.75rem', borderRight: '1px solid var(--border-subtle)' }}>
-          <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+        <div className="flex items-center gap-[0.45rem] border-r border-r-line pr-3">
+          <span className="text-[0.72rem] font-semibold text-fg-muted uppercase">
             Perimeter Threat:
           </span>
           <SeverityBadge severity={threatLevel} size="sm" />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            <span className="live-indicator"></span>
+        <div className="flex items-center gap-[0.4rem]">
+          <span className="flex items-center gap-[0.3rem] text-[0.75rem] font-medium text-fg-muted">
+            <span className={liveIndicator}></span>
             Live Data
           </span>
         </div>

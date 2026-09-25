@@ -8,8 +8,10 @@ import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Modal } from '../components/common/Modal';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye, FileText, Printer, Trash2, Square, CheckSquare } from 'lucide-react';
+import { Flame, CheckCircle, ShieldAlert, GitBranch, ArrowRight, Eye, FileText, Printer, Ban, Database } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, controlBtn, dataTable, formGroup, formInput, formLabel, formSelect, kvGrid, kvItem, kvLabel, kvValue, mono, navBadge, pageBody, tableContainer } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -45,11 +47,6 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [severityFilter, setSeverityFilter] = useState<string>('');
   const [sourceIpFilter, setSourceIpFilter] = useState<string>('');
-
-  // Selection & Deletion
-  const [selectedIncidentIds, setSelectedIncidentIds] = useState<Set<string>>(new Set());
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Detail Modal
   const [selectedIncident, setSelectedIncident] = useState<IncidentDetailResponse | null>(null);
@@ -605,8 +602,6 @@ END OF REPORT
   const [isResolving, setIsResolving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [isBlocking, setIsBlocking] = useState(false);
-  const [isAddingSig, setIsAddingSig] = useState(false);
 
   const fetchIncidents = async () => {
     try {
@@ -649,6 +644,37 @@ END OF REPORT
     }
   };
 
+  const handleBlockIp = async (ip: string) => {
+    if (!confirm(`Are you sure you want to block IP ${ip} on the WAF?`)) return;
+    try {
+      await api.network.blockIp(ip);
+      setActionSuccess(`IP ${ip} temporarily blocked on WAF.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to block IP.');
+      setTimeout(() => setActionError(null), 5000);
+    }
+  };
+
+  const handlePermanentBlock = async (ip: string) => {
+    if (!confirm(`Are you sure you want to permanently block IP ${ip}? This will store it in the Threat Intel Database.`)) return;
+    try {
+      await api.threatIntel.create({
+        ioc_type: 'IP',
+        indicator: ip,
+        category: 'malicious',
+        severity: 'HIGH',
+        confidence: 95,
+        description: 'Permanently blocked via SOC Dashboard',
+      });
+      setActionSuccess(`IP ${ip} permanently blocked and stored in Threat Intel DB.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to add to Threat Intel DB.');
+      setTimeout(() => setActionError(null), 5000);
+    }
+  };
+
   // Resolve incident with strict server confirmation
   const handleConfirmResolve = async () => {
     if (!incidentToResolve) return;
@@ -676,107 +702,34 @@ END OF REPORT
     }
   };
 
-  const handleBlockSourceIp = async () => {
-    if (!selectedIncident?.incident.source_ip) return;
-    try {
-      setIsBlocking(true);
-      setActionError(null);
-      await api.network.blockIp(selectedIncident.incident.source_ip);
-      setActionSuccess(`Source IP ${selectedIncident.incident.source_ip} successfully blocked at network level.`);
-    } catch (err: any) {
-      setActionError(err.message || 'Failed to block IP.');
-    } finally {
-      setIsBlocking(false);
-    }
-  };
-
-  const handleAddWafSignature = async () => {
-    try {
-      setIsAddingSig(true);
-      setActionError(null);
-      await api.threatIntel.create({
-        ioc_type: 'IP',
-        indicator: selectedIncident?.incident.source_ip || 'UNKNOWN',
-        category: 'WAF_SIGNATURE',
-        description: 'Auto-extracted WAF block signature from incident.',
-        severity: 'CRITICAL',
-        confidence: 100
-      });
-      setActionSuccess(`Payload signature extracted and pushed to WAF Enforce mode! This attack will never work again from ANY IP.`);
-    } catch (err: any) {
-      setActionError(err.message || 'Failed to push WAF signature.');
-    } finally {
-      setIsAddingSig(false);
-    }
-  };
-
-  const toggleSelection = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // prevent row click
-    const newSelection = new Set(selectedIncidentIds);
-    if (newSelection.has(id)) {
-      newSelection.delete(id);
-    } else {
-      newSelection.add(id);
-    }
-    setSelectedIncidentIds(newSelection);
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedIncidentIds.size === incidents.length && incidents.length > 0) {
-      setSelectedIncidentIds(new Set());
-    } else {
-      setSelectedIncidentIds(new Set(incidents.map((i) => i.incident_id)));
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedIncidentIds.size === 0) return;
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteSelected = async () => {
-    try {
-      setIsDeleting(true);
-      await api.incidents.delete(Array.from(selectedIncidentIds));
-      setSelectedIncidentIds(new Set());
-      await fetchIncidents();
-      setActionSuccess(`Successfully deleted selected incident(s).`);
-    } catch (err: any) {
-      setActionError(err.message || 'Failed to delete incidents.');
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-    }
-  };
-
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Action alerts */}
       {actionSuccess && (
-        <motion.div variants={itemVariants} className="alert-box success">
+        <motion.div variants={itemVariants} className={alertBox('success')}>
           <CheckCircle size={16} />
           <span>{actionSuccess}</span>
         </motion.div>
       )}
       {actionError && (
-        <motion.div variants={itemVariants} className="alert-box danger">
+        <motion.div variants={itemVariants} className={alertBox('danger')}>
           <ShieldAlert size={16} />
           <span>{actionError}</span>
         </motion.div>
       )}
 
       {/* Filter Bar */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
-          <div className="form-group" style={{ width: '180px', margin: 0 }}>
-            <label className="form-label">Status</label>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className={cn(formGroup, 'w-[180px] m-0')}>
+            <label className={formLabel}>Status</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -786,10 +739,10 @@ END OF REPORT
             </select>
           </div>
 
-          <div className="form-group" style={{ width: '180px', margin: 0 }}>
-            <label className="form-label">Severity</label>
+          <div className={cn(formGroup, 'w-[180px] m-0')}>
+            <label className={formLabel}>Severity</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
             >
@@ -801,11 +754,11 @@ END OF REPORT
             </select>
           </div>
 
-          <div className="form-group" style={{ flex: '1 1 200px', margin: 0 }}>
-            <label className="form-label">Filter by Source IP</label>
+          <div className={cn(formGroup, 'flex-[1_1_200px] m-0')}>
+            <label className={formLabel}>Filter by Source IP</label>
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder="e.g. 192.168.1.100"
               value={sourceIpFilter}
               onChange={(e) => setSourceIpFilter(e.target.value)}
@@ -815,62 +768,20 @@ END OF REPORT
             />
           </div>
 
-          <button className="control-btn primary" onClick={fetchIncidents}>
+          <button className={controlBtn('primary')} onClick={fetchIncidents}>
             Filter
           </button>
-
-          {incidents.length > 0 && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-              <button 
-                className="control-btn"
-                onClick={toggleSelectAll}
-                style={{
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem',
-                  background: 'var(--bg-surface-elevated)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-main)'
-                }}
-              >
-                {selectedIncidentIds.size === incidents.length ? (
-                  <><CheckSquare size={16} color="var(--accent-gold)" /> Deselect All</>
-                ) : (
-                  <><Square size={16} color="var(--text-muted)" /> Select All</>
-                )}
-              </button>
-
-              {selectedIncidentIds.size > 0 && (
-                <button 
-                  className="control-btn" 
-                  onClick={handleDeleteSelected}
-                  disabled={isDeleting}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.5rem',
-                    background: 'var(--crit-bg)',
-                    color: 'var(--crit-color)',
-                    border: '1px solid var(--crit-border)'
-                  }}
-                >
-                  <Trash2 size={16} />
-                  {isDeleting ? 'Deleting...' : `Delete Selected (${selectedIncidentIds.size})`}
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </motion.div>
 
       {/* Incidents Table */}
-      <motion.div variants={itemVariants} className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <Flame size={18} color="var(--crit-color)" />
+      <motion.div variants={itemVariants} className={card}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Flame size={18} color="var(--color-crit)" />
             <span>Correlated Security Incidents</span>
           </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <span className="text-[0.78rem] text-fg-muted">
             Showing {incidents.length} incident chains
           </span>
         </div>
@@ -880,50 +791,28 @@ END OF REPORT
         ) : error ? (
           <ErrorState title="Failed to Load Incidents" error={error} onRetry={fetchIncidents} />
         ) : incidents.length === 0 ? (
-          <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+          <div className="py-12 px-6 text-center">
             <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'var(--benign-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem auto',
-                border: '1px solid var(--benign-border)',
-              }}
+              className="w-[48px] h-[48px] rounded-[50%] bg-benign-bg flex items-center justify-center mt-0 mx-auto mb-4 border border-benign"
             >
-              <Flame size={24} color="var(--benign-color)" />
+              <Flame size={24} color="var(--color-benign)" />
             </div>
-            <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
+            <div className="font-bold text-[1rem] mb-[0.35rem] text-fg">
               {statusFilter || severityFilter || sourceIpFilter
                 ? 'No Incidents Match Query'
                 : 'Zero Active Incident Chains'}
             </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.84rem', maxWidth: '420px', margin: '0 auto' }}>
+            <div className="text-fg-muted text-[0.84rem] max-w-[420px] my-0 mx-auto">
               {statusFilter || severityFilter || sourceIpFilter
                 ? 'Try adjusting or clearing your filters to view historical incidents.'
                 : 'All network flows and alerts are within isolated thresholds. Multi-event correlations will appear here.'}
             </div>
           </div>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div className={tableContainer}>
+            <table className={dataTable}>
               <thead>
                 <tr>
-                  <th style={{ width: '40px', textAlign: 'center' }}>
-                    <div
-                      onClick={toggleSelectAll}
-                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      {selectedIncidentIds.size === incidents.length && incidents.length > 0 ? (
-                        <CheckSquare size={16} color="var(--accent-gold)" />
-                      ) : (
-                        <Square size={16} color="var(--text-muted)" />
-                      )}
-                    </div>
-                  </th>
                   <th>Status</th>
                   <th>Severity</th>
                   <th>Incident ID</th>
@@ -940,29 +829,12 @@ END OF REPORT
                 {incidents.map((inc) => (
                   <tr 
                     key={inc.incident_id}
-                    className="clickable-row"
+                    className="cursor-pointer [transition:background-color_0.2s_ease] hover:bg-elevated"
                     onClick={() => handleOpenDetail(inc.incident_id)}
-                    style={{ background: selectedIncidentIds.has(inc.incident_id) ? 'var(--bg-surface-elevated)' : '' }}
                   >
-                    <td onClick={(e) => toggleSelection(e, inc.incident_id)} style={{ textAlign: 'center', cursor: 'pointer' }}>
-                      {selectedIncidentIds.has(inc.incident_id) ? (
-                        <CheckSquare size={16} color="var(--accent-gold)" />
-                      ) : (
-                        <Square size={16} color="var(--text-muted)" />
-                      )}
-                    </td>
                     <td>
                       <span
-                        className="mono"
-                        style={{
-                          fontSize: '0.72rem',
-                          fontWeight: 700,
-                          padding: '0.15rem 0.45rem',
-                          borderRadius: '4px',
-                          background: inc.status === 'OPEN' ? 'var(--crit-bg)' : 'var(--benign-bg)',
-                          color: inc.status === 'OPEN' ? 'var(--crit-color)' : 'var(--benign-color)',
-                          border: `1px solid ${inc.status === 'OPEN' ? 'var(--crit-border)' : 'var(--benign-border)'}`,
-                        }}
+                        className={cn(mono, 'text-[0.72rem] font-bold py-[0.15rem] px-[0.45rem] rounded-[4px]', (inc.status === 'OPEN' ? 'bg-crit-bg' : 'bg-benign-bg'), (inc.status === 'OPEN' ? 'text-crit' : 'text-benign'), 'border', inc.status === 'OPEN' ? 'border-crit' : 'border-benign')}
                       >
                         {inc.status}
                       </span>
@@ -970,50 +842,44 @@ END OF REPORT
                     <td>
                       <SeverityBadge severity={inc.severity} size="sm" />
                     </td>
-                    <td className="mono" style={{ fontSize: '0.78rem' }}>
+                    <td className={cn(mono, 'text-[0.78rem]!')}>
                       {inc.incident_id}
                     </td>
-                    <td className="mono">{inc.source_ip || 'N/A'}</td>
-                    <td className="mono">{inc.destination_ip || 'N/A'}</td>
+                    <td className={mono}>{inc.source_ip || 'N/A'}</td>
+                    <td className={mono}>{inc.destination_ip || 'N/A'}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                      <div className="flex gap-1 flex-wrap">
                         {inc.attack_categories.map((cat, idx) => (
                           <span
                             key={idx}
-                            className="mono"
-                            style={{
-                              fontSize: '0.68rem',
-                              background: 'var(--bg-surface-elevated)',
-                              border: '1px solid var(--border-subtle)',
-                              padding: '2px 6px',
-                              borderRadius: '4px',
-                            }}
+                            className={cn(mono, 'text-[0.68rem] bg-elevated border border-line py-[2px] px-[6px] rounded-[4px]')}
+
                           >
                             {cat}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="mono" style={{ fontWeight: 700 }}>
+                    <td className={cn(mono, 'font-bold!')}>
                       {inc.event_count}
                     </td>
-                    <td className="mono" style={{ fontWeight: 700 }}>
+                    <td className={cn(mono, 'font-bold!')}>
                       {inc.correlation_score}
                     </td>
                     <td>
                       {inc.escalation_detected ? (
-                        <span className="nav-badge danger" style={{ fontSize: '0.68rem' }}>
+                        <span className={navBadge('danger', 'text-[0.68rem]')}>
                           ESCALATED
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>None</span>
+                        <span className="text-fg-muted text-[0.75rem]">None</span>
                       )}
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <div className="flex gap-[0.4rem]">
                         <button
-                          className="control-btn"
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                          className={cn(controlBtn(), 'py-1 px-2 text-[0.75rem]')}
+
                           onClick={(e) => {
                             e.stopPropagation();
                             handleOpenDetail(inc.incident_id);
@@ -1025,8 +891,8 @@ END OF REPORT
                         </button>
                         {inc.status === 'OPEN' && (
                           <button
-                            className="control-btn success"
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                            className={cn(controlBtn('success'), 'py-1 px-2 text-[0.75rem]')}
+
                             onClick={(e) => {
                               e.stopPropagation();
                               setIncidentToResolve(inc);
@@ -1054,118 +920,115 @@ END OF REPORT
           onClose={() => setSelectedIncident(null)}
           wide
           title={
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <GitBranch size={18} color="var(--accent-cyan)" />
+            <div className="flex items-center gap-2">
+              <GitBranch size={18} color="var(--color-accent)" />
               <span>Incident Detail: {selectedIncident.incident.incident_id}</span>
               <SeverityBadge severity={selectedIncident.incident.severity} size="sm" />
             </div>
           }
           footer={
-            <div style={{ display: 'flex', gap: '0.75rem', width: '100%', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="flex gap-3 w-full items-center flex-wrap">
               {/* Resolve — only when OPEN */}
               {selectedIncident.incident.status === 'OPEN' && (
                 <button
-                  className="control-btn success"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  className={cn(controlBtn('success'), 'flex items-center gap-2')}
+
                   onClick={() => setIncidentToResolve(selectedIncident.incident)}
                 >
                   <CheckCircle size={16} />
                   Resolve Incident
                 </button>
               )}
+              {/* Block Actions */}
               {selectedIncident.incident.source_ip && (
-                <button
-                  className="control-btn"
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#dc2626', color: 'white', border: 'none' }}
-                  onClick={handleBlockSourceIp}
-                  disabled={isBlocking}
-                >
-                  <ShieldAlert size={16} />
-                  {isBlocking ? 'Blocking...' : 'Block Source IP'}
-                </button>
+                <>
+                  <button
+                    className={cn(controlBtn('danger'), 'flex items-center gap-2')}
+                    onClick={() => handleBlockIp(selectedIncident.incident.source_ip!)}
+                  >
+                    <Ban size={16} /> Block IP
+                  </button>
+                  <button
+                    className={cn(controlBtn('danger'), 'flex items-center gap-2 bg-[#991b1b] border-[#7f1d1d] hover:bg-[#7f1d1d]')}
+                    onClick={() => handlePermanentBlock(selectedIncident.incident.source_ip!)}
+                  >
+                    <Database size={16} /> Never work again from any IP
+                  </button>
+                </>
               )}
-              <button
-                className="control-btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#0f172a', color: 'white', border: '1px solid #334155' }}
-                onClick={handleAddWafSignature}
-                disabled={isAddingSig}
-              >
-                <GitBranch size={16} />
-                {isAddingSig ? 'Adding...' : 'Never work again from any IP'}
-              </button>
               {/* TXT Download */}
               <button
-                className="control-btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}
+                className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] not-disabled:hover:bg-[#f1f5f9] not-disabled:hover:text-[#334155] not-disabled:hover:border-[#cbd5e1]')}
+
                 onClick={() => generateIncidentTxt(selectedIncident)}
               >
                 <FileText size={16} /> TXT Report
               </button>
               {/* PDF / Print */}
               <button
-                className="control-btn primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-cyan)', color: 'white', border: 'none' }}
+                className={cn(controlBtn('primary'), 'flex items-center gap-2 bg-accent text-white border-none')}
+
                 onClick={() => generateIncidentReport(selectedIncident)}
               >
                 <Printer size={16} /> Print / Save as PDF
               </button>
               {popupBlocked && (
-                <span style={{ color: 'var(--accent-gold)', fontSize: '0.78rem', fontWeight: 600 }}>
+                <span className="text-accent text-[0.78rem] font-semibold">
                   ⚠ Allow popups to open the PDF
                 </span>
               )}
               {/* spacer */}
-              <div style={{ flex: 1 }} />
-              <button className="control-btn" onClick={() => setSelectedIncident(null)}>
+              <div className="flex-1" />
+              <button className={controlBtn()} onClick={() => setSelectedIncident(null)}>
                 Close
               </button>
             </div>
           }
         >
           <div>
-            <p className="modal-description">
+            <p className="mb-6 text-[0.9rem] leading-[1.5] text-fg-2">
               {selectedIncident.incident.summary}
             </p>
 
-            <div className="modal-section">
+            <div className="mb-6 last:mb-0 [&_h3]:mb-[0.85rem] [&_h3]:border-b [&_h3]:border-b-line [&_h3]:pb-2 [&_h3]:text-[0.85rem] [&_h3]:tracking-[0.05em] [&_h3]:text-accent [&_h3]:uppercase">
               <h3>Correlation Diagnostics</h3>
-              <div className="kv-grid">
-                <div className="kv-item">
-                  <span className="kv-label">Status</span>
-                  <span className="kv-value">{selectedIncident.incident.status}</span>
+              <div className={kvGrid}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Status</span>
+                  <span className={kvValue}>{selectedIncident.incident.status}</span>
                 </div>
-                <div className="kv-item">
-                  <span className="kv-label">Escalation State</span>
-                  <span className="kv-value" style={{ color: selectedIncident.incident.escalation_detected ? 'var(--crit-color)' : 'var(--benign-color)' }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Escalation State</span>
+                  <span className={cn(kvValue, (selectedIncident.incident.escalation_detected ? 'text-crit' : 'text-benign'))}>
                     {selectedIncident.incident.escalation_detected ? 'ESCALATED' : 'Normal'}
                   </span>
                 </div>
-                <div className="kv-item">
-                  <span className="kv-label">First Seen</span>
-                  <span className="kv-value mono">{selectedIncident.incident.first_seen}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>First Seen</span>
+                  <span className={cn(mono, kvValue)}>{selectedIncident.incident.first_seen}</span>
                 </div>
-                <div className="kv-item">
-                  <span className="kv-label">Last Seen</span>
-                  <span className="kv-value mono">{selectedIncident.incident.last_seen}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Last Seen</span>
+                  <span className={cn(mono, kvValue)}>{selectedIncident.incident.last_seen}</span>
                 </div>
-                <div className="kv-item">
-                  <span className="kv-label">Correlated Events</span>
-                  <span className="kv-value mono">{selectedIncident.incident.event_count}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Correlated Events</span>
+                  <span className={cn(mono, kvValue)}>{selectedIncident.incident.event_count}</span>
                 </div>
-                <div className="kv-item">
-                  <span className="kv-label">Recommended Action</span>
-                  <span className="kv-value" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Recommended Action</span>
+                  <span className={cn(kvValue, 'text-fg font-semibold')}>
                     {selectedIncident.incident.recommended_action || 'Monitor traffic'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="modal-section">
+            <div className="mb-6 last:mb-0 [&_h3]:mb-[0.85rem] [&_h3]:border-b [&_h3]:border-b-line [&_h3]:pb-2 [&_h3]:text-[0.85rem] [&_h3]:tracking-[0.05em] [&_h3]:text-accent [&_h3]:uppercase">
               <h3>Attack Categories Identified</h3>
-              <div className="features-grid">
+              <div className="flex flex-wrap gap-2">
                 {selectedIncident.incident.attack_categories.map((cat: string, idx: number) => (
-                  <div key={idx} className="feature-badge">
+                  <div key={idx} className="rounded-[4px] border border-line bg-app px-[0.65rem] py-[0.35rem] font-mono text-[0.75rem] text-fg">
                     {cat}
                   </div>
                 ))}
@@ -1173,15 +1036,15 @@ END OF REPORT
             </div>
 
             {/* Linked Events List */}
-            <div className="modal-section">
+            <div className="mb-6 last:mb-0 [&_h3]:mb-[0.85rem] [&_h3]:border-b [&_h3]:border-b-line [&_h3]:pb-2 [&_h3]:text-[0.85rem] [&_h3]:tracking-[0.05em] [&_h3]:text-accent [&_h3]:uppercase">
               <h3>Associated Security Events ({selectedIncident.events.length})</h3>
               {selectedIncident.events.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                <div className="text-fg-muted text-[0.8rem]">
                   No event records found linked to this incident.
                 </div>
               ) : (
-                <div className="table-container" style={{ maxHeight: '300px' }}>
-                  <table className="data-table">
+                <div className={cn(tableContainer, 'max-h-[300px]')}>
+                  <table className={dataTable}>
                     <thead>
                       <tr>
                         <th>Event ID</th>
@@ -1195,20 +1058,20 @@ END OF REPORT
                     <tbody>
                       {selectedIncident.events.map((ev: any, idx: number) => (
                         <tr key={ev.event_id || idx}>
-                          <td className="mono" style={{ fontSize: '0.75rem' }}>
+                          <td className={cn(mono, 'text-[0.75rem]!')}>
                             {ev.event_id}
                           </td>
-                          <td className="mono" style={{ fontSize: '0.75rem' }}>
+                          <td className={cn(mono, 'text-[0.75rem]!')}>
                             {ev.timestamp}
                           </td>
                           <td>
-                            <span style={{ fontWeight: 600 }}>
+                            <span className="font-semibold">
                               {ev.attack_type || ev.classification || 'UNKNOWN'}
                             </span>
                           </td>
-                          <td className="mono">{ev.risk_score ?? ev.threat_score ?? 0}</td>
-                          <td className="mono">{ev.source_ip || ev.domain || 'N/A'}</td>
-                          <td className="mono">{ev.destination_ip || 'N/A'}</td>
+                          <td className={mono}>{ev.risk_score ?? ev.threat_score ?? 0}</td>
+                          <td className={mono}>{ev.source_ip || ev.domain || 'N/A'}</td>
+                          <td className={mono}>{ev.destination_ip || 'N/A'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1231,10 +1094,10 @@ END OF REPORT
             <div>
               <p>
                 Are you sure you want to mark incident{' '}
-                <strong className="mono">{incidentToResolve.incident_id}</strong> as{' '}
+                <strong className={mono}>{incidentToResolve.incident_id}</strong> as{' '}
                 <strong>RESOLVED</strong>?
               </p>
-              <p style={{ marginTop: '0.5rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              <p className="mt-2 text-[0.82rem] text-fg-muted">
                 This will submit a resolution request to the backend correlation engine. The incident state will only be updated once the server confirms success.
               </p>
             </div>
@@ -1244,18 +1107,6 @@ END OF REPORT
         }
         confirmLabel="Resolve Incident"
         isLoading={isResolving}
-      />
-
-      {/* Confirmation Dialog for Deletion */}
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={confirmDeleteSelected}
-        title="Delete Selected Incidents"
-        message={`Are you sure you want to permanently delete ${selectedIncidentIds.size} selected incident(s)? This action cannot be undone.`}
-        confirmLabel="Delete"
-        isDestructive={true}
-        isLoading={isDeleting}
       />
     </motion.div>
   );

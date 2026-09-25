@@ -47,7 +47,7 @@ export const App: React.FC = () => {
   const [threatLevel, setThreatLevel] = useState<Severity>('LOW');
   const [openIncidentsCount, setOpenIncidentsCount] = useState(0);
   const [sensorRunning, setSensorRunning] = useState(false);
-  const [preventionMode, setPreventionMode] = useState<PreventionMode>('enforce');
+  const [preventionMode, setPreventionMode] = useState<PreventionMode>('detect_only');
 
   // Live Refresh
   const [refreshKey, setRefreshKey] = useState(0);
@@ -88,7 +88,7 @@ export const App: React.FC = () => {
       }
 
       if (netHealthRes.status === 'fulfilled') {
-        setPreventionMode(netHealthRes.value.prevention_mode || 'enforce');
+        setPreventionMode(netHealthRes.value.prevention_mode || 'detect_only');
       }
 
     } catch {
@@ -135,7 +135,7 @@ export const App: React.FC = () => {
       case 'phishing':
         return {
           title: 'Phishing Threat Detector',
-          subtitle: '28-feature Random Forest ML classification & local URL heuristic inspection',
+          subtitle: '15-feature Random Forest ML classification & local URL heuristic inspection',
         };
       case 'email':
         return {
@@ -174,17 +174,11 @@ export const App: React.FC = () => {
 
   const handleSetMode = async (newMode: 'detect_only' | 'enforce') => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/network/prevention-mode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: newMode })
-      });
-      if (response.ok) {
-        setPreventionMode(newMode);
-        // Trigger immediate global refresh
-        setRefreshKey((k) => k + 1);
-        fetchGlobalStatus();
-      }
+      await api.network.setPreventionMode(newMode);
+      setPreventionMode(newMode);
+      // Trigger immediate global refresh
+      setRefreshKey((k) => k + 1);
+      fetchGlobalStatus();
     } catch (err) {
       console.error('Failed to update prevention mode:', err);
     }
@@ -193,7 +187,7 @@ export const App: React.FC = () => {
   const { title, subtitle } = getPageMeta();
 
   return (
-    <div className="app-container">
+    <div className="flex h-full w-full">
       <Sidebar
         currentTab={currentTab}
         onSelectTab={(tab) => {
@@ -208,7 +202,7 @@ export const App: React.FC = () => {
         backendConnected={backendConnected}
       />
 
-      <div className="main-content">
+      <div className="flex h-full flex-1 flex-col overflow-y-auto bg-app">
         <Header
           title={title}
           subtitle={subtitle}
@@ -217,7 +211,7 @@ export const App: React.FC = () => {
           onModeToggle={() => handleSetMode(preventionMode === 'detect_only' ? 'enforce' : 'detect_only')}
         />
 
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <main className="flex-1 flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentTab}
@@ -225,7 +219,7 @@ export const App: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const }}
-              style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              className="flex-1 flex flex-col"
             >
               {currentTab === 'overview' && (
                 <OverviewPage

@@ -6,6 +6,8 @@ import { ErrorState } from '../components/common/ErrorState';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { Radio, Play, Square, AlertTriangle, CheckCircle, RefreshCw, Cpu, Activity } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, codeTag, controlBtn, formGroup, formInput, formLabel, formSelect, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody, presetPill } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -148,14 +150,14 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Privilege & Privacy Disclaimer Banner */}
-      <motion.div variants={itemVariants} className="alert-box warning">
-        <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+      <motion.div variants={itemVariants} className={alertBox('warning')}>
+        <AlertTriangle size={18} className="shrink-0" />
         <div>
           <strong>Npcap & High-Performance C++ Capture Architecture:</strong> Live packet capture runs in user space through a custom C++ engine leveraging Npcap.
           Depending on the Windows interface and Npcap configuration, packet capture may require elevated privileges.
@@ -164,129 +166,117 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
       </motion.div>
 
       {actionNotice && (
-        <motion.div variants={itemVariants} className="alert-box success">
+        <motion.div variants={itemVariants} className={alertBox('success')}>
           <CheckCircle size={16} />
           <span>{actionNotice}</span>
         </motion.div>
       )}
 
       {error && (
-        <motion.div variants={itemVariants} className="alert-box danger">
+        <motion.div variants={itemVariants} className={alertBox('danger')}>
           <AlertTriangle size={16} />
           <span>{error}</span>
         </motion.div>
       )}
 
       {/* Sensor Status Banner */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-header">
-          <div className="card-title">
-            <Radio size={18} color={isRunning ? 'var(--benign-color)' : 'var(--text-muted)'} />
+      <motion.div variants={itemVariants} className={cn(card, 'mb-6')}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Radio size={18} color={isRunning ? 'var(--color-benign)' : 'var(--color-fg-muted)'} />
             <span>Sensor Runtime Telemetry</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="flex items-center gap-3">
             <span
-              className="mono"
-              style={{
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                padding: '0.3rem 0.75rem',
-                borderRadius: '6px',
-                background: isRunning ? 'var(--benign-bg)' : 'var(--bg-surface-elevated)',
-                color: isRunning ? 'var(--benign-color)' : 'var(--text-muted)',
-                border: `1px solid ${isRunning ? 'var(--benign-border)' : 'var(--border-subtle)'}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-              }}
+              className={cn(mono, 'text-[0.78rem] font-bold py-[0.3rem] px-3 rounded-[6px] flex items-center gap-[0.45rem]', (isRunning ? 'bg-benign-bg' : 'bg-elevated'), (isRunning ? 'text-benign' : 'text-fg-muted'), 'border', isRunning ? 'border-benign' : 'border-line')}
             >
-              {isRunning && <span className="pulse-dot" />}
-              {!isRunning && <span className="status-indicator offline" style={{ width: '7px', height: '7px' }} />}
+              {isRunning && <span className="inline-block size-[8px] animate-pulse-green rounded-[50%] bg-benign" />}
+              {!isRunning && <span className={cn('mr-[6px] inline-block size-[8px] rounded-[50%] bg-benign', 'bg-crit', 'w-[7px] h-[7px]')} />}
               {isRunning ? 'SENSOR ACTIVE' : 'SENSOR STANDBY'}
             </span>
           </div>
         </div>
 
         {/* Real-Time Metrics Grid */}
-        <div className="telemetry-grid-4" style={{ marginTop: '0.75rem', marginBottom: '1rem' }}>
-          <motion.div whileHover={{ y: -2 }} className="telemetry-card">
-            <div className="telemetry-card-header">
-              <span className="telemetry-card-label">Packets Captured</span>
-              <div className="telemetry-card-icon" style={{ color: 'var(--text-primary)' }}>
+        <div className={cn('mb-6 grid grid-cols-[repeat(4,1fr)] gap-[1.1rem] lte-960:grid-cols-[repeat(2,1fr)] lte-540:grid-cols-[1fr]', 'mt-3 mb-4')}>
+          <motion.div whileHover={{ y: -2 }} className="relative cursor-pointer overflow-hidden rounded-none border border-line-card bg-surface px-5 py-[1.15rem] [transition:all_0.2s_cubic-bezier(0.4,0,0.2,1)] hover:border-elevated hover:transform-[translateY(-2px)]">
+            <div className="mb-[0.65rem] flex items-center justify-between">
+              <span className="text-[0.76rem] font-bold tracking-[0.05em] text-fg-muted uppercase">Packets Captured</span>
+              <div className={cn('flex size-[32px] items-center justify-center rounded-none bg-elevated text-fg-2', 'text-fg')}>
                 <Activity size={16} />
               </div>
             </div>
-            <div className="telemetry-card-value">
+            <div className="mb-[0.35rem] font-sans text-[1.75rem] leading-[1.1] font-extrabold text-fg">
               {sensorStatus?.packets_captured?.toLocaleString() ?? 0}
             </div>
-            <div className="telemetry-card-sub">Raw frames parsed via C++ Engine</div>
+            <div className="text-[0.74rem] font-medium text-fg-muted">Raw frames parsed via C++ Engine</div>
           </motion.div>
 
-          <motion.div whileHover={{ y: -2 }} className="telemetry-card">
-            <div className="telemetry-card-header">
-              <span className="telemetry-card-label">Active Flows</span>
-              <div className="telemetry-card-icon" style={{ color: 'var(--accent-blue)' }}>
+          <motion.div whileHover={{ y: -2 }} className="relative cursor-pointer overflow-hidden rounded-none border border-line-card bg-surface px-5 py-[1.15rem] [transition:all_0.2s_cubic-bezier(0.4,0,0.2,1)] hover:border-elevated hover:transform-[translateY(-2px)]">
+            <div className="mb-[0.65rem] flex items-center justify-between">
+              <span className="text-[0.76rem] font-bold tracking-[0.05em] text-fg-muted uppercase">Active Flows</span>
+              <div className={cn('flex size-[32px] items-center justify-center rounded-none bg-elevated text-fg-2', 'text-accent')}>
                 <Radio size={16} />
               </div>
             </div>
-            <div className="telemetry-card-value" style={{ color: 'var(--accent-blue)' }}>
+            <div className={cn('mb-[0.35rem] font-sans text-[1.75rem] leading-[1.1] font-extrabold text-fg', 'text-accent')}>
               {sensorStatus?.active_flows?.toLocaleString() ?? 0}
             </div>
-            <div className="telemetry-card-sub">Sliding-window tracking table</div>
+            <div className="text-[0.74rem] font-medium text-fg-muted">Sliding-window tracking table</div>
           </motion.div>
 
-          <motion.div whileHover={{ y: -2 }} className="telemetry-card">
-            <div className="telemetry-card-header">
-              <span className="telemetry-card-label">Finalized Flows</span>
-              <div className="telemetry-card-icon" style={{ color: 'var(--benign-color)' }}>
+          <motion.div whileHover={{ y: -2 }} className="relative cursor-pointer overflow-hidden rounded-none border border-line-card bg-surface px-5 py-[1.15rem] [transition:all_0.2s_cubic-bezier(0.4,0,0.2,1)] hover:border-elevated hover:transform-[translateY(-2px)]">
+            <div className="mb-[0.65rem] flex items-center justify-between">
+              <span className="text-[0.76rem] font-bold tracking-[0.05em] text-fg-muted uppercase">Finalized Flows</span>
+              <div className={cn('flex size-[32px] items-center justify-center rounded-none bg-elevated text-fg-2', 'text-benign')}>
                 <CheckCircle size={16} />
               </div>
             </div>
-            <div className="telemetry-card-value" style={{ color: 'var(--benign-color)' }}>
+            <div className={cn('mb-[0.35rem] font-sans text-[1.75rem] leading-[1.1] font-extrabold text-fg', 'text-benign')}>
               {(sensorStatus?.finalized_flows ?? sensorStatus?.completed_flows ?? 0).toLocaleString()}
             </div>
-            <div className="telemetry-card-sub">Exported to Network IDS ML</div>
+            <div className="text-[0.74rem] font-medium text-fg-muted">Exported to Network IDS ML</div>
           </motion.div>
 
-          <motion.div whileHover={{ y: -2 }} className="telemetry-card">
-            <div className="telemetry-card-header">
-              <span className="telemetry-card-label">Dropped Packets</span>
-              <div className="telemetry-card-icon" style={{ color: (sensorStatus?.packets_dropped ?? sensorStatus?.errors) ? 'var(--crit-color)' : 'var(--text-muted)' }}>
+          <motion.div whileHover={{ y: -2 }} className="relative cursor-pointer overflow-hidden rounded-none border border-line-card bg-surface px-5 py-[1.15rem] [transition:all_0.2s_cubic-bezier(0.4,0,0.2,1)] hover:border-elevated hover:transform-[translateY(-2px)]">
+            <div className="mb-[0.65rem] flex items-center justify-between">
+              <span className="text-[0.76rem] font-bold tracking-[0.05em] text-fg-muted uppercase">Dropped Packets</span>
+              <div className={cn('flex size-[32px] items-center justify-center rounded-none bg-elevated text-fg-2', ((sensorStatus?.packets_dropped ?? sensorStatus?.errors) ? 'text-crit' : 'text-fg-muted'))}>
                 <AlertTriangle size={16} />
               </div>
             </div>
-            <div className="telemetry-card-value" style={{ color: (sensorStatus?.packets_dropped ?? sensorStatus?.errors) ? 'var(--crit-color)' : 'var(--text-primary)' }}>
+            <div className={cn('mb-[0.35rem] font-sans text-[1.75rem] leading-[1.1] font-extrabold text-fg', ((sensorStatus?.packets_dropped ?? sensorStatus?.errors) ? 'text-crit' : 'text-fg'))}>
               {(sensorStatus?.packets_dropped ?? sensorStatus?.errors ?? 0).toLocaleString()}
             </div>
-            <div className="telemetry-card-sub">Ring buffer overrun count</div>
+            <div className="text-[0.74rem] font-medium text-fg-muted">Ring buffer overrun count</div>
           </motion.div>
         </div>
 
         {/* Current Config Details */}
-        <div className="kv-grid" style={{ marginTop: '1.25rem' }}>
-          <div className="kv-item">
-            <span className="kv-label">Bound Interface</span>
-            <span className="kv-value mono">{sensorStatus?.interface || 'None'}</span>
+        <div className={cn(kvGrid, 'mt-5')}>
+          <div className={kvItem}>
+            <span className={kvLabel}>Bound Interface</span>
+            <span className={cn(mono, kvValue)}>{sensorStatus?.interface || 'None'}</span>
           </div>
-          <div className="kv-item">
-            <span className="kv-label">BPF Filter</span>
-            <span className="kv-value mono">{sensorStatus?.bpf_filter || 'None'}</span>
+          <div className={kvItem}>
+            <span className={kvLabel}>BPF Filter</span>
+            <span className={cn(mono, kvValue)}>{sensorStatus?.bpf_filter || 'None'}</span>
           </div>
-          <div className="kv-item">
-            <span className="kv-label">Flow Idle Timeout</span>
-            <span className="kv-value mono">{sensorStatus?.flow_idle_timeout ?? 5} seconds</span>
+          <div className={kvItem}>
+            <span className={kvLabel}>Flow Idle Timeout</span>
+            <span className={cn(mono, kvValue)}>{sensorStatus?.flow_idle_timeout ?? 5} seconds</span>
           </div>
-          <div className="kv-item">
-            <span className="kv-label">Flow Active Timeout</span>
-            <span className="kv-value mono">{sensorStatus?.flow_active_timeout ?? 120} seconds</span>
+          <div className={kvItem}>
+            <span className={kvLabel}>Flow Active Timeout</span>
+            <span className={cn(mono, kvValue)}>{sensorStatus?.flow_active_timeout ?? 120} seconds</span>
           </div>
-          <div className="kv-item">
-            <span className="kv-label">Started At</span>
-            <span className="kv-value mono">{sensorStatus?.started_at || 'Idle'}</span>
+          <div className={kvItem}>
+            <span className={kvLabel}>Started At</span>
+            <span className={cn(mono, kvValue)}>{sensorStatus?.started_at || 'Idle'}</span>
           </div>
-          <div className="kv-item">
-            <span className="kv-label">Default Prevention Safety</span>
-              <span className="kv-value mono" style={{ color: 'var(--accent-cyan)' }}>
+          <div className={kvItem}>
+            <span className={kvLabel}>Default Prevention Safety</span>
+              <span className={cn(mono, kvValue, 'text-accent')}>
                 {sensorStatus?.prevention_mode || 'enforce'}
               </span>
           </div>
@@ -294,19 +284,19 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
       </motion.div>
 
       {/* Sensor Controls Card */}
-      <motion.div variants={itemVariants} className="card">
-        <div className="card-header">
-          <div className="card-title">
-            <Cpu size={16} color="var(--accent-blue)" />
+      <motion.div variants={itemVariants} className={card}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Cpu size={16} color="var(--color-accent)" />
             <span>Packet Sensor Configuration & Control</span>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Network Interface</label>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4 mb-4">
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Network Interface</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={selectedInterface}
               onChange={(e) => setSelectedInterface(e.target.value)}
               disabled={isRunning}
@@ -322,11 +312,11 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
             </select>
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">BPF Capture Filter</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>BPF Capture Filter</label>
             <input
               type="text"
-              className="form-input mono"
+              className={cn(mono, formInput)}
               value={bpfFilter}
               onChange={(e) => setBpfFilter(e.target.value)}
               placeholder="e.g. ip or ip6, tcp, or port 80"
@@ -334,22 +324,22 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
             />
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Flow Idle Timeout (s)</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Flow Idle Timeout (s)</label>
             <input
               type="number"
-              className="form-input mono"
+              className={cn(mono, formInput)}
               value={flowIdleTimeout}
               onChange={(e) => setFlowIdleTimeout(Number(e.target.value))}
               disabled={isRunning}
             />
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Flow Active Timeout (s)</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Flow Active Timeout (s)</label>
             <input
               type="number"
-              className="form-input mono"
+              className={cn(mono, formInput)}
               value={flowActiveTimeout}
               onChange={(e) => setFlowActiveTimeout(Number(e.target.value))}
               disabled={isRunning}
@@ -359,11 +349,11 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
 
         {/* Quick BPF Filter Presets */}
         {!isRunning && (
-          <div style={{ marginBottom: '1.25rem' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div className="mb-5">
+            <span className="text-[0.72rem] font-semibold text-fg-muted uppercase tracking-[0.04em]">
               BPF Filter Presets:
             </span>
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+            <div className="flex gap-[0.4rem] flex-wrap mt-[0.35rem]">
               {[
                 { label: 'All IPv4/IPv6', filter: 'ip or ip6' },
                 { label: 'TCP Only', filter: 'tcp' },
@@ -374,9 +364,9 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
                 <button
                   key={p.filter}
                   type="button"
-                  className="preset-pill"
+                  className={cn(presetPill, 'text-[0.72rem] py-[0.2rem] px-[0.55rem]')}
                   onClick={() => setBpfFilter(p.filter)}
-                  style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem' }}
+
                 >
                   {p.label}
                 </button>
@@ -385,10 +375,10 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+        <div className="flex justify-end gap-3">
           {isRunning ? (
             <button
-              className="control-btn danger"
+              className={controlBtn('danger')}
               onClick={() => setIsConfirmStopOpen(true)}
               disabled={isOperating}
             >
@@ -397,7 +387,7 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
             </button>
           ) : (
             <button
-              className="control-btn primary"
+              className={controlBtn('primary')}
               onClick={() => setIsConfirmStartOpen(true)}
               disabled={isOperating || !selectedInterface}
             >
@@ -418,11 +408,11 @@ export const SensorPage: React.FC<SensorPageProps> = ({ refreshTrigger }) => {
           <div>
             <p>
               Are you sure you want to start live packet capture on interface{' '}
-              <strong className="mono">{selectedInterface}</strong> with filter{' '}
-              <code className="mono">{bpfFilter}</code>?
+              <strong className={mono}>{selectedInterface}</strong> with filter{' '}
+              <code className={cn(codeTag, mono)}>{bpfFilter}</code>?
             </p>
-            <div className="alert-box warning" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
-              <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+            <div className={cn(alertBox('warning'), 'mt-3 mb-0')}>
+              <AlertTriangle size={16} className="shrink-0" />
               <div>
                 <strong>Operating System Privilege Notice:</strong> Live packet capture runs through the custom C++ Engine and Npcap.
                 Depending on your Windows network configuration, starting packet capture may require elevated permissions.

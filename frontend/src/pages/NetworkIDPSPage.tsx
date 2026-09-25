@@ -5,8 +5,8 @@ import { Network, Activity } from 'lucide-react';
 
 export const NetworkIDPSPage: React.FC = () => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1.5rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+    <div className="flex flex-col gap-6 p-6">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5">
         <MetricCard
           title="Active Bidirectional Flows"
           value={0}
@@ -20,8 +20,8 @@ export const NetworkIDPSPage: React.FC = () => {
         />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Real-Time Network Flows</h3>
+      <div className="flex flex-col gap-3">
+        <h3 className="text-[0.9rem] text-fg">Real-Time Network Flows</h3>
         <DataGrid
           columns={[
             { header: 'Src IP', accessor: 'src_ip' },

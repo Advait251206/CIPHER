@@ -42,6 +42,7 @@ import {
   EmailAnalyzeResponse,
   EmailModelInfoResponse,
   EmailHealthResponse,
+  PreventionMode,
 } from './types';
 
 export class ApiError extends Error {
@@ -198,6 +199,11 @@ export const api = {
   // Network IDPS & Sensor
   network: {
     getHealth: () => request<NetworkHealthResponse>('/network/health'),
+    setPreventionMode: (mode: PreventionMode) =>
+      request<{ status: string; mode: PreventionMode }>('/network/prevention-mode', {
+        method: 'POST',
+        body: JSON.stringify({ mode }),
+      }),
     getStats: () => request<NetworkStatsResponse>('/network/stats'),
     getModelInfo: () => request<NetworkModelInfoResponse>('/network/model'),
     listRules: () => request<NetworkRulesResponse>('/network/rules'),
@@ -333,6 +339,15 @@ export const api = {
     getModelInfo: () => request<EmailModelInfoResponse>('/email/model'),
     getHealth: () => request<EmailHealthResponse>('/email/health'),
   },
+  waf: {
+    getConfig: () => request<Record<string, 'off' | 'detect' | 'enforce'>>('/waf/config'),
+    setMode: (feature: string, mode: 'off' | 'detect' | 'enforce') =>
+      request<{ status: string; config: Record<string, 'off' | 'detect' | 'enforce'> }>('/waf/config', {
+        method: 'POST',
+        body: JSON.stringify({ feature, mode }),
+      }).then((r) => r.config),
+  },
+
   extension: {
     getStatus: () => request<import('./types').ExtensionStatusResponse>('/extension/status'),
     launchChrome: (targetUrl?: string) =>

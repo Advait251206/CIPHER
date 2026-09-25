@@ -15,34 +15,12 @@ interface DataGridProps {
 
 export const DataGrid: React.FC<DataGridProps> = ({ columns, data, keyExtractor, emptyMessage = "No data available." }) => {
   return (
-    <div style={{
-      width: '100%',
-      overflowX: 'auto',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '6px',
-      background: 'var(--bg-surface)'
-    }}>
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        textAlign: 'left',
-        fontSize: '0.85rem'
-      }}>
+    <div className="w-full overflow-x-auto rounded-[6px] border border-line bg-surface">
+      <table className="w-full border-collapse text-left text-[0.85rem]">
         <thead>
-          <tr style={{ 
-            borderBottom: '2px solid var(--border-subtle)', 
-            background: 'var(--bg-app)' 
-          }}>
+          <tr className="border-b-2 border-b-line bg-app">
             {columns.map((col, idx) => (
-              <th key={idx} style={{
-                padding: '0.85rem 1.25rem',
-                color: 'var(--text-secondary)',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                fontSize: '0.75rem',
-                whiteSpace: 'nowrap'
-              }}>
+              <th key={idx} className="px-5 py-[0.85rem] text-[0.75rem] font-bold tracking-[0.08em] whitespace-nowrap text-fg-2 uppercase">
                 {col.header}
               </th>
             ))}
@@ -51,28 +29,18 @@ export const DataGrid: React.FC<DataGridProps> = ({ columns, data, keyExtractor,
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <td colSpan={columns.length} className="px-8 py-12 text-center text-fg-muted">
                 {emptyMessage}
               </td>
             </tr>
           ) : (
-            data.map((row, rIdx) => (
-              <tr key={keyExtractor(row)} style={{
-                borderBottom: rIdx === data.length - 1 ? 'none' : '1px solid var(--border-subtle)',
-                transition: 'background 0.2s ease, border-left 0.2s ease',
-                borderLeft: '3px solid transparent'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-card-hover)';
-                e.currentTarget.style.borderLeftColor = 'var(--border-accent)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderLeftColor = 'transparent';
-              }}
+            data.map((row) => (
+              <tr
+                key={keyExtractor(row)}
+                className="border-b border-l-[3px] border-b-line border-l-transparent [transition:background_0.2s_ease,border-left_0.2s_ease] last:border-b-0 hover:border-l-accent hover:bg-card-hover"
               >
                 {columns.map((col, cIdx) => (
-                  <td key={cIdx} style={{ padding: '0.85rem 1.25rem', color: 'var(--text-primary)', verticalAlign: 'middle' }}>
+                  <td key={cIdx} className="px-5 py-[0.85rem] align-middle text-fg">
                     {col.render ? col.render(row[col.accessor], row) : row[col.accessor]}
                   </td>
                 ))}

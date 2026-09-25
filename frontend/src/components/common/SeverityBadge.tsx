@@ -1,6 +1,17 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, AlertCircle, Shield, CheckCircle2 } from 'lucide-react';
 import { Severity } from '../../api/types';
+import { cn } from '../../lib/cn';
+
+type BadgeVariant = 'critical' | 'high' | 'medium' | 'low' | 'benign';
+
+const variantClass: Record<BadgeVariant, string> = {
+  critical: 'border-crit bg-crit-bg text-crit',
+  high: 'border-high bg-high-bg text-high',
+  medium: 'border-med bg-med-bg text-med',
+  low: 'border-low bg-low-bg text-low',
+  benign: 'border-benign bg-benign-bg text-benign',
+};
 
 interface SeverityBadgeProps {
   severity?: string | Severity | null;
@@ -34,7 +45,7 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({
     }
   };
 
-  const getStyleClass = () => {
+  const getVariant = (): BadgeVariant => {
     switch (norm) {
       case 'CRITICAL':
         return 'critical';
@@ -52,12 +63,19 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({
     }
   };
 
+  const variant = getVariant();
+
   return (
     <span
-      className={`severity-badge ${getStyleClass()} ${className}`}
+      className={cn(
+        'inline-flex items-center gap-[0.35rem] rounded-none border border-transparent px-[0.6rem] py-[0.22rem] font-mono text-[0.72rem] font-bold tracking-[0.04em] whitespace-nowrap uppercase',
+        variantClass[variant],
+        size === 'sm' && 'px-[0.4rem] py-[0.15rem] text-[0.68rem]',
+        className
+      )}
       data-testid="severity-badge"
       data-severity={norm}
-      style={size === 'sm' ? { fontSize: '0.68rem', padding: '0.15rem 0.4rem' } : undefined}
+      data-variant={variant}
     >
       {getIcon()}
       <span>{norm}</span>

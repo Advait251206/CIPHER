@@ -3,10 +3,10 @@ import { api } from '../api/client';
 import { CorrelationStatsResponse, SecurityEventItem, SystemStatsResponse, NetworkStatsResponse } from '../api/types';
 import { MetricCard } from '../components/common/MetricCard';
 import { DataGrid } from '../components/common/DataGrid';
-import { Activity, Flame, ShieldAlert, Crosshair, Network, Fingerprint, Shield, AlertTriangle } from 'lucide-react';
+import { Activity, Flame, ShieldAlert, Crosshair, Network, Fingerprint, Shield, AlertTriangle, Compass } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie } from 'recharts';
-
-import { WafControlPanel } from '../components/common/WafControlPanel';
+import { cn } from '../lib/cn';
+import { controlBtn } from '../ui/classes';
 
 interface OverviewPageProps {
   onNavigate: (tab: any) => void;
@@ -15,7 +15,7 @@ interface OverviewPageProps {
   onOpenExtensionModal?: () => void;
 }
 
-export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) => {
+export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger, onOpenExtensionModal }) => {
   const [corrStats, setCorrStats] = useState<CorrelationStatsResponse | null>(null);
   const [sysStats, setSysStats] = useState<SystemStatsResponse | null>(null);
   const [netStats, setNetStats] = useState<NetworkStatsResponse | null>(null);
@@ -59,26 +59,45 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
   const topAttackers = corrStats?.top_attacking_sources || [];
 
   const getSeverityColor = (severity?: string | null) => {
-    if (!severity) return 'var(--border-accent)';
+    if (!severity) return 'var(--color-accent)';
     switch (severity.toUpperCase()) {
-      case 'CRITICAL': return 'var(--crit-color)';
-      case 'HIGH': return 'var(--high-color)';
-      case 'MEDIUM': return 'var(--med-color)';
-      case 'LOW': return 'var(--low-color)';
-      default: return 'var(--border-accent)';
+      case 'CRITICAL': return 'var(--color-crit)';
+      case 'HIGH': return 'var(--color-high)';
+      case 'MEDIUM': return 'var(--color-med)';
+      case 'LOW': return 'var(--color-low)';
+      default: return 'var(--color-accent)';
+    }
+  };
+
+  // Class equivalent of getSeverityColor for text/border (the chart needs the raw colour).
+  const severityTone = (severity?: string | null) => {
+    switch ((severity || '').toUpperCase()) {
+      case 'CRITICAL': return { text: 'text-crit', border: 'border-crit' };
+      case 'HIGH': return { text: 'text-high', border: 'border-high' };
+      case 'MEDIUM': return { text: 'text-med', border: 'border-med' };
+      case 'LOW': return { text: 'text-low', border: 'border-low' };
+      default: return { text: 'text-accent', border: 'border-accent' };
     }
   };
 
   const COLORS = ['#FF4444', '#FF8800', '#D4AF37', '#00AAFF', '#AA00FF'];
 
   return (
-    <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="p-6 flex flex-col gap-6">
       
-      {/* WAF CONTROLS */}
-      <WafControlPanel />
+      {/* Browser Guard entry point: the modal had no way to be opened. */}
+      {onOpenExtensionModal && (
+        <div className="flex justify-end">
+          <button className={controlBtn()} onClick={() => onOpenExtensionModal()}>
+            <Compass size={14} />
+            <span>Add Browser Guard Extension</span>
+          </button>
+        </div>
+      )}
+
 
       {/* METRICS GRID - 2 Rows */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
         <MetricCard title="Total Incidents" value={corrStats?.total_incidents || 0} icon={<Activity size={20} />} />
         <MetricCard title="Open Incident Chains" value={corrStats?.open_incidents || 0} icon={<Flame size={20} />} highlight={true} />
         <MetricCard title="Avg Correlation Score" value={corrStats?.average_correlation_score ? corrStats.average_correlation_score.toFixed(1) : 0} icon={<ShieldAlert size={20} />} />
@@ -91,19 +110,19 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
       </div>
 
       {/* CHARTS GRID */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-6">
         
         {/* Chart 1: Incidents by Severity */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Incidents by Severity</h3>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '1rem', height: '220px' }}>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[0.9rem] text-fg">Incidents by Severity</h3>
+          <div className="bg-surface border border-line rounded-[6px] p-4 h-[220px]">
             {severityData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={severityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={{ stroke: 'var(--border-subtle)' }} tickLine={false} />
-                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)', fontSize: '0.8rem', borderRadius: '4px' }} itemStyle={{ color: 'var(--text-primary)' }} cursor={{ fill: 'var(--bg-card-hover)' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: 'var(--color-fg-2)', fontSize: 11 }} axisLine={{ stroke: 'var(--color-line)' }} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--color-fg-2)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-sidebar)', borderColor: 'var(--color-line)', color: 'var(--color-fg)', fontSize: '0.8rem', borderRadius: '4px' }} itemStyle={{ color: 'var(--color-fg)' }} cursor={{ fill: 'var(--color-card-hover)' }} />
                   <Bar dataKey="value" radius={[2, 2, 0, 0]}>
                     {severityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getSeverityColor(entry.name)} />
@@ -112,15 +131,15 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No incident data</div>
+              <div className="flex h-full items-center justify-center text-fg-muted text-[0.85rem]">No incident data</div>
             )}
           </div>
         </div>
 
         {/* Chart 2: Network Attacks by Category */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Network Attacks by ML Category</h3>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '1rem', height: '220px' }}>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[0.9rem] text-fg">Network Attacks by ML Category</h3>
+          <div className="bg-surface border border-line rounded-[6px] p-4 h-[220px]">
             {networkCategoryData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -129,49 +148,49 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger }) =>
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'var(--bg-sidebar)', borderColor: 'var(--border-subtle)', color: 'var(--text-primary)', fontSize: '0.8rem', borderRadius: '4px' }} itemStyle={{ color: 'var(--text-primary)' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-sidebar)', borderColor: 'var(--color-line)', color: 'var(--color-fg)', fontSize: '0.8rem', borderRadius: '4px' }} itemStyle={{ color: 'var(--color-fg)' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No network attack data</div>
+              <div className="flex h-full items-center justify-center text-fg-muted text-[0.85rem]">No network attack data</div>
             )}
           </div>
         </div>
 
         {/* Chart 3: Top Attacking Sources */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Top Attacking IPs</h3>
-          <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '1rem', height: '220px', overflow: 'hidden' }}>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[0.9rem] text-fg">Top Attacking IPs</h3>
+          <div className="bg-surface border border-line rounded-[6px] p-4 h-[220px] overflow-hidden">
             {topAttackers.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', height: '100%' }}>
+              <div className="flex flex-col gap-2 h-full">
                 {topAttackers.slice(0, 5).map((attacker, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'var(--bg-sidebar)', borderRadius: '4px', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{ color: getSeverityColor(attacker.max_severity), fontWeight: 'bold', fontSize: '0.7rem', padding: '0.1rem 0.3rem', border: `1px solid ${getSeverityColor(attacker.max_severity)}`, borderRadius: '3px' }}>
+                  <div key={idx} className="flex justify-between items-center p-2 bg-sidebar rounded-[4px] border border-line">
+                    <div className="flex items-center gap-3">
+                      <span className={cn('font-bold text-[0.7rem] py-[0.1rem] px-[0.3rem] rounded-[3px] border', severityTone(attacker.max_severity).text, severityTone(attacker.max_severity).border)}>
                         {attacker.max_severity}
                       </span>
-                      <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontFamily: 'monospace' }}>{attacker.source_ip}</span>
+                      <span className="text-fg text-[0.85rem] [font-family:monospace]">{attacker.source_ip}</span>
                     </div>
-                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{attacker.count} events</span>
+                    <span className="text-fg-2 text-[0.85rem]">{attacker.count} events</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No attacker data</div>
+              <div className="flex h-full items-center justify-center text-fg-muted text-[0.85rem]">No attacker data</div>
             )}
           </div>
         </div>
       </div>
 
       {/* RECENT EVENTS */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
-        <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>Live Security Events</h3>
+      <div className="flex flex-col gap-3 mt-2">
+        <h3 className="text-[0.9rem] text-fg">Live Security Events</h3>
         <DataGrid
           columns={[
             { header: 'Time', accessor: 'timestamp', render: (val) => new Date(val).toLocaleTimeString() },
             { header: 'Classification', accessor: 'classification' },
             { header: 'Severity', accessor: 'severity', render: (val) => (
-              <span style={{ color: getSeverityColor(val), fontWeight: 600 }}>{val}</span>
+              <span className={cn('font-semibold', severityTone(val).text)}>{val}</span>
             )},
             { header: 'Source', accessor: 'source_ip', render: (val, row) => val || row.domain || row.source || 'N/A' },
             { header: 'Type', accessor: 'event_type' }

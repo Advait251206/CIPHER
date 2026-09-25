@@ -1,5 +1,7 @@
 import React, { ReactNode, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { closeBtn, modalBody, modalFooter, modalHeader, modalPanel, modalTitle } from '../../ui/classes';
 
 interface ModalProps {
   isOpen: boolean;
@@ -31,19 +33,19 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+    <div className="fixed top-0 left-0 z-50 flex h-screen w-screen items-center justify-center bg-[rgba(15,23,42,0.45)] p-4" onClick={onClose} role="dialog" aria-modal="true">
       <div
-        className={`modal-content ${wide ? 'wide' : ''}`}
+        className={cn(modalPanel, wide && 'max-w-[880px]')}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <div className="modal-title">{title}</div>
-          <button className="close-btn" onClick={onClose} aria-label="Close modal">
+        <div className={modalHeader}>
+          <div className={modalTitle}>{title}</div>
+          <button className={closeBtn} onClick={onClose} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
-        <div className="modal-body">{children}</div>
-        {footer && <div className="modal-footer">{footer}</div>}
+        <div className={modalBody}>{children}</div>
+        {footer && <div className={modalFooter}>{footer}</div>}
       </div>
     </div>
   );

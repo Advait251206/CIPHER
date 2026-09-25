@@ -25,6 +25,16 @@ import {
   Eye,
 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, btn, card, cardHeader, cardTitle, codeTag, controlBtn, input, pageBody } from '../ui/classes';
+
+const classificationTone = (c?: string) =>
+  c === 'MALICIOUS_EMAIL' || c === 'PHISHING'
+    ? 'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+    : c === 'SUSPICIOUS'
+      ? 'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+      : 'bg-[rgba(16,185,129,0.15)] text-[#10b981]';
+
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -187,14 +197,14 @@ export const EmailPage: React.FC = () => {
   return (
     <>
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Privacy and Local Processing Architecture Banner */}
-      <motion.div variants={itemVariants} className="alert-box info">
-        <Info size={18} style={{ flexShrink: 0 }} />
+      <motion.div variants={itemVariants} className={alertBox('info')}>
+        <Info size={18} className="shrink-0" />
         <div>
           <strong>Local Privacy Architecture:</strong> Email analysis executes strictly in-memory on your local CIPHER node.
           <strong> Raw email bodies are NEVER stored or persisted</strong> in the SQLite database or external telemetry.
@@ -203,37 +213,37 @@ export const EmailPage: React.FC = () => {
       </motion.div>
 
       {/* Mode Selector and Quick Samples */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-6')}>
+        <div className="flex justify-between items-center flex-wrap gap-3 mb-4">
+          <div className="flex gap-2">
             <button
               type="button"
-              className={`btn ${activeMode === 'structured' ? 'btn-primary' : 'btn-secondary'}`}
+              className={btn(activeMode === 'structured' ? 'primary' : 'secondary', 'flex items-center gap-[0.4rem]')}
               onClick={() => setActiveMode('structured')}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+
             >
               <FileText size={15} />
               <span>Structured Email</span>
             </button>
             <button
               type="button"
-              className={`btn ${activeMode === 'raw' ? 'btn-primary' : 'btn-secondary'}`}
+              className={btn(activeMode === 'raw' ? 'primary' : 'secondary', 'flex items-center gap-[0.4rem]')}
               onClick={() => setActiveMode('raw')}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+
             >
               <Terminal size={15} />
               <span>Raw Text / RFC 822</span>
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Load Sample:</span>
+          <div className="flex items-center gap-[0.4rem] flex-wrap">
+            <span className="text-[0.75rem] text-fg-muted">Load Sample:</span>
             {(Object.keys(sampleCategories) as SampleCategory[]).map((category) => (
               <button
                 key={category}
                 type="button"
-                className="btn btn-secondary"
-                style={{ fontSize: '0.72rem', padding: '0.3rem 0.6rem' }}
+                className={cn(btn('secondary'), 'text-[0.72rem] py-[0.3rem] px-[0.6rem]')}
+
                 onClick={() => handleSelectSampleCategory(category)}
               >
                 {category}
@@ -245,27 +255,27 @@ export const EmailPage: React.FC = () => {
         {/* Input Form */}
         <form onSubmit={handleAnalyze}>
           {activeMode === 'structured' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+            <div className="flex flex-col gap-[0.85rem]">
+              <div className="grid grid-cols-[1fr_1fr] gap-[0.85rem]">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  <label className="block text-[0.78rem] text-fg-muted mb-[0.3rem]">
                     Sender (From header)
                   </label>
                   <input
                     type="text"
-                    className="input"
+                    className={input}
                     placeholder="e.g. IT Helpdesk <support@acme.com>"
                     value={sender}
                     onChange={(e) => setSender(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  <label className="block text-[0.78rem] text-fg-muted mb-[0.3rem]">
                     Recipient (To header)
                   </label>
                   <input
                     type="text"
-                    className="input"
+                    className={input}
                     placeholder="e.g. employee@acme.com"
                     value={recipient}
                     onChange={(e) => setRecipient(e.target.value)}
@@ -274,12 +284,12 @@ export const EmailPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                <label className="block text-[0.78rem] text-fg-muted mb-[0.3rem]">
                   Subject Line
                 </label>
                 <input
                   type="text"
-                  className="input"
+                  className={input}
                   placeholder="e.g. URGENT: Verify your billing information"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
@@ -287,52 +297,52 @@ export const EmailPage: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                <label className="block text-[0.78rem] text-fg-muted mb-[0.3rem]">
                   Email Body (Plain Text or HTML)
-                  <span style={{ float: 'right', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                  <span className="[float:right] text-[0.7rem] text-fg-muted">
                     {body.length.toLocaleString()} / 500,000 chars
                   </span>
                 </label>
                 <textarea
-                  className="input"
+                  className={cn(input, 'min-h-[100px] resize-y', '[font-family:var(--font-mono,monospace)] text-[0.85rem] resize-y')}
                   rows={6}
                   placeholder="Paste email message text or HTML content here..."
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.85rem', resize: 'vertical' }}
+
                 />
               </div>
             </div>
           ) : (
             <div>
-              <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+              <label className="block text-[0.78rem] text-fg-muted mb-[0.3rem]">
                 Raw Email Stream / RFC 822 Text
-                <span style={{ float: 'right', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                <span className="[float:right] text-[0.7rem] text-fg-muted">
                   {rawText.length.toLocaleString()} / 500,000 chars
                 </span>
               </label>
               <textarea
-                className="input"
+                className={cn(input, 'min-h-[100px] resize-y', '[font-family:var(--font-mono,monospace)] text-[0.85rem] resize-y')}
                 rows={9}
                 placeholder="From: security@paypal-verify.com&#10;Subject: Action Required&#10;&#10;Please confirm your account immediately at http://192.168.1.1/login..."
                 value={rawText}
                 onChange={(e) => setRawText(e.target.value)}
-                style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.85rem', resize: 'vertical' }}
+
               />
             </div>
           )}
 
           {error && (
-            <div className="alert-box danger" style={{ marginTop: '1rem' }}>
+            <div className={cn(alertBox('danger'), 'mt-4')}>
               <AlertTriangle size={16} />
               <span>{error}</span>
             </div>
           )}
 
-          <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <div className="mt-4 flex justify-end gap-3">
             <button
               type="button"
-              className="btn btn-secondary"
+              className={btn('secondary')}
               onClick={() => {
                 setSender('');
                 setRecipient('');
@@ -348,13 +358,13 @@ export const EmailPage: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className={cn(btn('primary'), 'flex items-center gap-2 min-w-[140px] justify-center')}
               disabled={isAnalyzing}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '140px', justifyContent: 'center' }}
+
             >
               {isAnalyzing ? (
                 <>
-                  <div className="spinner-border spinner-border-sm" />
+                  <div />
                   <span>Evaluating...</span>
                 </>
               ) : (
@@ -370,78 +380,47 @@ export const EmailPage: React.FC = () => {
 
       {/* Analysis Results Display */}
       {result && (
-        <motion.div variants={itemVariants} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <motion.div variants={itemVariants} className="flex flex-col gap-6 mb-6">
           {/* Main Verdict Card */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">
-                <ShieldCheck size={18} color="var(--accent-cyan)" />
+          <div className={card}>
+            <div className={cardHeader}>
+              <div className={cardTitle}>
+                <ShieldCheck size={18} color="var(--color-accent)" />
                 <span>Detection Verdict & Risk Assessment</span>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div className="flex gap-2 items-center">
                 <SeverityBadge severity={result.severity} />
                 <span
-                  style={{
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    backgroundColor:
-                      result.classification === 'MALICIOUS_EMAIL'
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : result.classification === 'SUSPICIOUS'
-                        ? 'rgba(245, 158, 11, 0.15)'
-                        : 'rgba(16, 185, 129, 0.15)',
-                    color:
-                      result.classification === 'MALICIOUS_EMAIL'
-                        ? '#ef4444'
-                        : result.classification === 'SUSPICIOUS'
-                        ? '#f59e0b'
-                        : '#10b981',
-                  }}
+                  className={cn('py-[0.2rem] px-[0.6rem] rounded-[4px] text-[0.75rem] font-semibold', classificationTone(result.classification))}
                 >
                   {result.classification}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.5rem', alignItems: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', borderRight: '1px solid var(--border-color)' }}>
+            <div className="grid grid-cols-[220px_1fr] gap-6 items-center">
+              <div className="flex flex-col items-center justify-center p-4 border-r border-r-line">
                 <RiskGauge score={result.risk_score} size="lg" />
-                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <div className="mt-2 text-[0.8rem] text-fg-muted">
                   Confidence: <strong>{(result.confidence * 100).toFixed(1)}%</strong>
                 </div>
                 {result.event_id && (
-                  <div style={{ marginTop: '0.25rem', fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                  <div className="mt-1 text-[0.68rem] text-fg-muted [font-family:monospace]">
                     Event: {result.event_id.slice(0, 8)}...
                   </div>
                 )}
               </div>
 
               <div>
-                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>SOC Operational Recommendation</h4>
+                <h4 className="mt-0 mx-0 mb-2 text-[0.95rem]">SOC Operational Recommendation</h4>
                 <div
-                  style={{
-                    padding: '0.75rem 1rem',
-                    borderRadius: '6px',
-                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                    borderLeft: `4px solid ${
-                      result.severity === 'CRITICAL' || result.severity === 'HIGH'
-                        ? '#ef4444'
-                        : result.severity === 'MEDIUM'
-                        ? '#f59e0b'
-                        : '#10b981'
-                    }`,
-                    fontSize: '0.86rem',
-                    lineHeight: '1.4',
-                    marginBottom: '1rem',
-                  }}
+                  className={cn('py-3 px-4 rounded-[6px] bg-[rgba(15,23,42,0.6)] text-[0.86rem] leading-[1.4] mb-4 border-l-4', result.severity === 'CRITICAL' || result.severity === 'HIGH' ? 'border-l-[#ef4444]' : result.severity === 'MEDIUM' ? 'border-l-[#f59e0b]' : 'border-l-[#10b981]')}
                 >
                   {result.recommendation}
                 </div>
 
-                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Explainable Detection Rationale</h4>
-                <ul style={{ margin: 0, paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.83rem', color: 'var(--text-secondary)' }}>
+                <h4 className="mt-0 mx-0 mb-2 text-[0.95rem]">Explainable Detection Rationale</h4>
+                <ul className="m-0 pl-[1.2rem] flex flex-col gap-[0.35rem] text-[0.83rem] text-fg-2">
                   {result.evidence.map((ev, i) => (
                     <li key={i}>{ev}</li>
                   ))}
@@ -452,15 +431,15 @@ export const EmailPage: React.FC = () => {
 
           {/* Extracted URLs Breakdown */}
           {result.urls_analyzed && result.urls_analyzed.length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <div className="card-title">
-                  <ExternalLink size={18} color="var(--accent-cyan)" />
+            <div className={card}>
+              <div className={cardHeader}>
+                <div className={cardTitle}>
+                  <ExternalLink size={18} color="var(--color-accent)" />
                   <span>Embedded Hyperlinks Inspected ({result.urls_analyzed.length})</span>
                 </div>
               </div>
-              <div className="table-responsive">
-                <table className="table">
+              <div>
+                <table>
                   <thead>
                     <tr>
                       <th>URL Target</th>
@@ -474,29 +453,12 @@ export const EmailPage: React.FC = () => {
                   <tbody>
                     {result.urls_analyzed.map((u, i) => (
                       <tr key={i}>
-                        <td style={{ maxWidth: '280px', wordBreak: 'break-all', fontFamily: 'monospace', fontSize: '0.78rem' }}>
+                        <td className="max-w-[280px]! break-all! [font-family:monospace]! text-[0.78rem]!">
                           {u.url}
                         </td>
                         <td>
                           <span
-                            style={{
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '4px',
-                              fontSize: '0.72rem',
-                              fontWeight: 600,
-                              backgroundColor:
-                                u.classification === 'PHISHING'
-                                  ? 'rgba(239, 68, 68, 0.15)'
-                                  : u.classification === 'SUSPICIOUS'
-                                  ? 'rgba(245, 158, 11, 0.15)'
-                                  : 'rgba(16, 185, 129, 0.15)',
-                              color:
-                                u.classification === 'PHISHING'
-                                  ? '#ef4444'
-                                  : u.classification === 'SUSPICIOUS'
-                                  ? '#f59e0b'
-                                  : '#10b981',
-                            }}
+                            className={cn('py-[0.15rem] px-[0.45rem] rounded-[4px] text-[0.72rem] font-semibold', classificationTone(u.classification))}
                           >
                             {u.classification}
                           </span>
@@ -508,7 +470,7 @@ export const EmailPage: React.FC = () => {
                           <SeverityBadge severity={u.severity} />
                         </td>
                         <td>{(u.confidence * 100).toFixed(1)}%</td>
-                        <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <td className="text-[0.75rem]! text-fg-muted!">
                           {u.reasons && u.reasons.length > 0 ? u.reasons.join(', ') : 'None'}
                         </td>
                       </tr>
@@ -521,42 +483,25 @@ export const EmailPage: React.FC = () => {
 
           {/* Extracted 32 Feature Vector Viewer */}
           {result.features && Object.keys(result.features).length > 0 && (
-            <div className="card">
-              <div className="card-header">
-                <div className="card-title">
-                  <Cpu size={18} color="var(--accent-cyan)" />
+            <div className={card}>
+              <div className={cardHeader}>
+                <div className={cardTitle}>
+                  <Cpu size={18} color="var(--color-accent)" />
                   <span>Extracted 32-Feature Vector</span>
                 </div>
               </div>
               <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '0.5rem',
-                  maxHeight: '260px',
-                  overflowY: 'auto',
-                  padding: '0.5rem',
-                  backgroundColor: 'rgba(11, 15, 25, 0.5)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border-color)',
-                }}
+                className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2 max-h-[260px] overflow-y-auto p-2 bg-[rgba(11,15,25,0.5)] rounded-[6px] border border-line"
               >
                 {Object.entries(result.features).map(([feat, val]) => (
                   <div
                     key={feat}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '0.3rem 0.5rem',
-                      borderRadius: '4px',
-                      backgroundColor: 'rgba(30, 41, 59, 0.4)',
-                      fontSize: '0.75rem',
-                    }}
+                    className="flex justify-between py-[0.3rem] px-2 rounded-[4px] bg-[rgba(30,41,59,0.4)] text-[0.75rem]"
                   >
-                    <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={feat}>
+                    <span className="text-fg-muted overflow-hidden text-ellipsis whitespace-nowrap" title={feat}>
                       {feat}
                     </span>
-                    <strong style={{ color: typeof val === 'number' && val > 0 ? 'var(--accent-cyan)' : 'var(--text-secondary)' }}>
+                    <strong className={(typeof val === 'number' && val > 0 ? 'text-accent' : 'text-fg-2')}>
                       {typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(4)) : String(val)}
                     </strong>
                   </div>
@@ -570,42 +515,42 @@ export const EmailPage: React.FC = () => {
       {/* CIPHER Browser Guard Extension & Model Telemetry Section */}
       <motion.div
         variants={itemVariants}
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}
+        className="grid grid-cols-[1fr_1fr] gap-6 mt-6"
       >
         {/* Browser Extension Card */}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              <Compass size={18} color="var(--accent-cyan)" />
+        <div className={card}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Compass size={18} color="var(--color-accent)" />
               <span>CIPHER Browser Guard (Chromium Extension)</span>
             </div>
-            <span className="badge badge-primary">Manifest V3</span>
+            <span>Manifest V3</span>
           </div>
 
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0 0 1rem 0' }}>
+          <p className="text-[0.84rem] text-fg-2 leading-[1.5] mt-0 mx-0 mb-4">
             Protect against webmail phishing on Gmail, Outlook, and Yahoo Mail directly within your browser.
             Features automatic badge risk alerts and an active interstitial block screen for high-confidence phishing sites.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="flex flex-col gap-[0.6rem] text-[0.8rem] text-fg-2 mb-5">
+            <div className="flex items-center gap-2">
               <CheckCircle2 size={15} color="#10b981" />
-              <span><strong>Strict Privacy:</strong> Zero cloud analytics; communicates exclusively with <code>http://127.0.0.1:8000</code></span>
+              <span><strong>Strict Privacy:</strong> Zero cloud analytics; communicates exclusively with <code className={codeTag}>http://127.0.0.1:8000</code></span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="flex items-center gap-2">
               <CheckCircle2 size={15} color="#10b981" />
               <span><strong>Webmail Integration:</strong> Floating scan badge on Gmail, Outlook, and Yahoo webmail</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="flex items-center gap-2">
               <CheckCircle2 size={15} color="#10b981" />
               <span><strong>Active Shield:</strong> Intercepts malicious links before credentials can be submitted</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+          <div className="flex gap-[0.6rem] flex-wrap mb-[0.85rem]">
             <button
               type="button"
-              className="control-btn primary"
+              className={cn(controlBtn('primary'), 'flex items-center gap-[0.4rem] text-[0.78rem] py-[0.4rem] px-3')}
               onClick={async () => {
                 try {
                   if (api.extension?.launchChrome) {
@@ -616,13 +561,7 @@ export const EmailPage: React.FC = () => {
                   showToast(e.detail || e.message || 'Failed to auto-launch Chrome', 'error');
                 }
               }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.78rem',
-                padding: '0.4rem 0.75rem',
-              }}
+
             >
               <Compass size={14} />
               <span>Launch Chrome with Extension</span>
@@ -631,104 +570,97 @@ export const EmailPage: React.FC = () => {
             <a
               href={api.extension?.getDownloadUrl ? api.extension.getDownloadUrl() : '/api/extension/download'}
               download="cipher-browser-guard.zip"
-              className="control-btn"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                fontSize: '0.78rem',
-                padding: '0.4rem 0.75rem',
-                textDecoration: 'none',
-              }}
+              className={cn(controlBtn(), 'inline-flex items-center gap-[0.4rem] text-[0.78rem] py-[0.4rem] px-3 no-underline')}
+
             >
               <Download size={13} />
               <span>Download (.zip)</span>
             </a>
           </div>
 
-          <div style={{ padding: '0.75rem', borderRadius: '6px', backgroundColor: 'rgba(15, 23, 42, 0.7)', border: '1px solid var(--border-color)', fontSize: '0.78rem' }}>
-            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.3rem' }}>Manual Setup Guide:</strong>
-            <ol style={{ margin: 0, paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <li>Open <code>chrome://extensions</code> and enable <strong>Developer Mode</strong>.</li>
-              <li>Click <strong>Load unpacked</strong> and choose <code>cipher-browser-extension</code> in the project root.</li>
+          <div className="p-3 rounded-[6px] bg-[rgba(15,23,42,0.7)] border border-line text-[0.78rem]">
+            <strong className="text-fg block mb-[0.3rem]">Manual Setup Guide:</strong>
+            <ol className="m-0 pl-[1.2rem] flex flex-col gap-1">
+              <li>Open <code className={codeTag}>chrome://extensions</code> and enable <strong>Developer Mode</strong>.</li>
+              <li>Click <strong>Load unpacked</strong> and choose <code className={codeTag}>cipher-browser-extension</code> in the project root.</li>
             </ol>
           </div>
         </div>
 
         {/* Model Telemetry Card */}
-        <div className="card">
-          <div className="card-header">
-            <div className="card-title">
-              <Cpu size={18} color="var(--accent-cyan)" />
+        <div className={card}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Cpu size={18} color="var(--color-accent)" />
               <span>Email Machine Learning Engine</span>
             </div>
             {healthInfo?.model_loaded ? (
-              <span className="badge badge-success">Model Active</span>
+              <span>Model Active</span>
             ) : (
-              <span className="badge badge-warning">Loading...</span>
+              <span>Loading...</span>
             )}
           </div>
 
           {modelInfo ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div style={{ padding: '0.6rem', borderRadius: '6px', backgroundColor: 'rgba(30, 41, 59, 0.4)' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Classifier Architecture</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{modelInfo.model_name}</div>
+            <div className="flex flex-col gap-[0.85rem]">
+              <div className="grid grid-cols-[1fr_1fr] gap-3">
+                <div className="p-[0.6rem] rounded-[6px] bg-[rgba(30,41,59,0.4)]">
+                  <div className="text-[0.72rem] text-fg-muted">Classifier Architecture</div>
+                  <div className="text-[0.9rem] font-semibold text-fg">{modelInfo.model_name}</div>
                 </div>
-                <div style={{ padding: '0.6rem', borderRadius: '6px', backgroundColor: 'rgba(30, 41, 59, 0.4)' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Feature Dimensions</div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>{modelInfo.feature_count} Leak-Free Features</div>
+                <div className="p-[0.6rem] rounded-[6px] bg-[rgba(30,41,59,0.4)]">
+                  <div className="text-[0.72rem] text-fg-muted">Feature Dimensions</div>
+                  <div className="text-[0.9rem] font-semibold text-fg">{modelInfo.feature_count} Leak-Free Features</div>
                 </div>
               </div>
 
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+              <div className="text-[0.8rem] font-semibold text-fg mt-1">
                 Held-Out Test Set Metrics (12,359 samples):
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Accuracy</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#10b981' }}>
+              <div className="grid grid-cols-[repeat(3,1fr)] gap-2">
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">Accuracy</div>
+                  <div className="text-[0.85rem] font-semibold text-[#10b981]">
                     {modelInfo.test_metrics.accuracy ? `${(modelInfo.test_metrics.accuracy * 100).toFixed(2)}%` : '91.53%'}
                   </div>
                 </div>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>F1-Score</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-cyan)' }}>
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">F1-Score</div>
+                  <div className="text-[0.85rem] font-semibold text-accent">
                     {modelInfo.test_metrics.f1_score ? `${(modelInfo.test_metrics.f1_score * 100).toFixed(2)}%` : '91.62%'}
                   </div>
                 </div>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>ROC-AUC</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8' }}>
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">ROC-AUC</div>
+                  <div className="text-[0.85rem] font-semibold text-[#38bdf8]">
                     {modelInfo.test_metrics.roc_auc ? modelInfo.test_metrics.roc_auc.toFixed(4) : '0.9736'}
                   </div>
                 </div>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Precision</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">Precision</div>
+                  <div className="text-[0.85rem] font-semibold">
                     {modelInfo.test_metrics.precision ? `${(modelInfo.test_metrics.precision * 100).toFixed(2)}%` : '94.24%'}
                   </div>
                 </div>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Recall</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">Recall</div>
+                  <div className="text-[0.85rem] font-semibold">
                     {modelInfo.test_metrics.recall ? `${(modelInfo.test_metrics.recall * 100).toFixed(2)}%` : '89.14%'}
                   </div>
                 </div>
-                <div style={{ padding: '0.5rem', borderRadius: '4px', backgroundColor: 'rgba(15, 23, 42, 0.5)', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Inference Speed</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>~80,000 /s</div>
+                <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                  <div className="text-[0.68rem] text-fg-muted">Inference Speed</div>
+                  <div className="text-[0.85rem] font-semibold">~80,000 /s</div>
                 </div>
               </div>
 
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              <div className="text-[0.72rem] text-fg-muted mt-1">
                 Dataset: 82,388 deduplicated emails (CEAS_08, Enron, Ling, Nazario, Nigerian Fraud, SpamAssasin).
               </div>
             </div>
           ) : (
-            <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            <div className="p-6 text-center text-fg-muted text-[0.85rem]">
               Connecting to Email ML Engine...
             </div>
           )}

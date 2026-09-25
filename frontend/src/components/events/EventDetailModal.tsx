@@ -4,6 +4,8 @@ import { Modal } from '../common/Modal';
 import { SeverityBadge } from '../common/SeverityBadge';
 import { RiskGauge } from '../common/RiskGauge';
 import { Shield, Network, AlertTriangle, BookOpen, Database, GitBranch, Lock, FileText, Printer } from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { controlBtn, evidenceHeader, evidenceSection, kvGrid, kvItem, kvLabel, kvValue, mono } from '../../ui/classes';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -547,127 +549,118 @@ END OF REPORT
       onClose={onClose}
       wide
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Shield size={20} color="var(--accent-cyan)" />
+        <div className="flex items-center gap-3">
+          <Shield size={20} color="var(--color-accent)" />
           <span>Security Event Details</span>
           <SeverityBadge severity={event.severity} size="sm" />
         </div>
       }
       footer={
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button className="control-btn" onClick={generateReportTxt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}>
+        <div className="flex gap-3">
+          <button className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] not-disabled:hover:bg-[#f1f5f9] not-disabled:hover:text-[#334155] not-disabled:hover:border-[#cbd5e1]')} onClick={generateReportTxt}>
             <FileText size={16} /> TXT Report
           </button>
-          <button className="control-btn primary" onClick={generateReportPdf} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-cyan)', color: 'white', border: 'none' }}>
+          <button className={cn(controlBtn('primary'), 'flex items-center gap-2 bg-accent text-white border-none')} onClick={generateReportPdf}>
             <Printer size={16} /> Print / Save as PDF
           </button>
-          <div style={{ flex: 1 }}></div>
-          <button className="control-btn" onClick={onClose}>
+          <div className="flex-1"></div>
+          <button className={controlBtn()} onClick={onClose}>
             Close Inspector
           </button>
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="flex flex-col gap-4">
         {/* Popup Blocker Warning */}
         {popupBlocked && (
-          <div style={{
-            padding: '0.75rem 1rem',
-            background: 'var(--med-bg, rgba(212,175,55,0.1))',
-            border: '1px solid var(--accent-gold, #D4AF37)',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.75rem',
-          }}>
-            <span style={{ color: 'var(--accent-gold)', fontSize: '0.85rem', fontWeight: 600 }}>
+          <div className="py-3 px-4 bg-med-bg border border-[#D4AF37] rounded-[6px] flex items-center justify-between gap-3">
+            <span className="text-accent text-[0.85rem] font-semibold">
               ⚠ Popup blocked — allow popups in your browser to open the print/PDF window.
             </span>
             <button
               onClick={() => setPopupBlocked(false)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}
+              className="bg-transparent border-none text-fg-muted cursor-pointer text-[1.1rem] leading-none"
             >
               &times;
             </button>
           </div>
         )}
         {/* 1. EVENT SECTION */}
-        <div className="evidence-section">
-          <div className="evidence-header">
+        <div className={evidenceSection}>
+          <div className={evidenceHeader}>
             <Shield size={14} />
             <span>Event Metadata</span>
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Event ID</span>
-              <span className="kv-value mono">{event.event_id}</span>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Event ID</span>
+              <span className={cn(mono, kvValue)}>{event.event_id}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Timestamp</span>
-              <span className="kv-value mono">{event.timestamp}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Timestamp</span>
+              <span className={cn(mono, kvValue)}>{event.timestamp}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Event Type</span>
-              <span className="kv-value">{event.event_type || 'SECURITY_EVENT'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Event Type</span>
+              <span className={kvValue}>{event.event_type || 'SECURITY_EVENT'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Detection Source</span>
-              <span className="kv-value">{event.source || 'CIPHER Engine'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Detection Source</span>
+              <span className={kvValue}>{event.source || 'CIPHER Engine'}</span>
             </div>
             {event.status && (
-              <div className="kv-item">
-                <span className="kv-label">Status</span>
-                <span className="kv-value">{event.status}</span>
+              <div className={kvItem}>
+                <span className={kvLabel}>Status</span>
+                <span className={kvValue}>{event.status}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* 2. THREAT VERDICT SECTION */}
-        <div className="evidence-section">
-          <div className="evidence-header">
+        <div className={evidenceSection}>
+          <div className={evidenceHeader}>
             <AlertTriangle size={14} />
             <span>Threat Assessment</span>
           </div>
-          <div style={{ marginBottom: '0.85rem' }}>
+          <div className="mb-[0.85rem]">
             <RiskGauge score={event.risk_score} label="Threat Score" />
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Classification</span>
-              <span className="kv-value">{event.classification}</span>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Classification</span>
+              <span className={kvValue}>{event.classification}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Attack Category</span>
-              <span className="kv-value">{event.attack_type || event.classification}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Attack Category</span>
+              <span className={kvValue}>{event.attack_type || event.classification}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Classifier Confidence</span>
-              <span className="kv-value mono">{(event.confidence * 100).toFixed(1)}%</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Classifier Confidence</span>
+              <span className={cn(mono, kvValue)}>{(event.confidence * 100).toFixed(1)}%</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Detection Method</span>
-              <span className="kv-value">{event.detection_method || 'ML + Heuristic'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Detection Method</span>
+              <span className={kvValue}>{event.detection_method || 'ML + Heuristic'}</span>
             </div>
             {event.ml_score !== undefined && (
-              <div className="kv-item">
-                <span className="kv-label">ML Attack Probability</span>
-                <span className="kv-value mono">{(event.ml_score * 100).toFixed(1)}%</span>
+              <div className={kvItem}>
+                <span className={kvLabel}>ML Attack Probability</span>
+                <span className={cn(mono, kvValue)}>{(event.ml_score * 100).toFixed(1)}%</span>
               </div>
             )}
             {event.heuristic_score !== undefined && (
-              <div className="kv-item">
-                <span className="kv-label">Heuristic Threat Score</span>
-                <span className="kv-value mono">{event.heuristic_score} / 100</span>
+              <div className={kvItem}>
+                <span className={kvLabel}>Heuristic Threat Score</span>
+                <span className={cn(mono, kvValue)}>{event.heuristic_score} / 100</span>
               </div>
             )}
           </div>
 
           {event.reasons && event.reasons.length > 0 && (
-            <div style={{ marginTop: '0.85rem' }}>
-              <span className="kv-label">Evidence & Reasons:</span>
-              <ul style={{ paddingLeft: '1.25rem', marginTop: '0.35rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+            <div className="mt-[0.85rem]">
+              <span className={kvLabel}>Evidence & Reasons:</span>
+              <ul className="pl-5 mt-[0.35rem] text-fg-2 text-[0.82rem]">
                 {event.reasons.map((r, i) => (
                   <li key={i}>{r}</li>
                 ))}
@@ -678,46 +671,46 @@ END OF REPORT
 
         {/* 3. NETWORK SECTION */}
         {hasNetwork && (
-          <div className="evidence-section">
-            <div className="evidence-header">
+          <div className={evidenceSection}>
+            <div className={evidenceHeader}>
               <Network size={14} />
               <span>Network Coordinates</span>
             </div>
-            <div className="kv-grid">
+            <div className={kvGrid}>
               {event.source_ip && (
-                <div className="kv-item">
-                  <span className="kv-label">Source IP</span>
-                  <span className="kv-value mono">{event.source_ip}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Source IP</span>
+                  <span className={cn(mono, kvValue)}>{event.source_ip}</span>
                 </div>
               )}
               {event.source_port !== undefined && event.source_port !== null && (
-                <div className="kv-item">
-                  <span className="kv-label">Source Port</span>
-                  <span className="kv-value mono">{event.source_port}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Source Port</span>
+                  <span className={cn(mono, kvValue)}>{event.source_port}</span>
                 </div>
               )}
               {event.destination_ip && (
-                <div className="kv-item">
-                  <span className="kv-label">Destination IP</span>
-                  <span className="kv-value mono">{event.destination_ip}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Destination IP</span>
+                  <span className={cn(mono, kvValue)}>{event.destination_ip}</span>
                 </div>
               )}
               {event.destination_port !== undefined && event.destination_port !== null && (
-                <div className="kv-item">
-                  <span className="kv-label">Destination Port</span>
-                  <span className="kv-value mono">{event.destination_port}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Destination Port</span>
+                  <span className={cn(mono, kvValue)}>{event.destination_port}</span>
                 </div>
               )}
               {event.protocol && (
-                <div className="kv-item">
-                  <span className="kv-label">Protocol</span>
-                  <span className="kv-value mono">{event.protocol}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Protocol</span>
+                  <span className={cn(mono, kvValue)}>{event.protocol}</span>
                 </div>
               )}
               {event.domain && (
-                <div className="kv-item">
-                  <span className="kv-label">Domain / Host</span>
-                  <span className="kv-value mono">{event.domain}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Domain / Host</span>
+                  <span className={cn(mono, kvValue)}>{event.domain}</span>
                 </div>
               )}
             </div>
@@ -726,37 +719,37 @@ END OF REPORT
 
         {/* 4. RULE EVIDENCE */}
         {hasRuleEvidence && (
-          <div className="evidence-section">
-            <div className="evidence-header">
+          <div className={evidenceSection}>
+            <div className={evidenceHeader}>
               <BookOpen size={14} />
               <span>Deterministic Rule Evidence</span>
             </div>
-            <div className="kv-grid">
+            <div className={kvGrid}>
               {metadata.rule_id && (
-                <div className="kv-item">
-                  <span className="kv-label">Rule ID</span>
-                  <span className="kv-value mono">
+                <div className={kvItem}>
+                  <span className={kvLabel}>Rule ID</span>
+                  <span className={cn(mono, kvValue)}>
                     {typeof metadata.rule_id === 'object' ? (metadata.rule_id.rule_id || JSON.stringify(metadata.rule_id)) : String(metadata.rule_id)}
                   </span>
                 </div>
               )}
               {metadata.rule_name && (
-                <div className="kv-item">
-                  <span className="kv-label">Rule Name</span>
-                  <span className="kv-value">
+                <div className={kvItem}>
+                  <span className={kvLabel}>Rule Name</span>
+                  <span className={kvValue}>
                     {typeof metadata.rule_name === 'object' ? (metadata.rule_name.name || JSON.stringify(metadata.rule_name)) : String(metadata.rule_name)}
                   </span>
                 </div>
               )}
             </div>
             {Array.isArray(ruleMatches) && ruleMatches.length > 0 && (
-              <div style={{ marginTop: '0.65rem' }}>
-                <span className="kv-label">Matched Rules:</span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.35rem' }}>
+              <div className="mt-[0.65rem]">
+                <span className={kvLabel}>Matched Rules:</span>
+                <div className="flex flex-wrap gap-[0.4rem] mt-[0.35rem]">
                   {ruleMatches.map((rule: any, idx: number) => {
                     const rId = typeof rule === 'string' ? rule : rule.rule_id || JSON.stringify(rule);
                     return (
-                      <span key={idx} className="mono" style={{ background: 'var(--low-bg)', border: '1px solid var(--low-border)', color: 'var(--low-color)', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.75rem' }}>
+                      <span key={idx} className={cn(mono, 'bg-low-bg border border-low text-low py-[0.15rem] px-[0.45rem] rounded-[4px] text-[0.75rem]')}>
                         {rId}
                       </span>
                     );
@@ -769,57 +762,57 @@ END OF REPORT
 
         {/* 5. THREAT INTELLIGENCE (IOC) */}
         {hasThreatIntel && (
-          <div className="evidence-section">
-            <div className="evidence-header">
+          <div className={evidenceSection}>
+            <div className={evidenceHeader}>
               <Database size={14} />
               <span>Local Threat Intelligence (IOC Match)</span>
             </div>
-            <div className="kv-grid">
+            <div className={kvGrid}>
               {iocMatch?.indicator && (
-                <div className="kv-item">
-                  <span className="kv-label">Matched Indicator</span>
-                  <span className="kv-value mono" style={{ color: 'var(--crit-color)' }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Matched Indicator</span>
+                  <span className={cn(mono, kvValue, 'text-crit')}>
                     {iocMatch.indicator}
                   </span>
                 </div>
               )}
               {iocMatch?.ioc_type && (
-                <div className="kv-item">
-                  <span className="kv-label">IOC Type</span>
-                  <span className="kv-value">{iocMatch.ioc_type}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>IOC Type</span>
+                  <span className={kvValue}>{iocMatch.ioc_type}</span>
                 </div>
               )}
               {iocMatch?.category && (
-                <div className="kv-item">
-                  <span className="kv-label">IOC Category</span>
-                  <span className="kv-value">{iocMatch.category}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>IOC Category</span>
+                  <span className={kvValue}>{iocMatch.category}</span>
                 </div>
               )}
               {iocMatch?.severity && (
-                <div className="kv-item">
-                  <span className="kv-label">IOC Severity</span>
-                  <span className="kv-value">
+                <div className={kvItem}>
+                  <span className={kvLabel}>IOC Severity</span>
+                  <span className={kvValue}>
                     <SeverityBadge severity={iocMatch.severity} size="sm" />
                   </span>
                 </div>
               )}
               {iocMatch?.confidence !== undefined && (
-                <div className="kv-item">
-                  <span className="kv-label">IOC Confidence</span>
-                  <span className="kv-value mono">{(iocMatch.confidence * 100).toFixed(0)}%</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>IOC Confidence</span>
+                  <span className={cn(mono, kvValue)}>{(iocMatch.confidence * 100).toFixed(0)}%</span>
                 </div>
               )}
               {iocMatch?.source && (
-                <div className="kv-item">
-                  <span className="kv-label">Intelligence Source</span>
-                  <span className="kv-value">{iocMatch.source}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Intelligence Source</span>
+                  <span className={kvValue}>{iocMatch.source}</span>
                 </div>
               )}
             </div>
             {iocMatch?.description && (
-              <div style={{ marginTop: '0.65rem' }}>
-                <span className="kv-label">Explanation:</span>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+              <div className="mt-[0.65rem]">
+                <span className={kvLabel}>Explanation:</span>
+                <p className="text-[0.82rem] text-fg-2 mt-[0.2rem]">
                   {iocMatch.description}
                 </p>
               </div>
@@ -829,30 +822,30 @@ END OF REPORT
 
         {/* 6. CORRELATION & INCIDENTS */}
         {hasCorrelation && (
-          <div className="evidence-section">
-            <div className="evidence-header">
+          <div className={evidenceSection}>
+            <div className={evidenceHeader}>
               <GitBranch size={14} />
               <span>Incident Correlation</span>
             </div>
-            <div className="kv-grid">
+            <div className={kvGrid}>
               {incidentId && (
-                <div className="kv-item">
-                  <span className="kv-label">Associated Incident ID</span>
-                  <span className="kv-value mono" style={{ color: 'var(--accent-cyan)' }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Associated Incident ID</span>
+                  <span className={cn(mono, kvValue, 'text-accent')}>
                     {incidentId}
                   </span>
                 </div>
               )}
               {metadata.event_count !== undefined && (
-                <div className="kv-item">
-                  <span className="kv-label">Correlated Event Count</span>
-                  <span className="kv-value mono">{metadata.event_count}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Correlated Event Count</span>
+                  <span className={cn(mono, kvValue)}>{metadata.event_count}</span>
                 </div>
               )}
               {metadata.escalation_detected !== undefined && (
-                <div className="kv-item">
-                  <span className="kv-label">Escalation Detected</span>
-                  <span className="kv-value" style={{ color: metadata.escalation_detected ? 'var(--crit-color)' : 'var(--benign-color)' }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Escalation Detected</span>
+                  <span className={cn(kvValue, (metadata.escalation_detected ? 'text-crit' : 'text-benign'))}>
                     {metadata.escalation_detected ? 'YES (Aggressive Repetition)' : 'NO'}
                   </span>
                 </div>
@@ -860,8 +853,8 @@ END OF REPORT
             </div>
             {incidentId && onNavigateToIncident && (
               <button
-                className="control-btn primary"
-                style={{ marginTop: '0.75rem' }}
+                className={cn(controlBtn('primary'), 'mt-3')}
+
                 onClick={() => {
                   onClose();
                   onNavigateToIncident(incidentId);
@@ -875,30 +868,30 @@ END OF REPORT
 
         {/* 7. PREVENTION */}
         {hasPrevention && (
-          <div className="evidence-section">
-            <div className="evidence-header">
+          <div className={evidenceSection}>
+            <div className={evidenceHeader}>
               <Lock size={14} />
               <span>Prevention & IPS Action</span>
             </div>
-            <div className="kv-grid">
+            <div className={kvGrid}>
               {metadata.prevention_mode && (
-                <div className="kv-item">
-                  <span className="kv-label">Active Mode</span>
-                  <span className="kv-value mono">{metadata.prevention_mode}</span>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Active Mode</span>
+                  <span className={cn(mono, kvValue)}>{metadata.prevention_mode}</span>
                 </div>
               )}
               {(event.action || metadata.prevention_action) && (
-                <div className="kv-item">
-                  <span className="kv-label">Action Applied</span>
-                  <span className="kv-value" style={{ fontWeight: 700, color: event.action === 'BLOCK' ? 'var(--crit-color)' : 'var(--low-color)' }}>
+                <div className={kvItem}>
+                  <span className={kvLabel}>Action Applied</span>
+                  <span className={cn(kvValue, 'font-bold', (event.action === 'BLOCK' ? 'text-crit' : 'text-low'))}>
                     {event.action || metadata.prevention_action}
                   </span>
                 </div>
               )}
               {event.recommendation && (
-                <div className="kv-item" style={{ gridColumn: '1 / -1' }}>
-                  <span className="kv-label">Security Recommendation</span>
-                  <span className="kv-value" style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                <div className={cn(kvItem, '[grid-column:1_/_-1]')}>
+                  <span className={kvLabel}>Security Recommendation</span>
+                  <span className={cn(kvValue, 'text-fg font-semibold')}>
                     {event.recommendation}
                   </span>
                 </div>
