@@ -6,7 +6,7 @@ The **CIPHER Email Phishing Detection Subsystem** provides multi-tiered, explain
 
 ### Core Architectural Invariants:
 1. **Local-First & Strict Privacy**: In-flight email bodies and headers are inspected purely in-memory. **Raw email bodies are never persisted** to SQLite databases, disk logs, or external cloud telemetry.
-2. **Authoritative Subsystem Reuse**: Embedded hyperlinks extracted from email bodies are automatically routed to CIPHER's existing 28-feature Random Forest Phishing URL model (`PhishingService`). Sender domains, IPs, and targets are correlated against CIPHER's local SQLite Threat Intelligence IOC repository.
+2. **Authoritative Subsystem Reuse**: Embedded hyperlinks extracted from email bodies are automatically routed to CIPHER's existing 15-feature Random Forest Phishing URL model (`PhishingService`). Sender domains, IPs, and targets are correlated against CIPHER's local SQLite Threat Intelligence IOC repository.
 3. **Calibrated Threat Scoring**: Predictions from the 32-feature email model are fused with URL risk scores, IOC matches, and deterministic heuristic flags through `threat_scorer.py` to calculate a unified risk score (0–100) and severity rating (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
 
 ---

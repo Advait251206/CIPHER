@@ -1,9 +1,9 @@
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
-[![Backend Tests](https://img.shields.io/badge/backend%20tests-152%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
-[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-11%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/frontend/src/test)
-[![Validation](https://img.shields.io/badge/validation%20(A--H)-8%2F8%20passed-blue)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local--first-green)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)
+[![Backend Tests](https://img.shields.io/badge/backend%20tests-177%20passed%2C%205%20skipped-success)](backend/tests)
+[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-13%20passed-success)](frontend/src/test)
+[![Validation](https://img.shields.io/badge/validation%20(A--H)-8%2F8%20passed-blue)](docs/validation.md)
+[![Privacy](https://img.shields.io/badge/privacy-100%25%20local--first-green)](docs/architecture.md)
 
 ---
 
@@ -11,7 +11,7 @@
 
 **CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*) is an integrated, local-first cybersecurity platform that unites machine learning detection, deterministic heuristic/signature evaluation, local threat intelligence, multi-stage event correlation, calibrated threat scoring, and automated defensive prevention. Designed for host and edge environments, CIPHER operates **100% locally on `127.0.0.1`** with zero external cloud API dependencies, eliminating telemetry leakage and third-party exposure.
 
-The platform provides dual-domain threat visibility: inspecting suspicious web indicators via a static 28-feature Random Forest phishing detector trained on PhiUSIIL, while concurrently ingesting raw network packets through an Npcap live sensor and analyzing flow statistics via a Dual Random Forest network intrusion detection system trained on 2.49 million deduplicated flows from CIC-IDS2017. A modern dark-themed SOC operations dashboard developed in React 18, TypeScript, and Vite provides real-time telemetry, interactive sandboxes, incident lifecycle tracking, and evidence inspection.
+The platform provides dual-domain threat visibility: inspecting suspicious web indicators via a static 15-feature Random Forest phishing detector trained on PhiUSIIL, while concurrently ingesting raw network packets through an Npcap live sensor and analyzing flow statistics via a Dual Random Forest network intrusion detection system trained on 2.49 million deduplicated flows from CIC-IDS2017. A modern dark-themed SOC operations dashboard developed in React 18, TypeScript, and Vite provides real-time telemetry, interactive sandboxes, incident lifecycle tracking, and evidence inspection.
 
 ---
 
@@ -28,7 +28,7 @@ Contemporary enterprise security environments are hindered by three critical str
 
 CIPHER fulfills eight core technical objectives:
 - **Network Intrusion Detection**: Real-time statistical flow classification across 8 attack categories (DoS, DDoS, PortScan, BruteForce, Botnet, Web Attacks, Infiltration, Heartbleed).
-- **Phishing URL Detection**: Sub-millisecond static URL inspection across 28 lexical, structural, and information-theoretic features without active web crawling.
+- **Phishing URL Detection**: Sub-millisecond static URL inspection across 15 lexical, structural, and information-theoretic features without active web crawling.
 - **Deterministic Heuristic & Signature Detection**: 14 stateful rules operating alongside ML to guarantee deterministic detection of horizontal scans, credential storms, and volumetric floods.
 - **Threat Intelligence Correlation**: Local-first SQLite IOC store (`threat_intel_iocs`) with in-memory caching and dominant severity risk floors.
 - **Multi-Stage Event Correlation**: Sliding-window (300s) incident correlation linking related events using strict `(source_ip, destination_ip)` identity pairing with automated escalation tracking.
@@ -46,7 +46,7 @@ Attack / Test Traffic               Suspicious URLs
   [ Live Sensor / Npcap ]                  │
   (50k Active Flow Table)                  │
          │                                 │
-67-Feature Flow Extraction        28-Feature URL Extractor
+67-Feature Flow Extraction        15-Feature URL Extractor
          │                                 │
 ┌────────┴────────┐               ┌────────┴────────┐
 │  Network ML:    │               │  Phishing ML:   │
@@ -85,7 +85,7 @@ Attack / Test Traffic               Suspicious URLs
 
 | Component | Technology | Primary Function |
 |:---|:---|:---|
-| **Phishing Detector** | Scikit-Learn Random Forest | 28 static lexical features; 99.66% accuracy on PhiUSIIL test set; hybrid approach with Tranco Top 50,000 domain whitelist to prevent false positives. |
+| **Phishing Detector** | Scikit-Learn Random Forest | 15 static lexical features; 99.66% accuracy on PhiUSIIL test set; hybrid approach with Tranco Top 50,000 domain whitelist to prevent false positives. |
 | **Browser Guard** | Chrome/Edge Extension | 100% local, air-gapped browser extension that connects directly to `localhost:8000` to scan active tabs in real-time. |
 | **Network IDS** | Dual Random Forest Ensemble | Binary gate + 9-class multiclass classifier; 67 flow features; 99.90% accuracy on CIC-IDS2017. |
 | **Live Network Sensor** | Scapy + Npcap Async Sniffer | Captures raw packets; tracks 50,000 flows; 5s idle / 60s active eviction timers. |
@@ -214,7 +214,7 @@ python -m scripts.phase10_validation.runner
 | **Network IDS (Multiclass)** | **99.900%** | Macro: 96.3% | Macro: 96.1%| Macro: 0.961| CIC-IDS2017 Held-Out Test (374,833 flows) |
 
 > [!NOTE]
-> Detailed per-class metrics, confusion matrices, and minority class analyses (e.g., Botnet precision at 69.39%, Infiltration support) are documented in [docs/model_results.md](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/model_results.md).
+> Detailed per-class metrics, confusion matrices, and minority class analyses (e.g., Botnet precision at 69.39%, Infiltration support) are documented in [docs/model_results.md](docs/model_results.md).
 
 ---
 
@@ -238,17 +238,17 @@ python -m scripts.phase10_validation.runner
 
 ## Project Documentation Index
 
-All detailed technical documentation is organized in the [`docs/`](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/) directory:
-- [Architecture & Diagrams](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)
-- [Methodology Across Phases 1–10](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/methodology.md)
-- [Machine Learning Results & Disclaimers](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/model_results.md)
-- [Dataset Documentation & Splits](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/dataset_documentation.md)
-- [Validation Report & Scenarios (A–H)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
-- [Technical Limitations](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/limitations.md)
-- [REST API Reference](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/api_reference.md)
-- [Demonstration Runbook (8–12 Minutes)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/demonstration.md)
-- [Evidence Index & Claim Mapping](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/evidence_index.md)
-- [Verified Project Statistics](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/project_statistics.md)
-- [Final Presentation Slide Deck Outline](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/presentation_outline.md)
-- [Defensible Claims & Evaluation Boundaries](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/defensible_claims.md)
-- [Final Comprehensive Project Report](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/final_project_report.md)
+All detailed technical documentation is organized in the [`docs/`](docs/) directory:
+- [Architecture & Diagrams](docs/architecture.md)
+- [Methodology Across Phases 1–10](docs/methodology.md)
+- [Machine Learning Results & Disclaimers](docs/model_results.md)
+- [Dataset Documentation & Splits](docs/dataset_documentation.md)
+- [Validation Report & Scenarios (A–H)](docs/validation.md)
+- [Technical Limitations](docs/limitations.md)
+- [REST API Reference](docs/api_reference.md)
+- [Demonstration Runbook (8–12 Minutes)](docs/demonstration.md)
+- [Evidence Index & Claim Mapping](docs/evidence_index.md)
+- [Verified Project Statistics](docs/project_statistics.md)
+- [Final Presentation Slide Deck Outline](docs/presentation_outline.md)
+- [Defensible Claims & Evaluation Boundaries](docs/defensible_claims.md)
+- [Final Comprehensive Project Report](docs/final_project_report.md)

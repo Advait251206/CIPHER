@@ -1,3 +1,5 @@
+from pathlib import Path
+import json
 """
 CIPHER REST API Automated Test Suite
 Tests all endpoints, error handling, edge cases, model unavailability, and database persistence.
@@ -41,8 +43,10 @@ def test_system_status_endpoint(client):
     data = response.json()
     assert data["system_name"].startswith("CIPHER")
     assert data["local_only"] is True
-    assert data["feature_count"] == 28
-    assert "URLLength" in data["feature_names"]
+    meta_path = Path(__file__).resolve().parents[1] / "models" / "phishing" / "model_metadata.json"
+    expected = json.loads(meta_path.read_text(encoding="utf-8"))["feature_names"]
+    assert data["feature_count"] == len(expected)
+    assert data["feature_names"] == expected
     assert "IsHTTPS" in data["feature_names"]
 
 
@@ -62,7 +66,8 @@ def test_analyze_legitimate_url(client):
     assert isinstance(data["reasons"], list)
     assert len(data["reasons"]) > 0
     assert "recommendation" in data
-    assert data["model_version"] == "phiusiil-rf-v1"
+    # www.google.com is on the Tranco allow-list, which answers before the model.
+    assert data["model_version"] == "cipher-whitelist-v1"
     assert data["event_id"] is not None
 
 

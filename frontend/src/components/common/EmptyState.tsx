@@ -1,5 +1,7 @@
 import React, { ReactNode } from 'react';
 import { ShieldCheck } from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { stateContainer, stateDesc, stateIcon, stateTitle } from '../../ui/classes';
 
 interface EmptyStateProps {
   title?: string;
@@ -15,13 +17,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   icon,
 }) => {
   return (
-    <div className="state-container" data-testid="empty-state">
-      <div className="state-icon" style={{ background: 'var(--benign-bg)', color: 'var(--benign-color)' }}>
+    <div className={stateContainer} data-testid="empty-state">
+      <div className={cn(stateIcon, 'bg-benign-bg text-benign')}>
         {icon || <ShieldCheck size={28} />}
       </div>
-      <div className="state-title">{title}</div>
-      <div className="state-desc">{description}</div>
-      {action && <div style={{ marginTop: '0.75rem' }}>{action}</div>}
+      <div className={stateTitle}>{title}</div>
+      <div className={stateDesc}>{description}</div>
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 };

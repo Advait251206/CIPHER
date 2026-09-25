@@ -60,10 +60,12 @@ def test_dos_packet_flood_detection(detector):
 
 
 def test_ddos_uniform_flood_detection(detector):
+    # NET-DDOS-01 requires sustained volume: >1000 forward packets over >0.5 s,
+    # so short uniform ACK bursts (downloads) no longer trigger it.
     flow = {
         "Destination Port": 80,
-        "Flow Duration": 8000,
-        "Total Fwd Packets": 500,
+        "Flow Duration": 2000000,
+        "Total Fwd Packets": 5000,
         "Total Backward Packets": 0,
         "Flow Packets/s": 62500.0,
         "Packet Length Variance": 0.5,    # Uniform packet length

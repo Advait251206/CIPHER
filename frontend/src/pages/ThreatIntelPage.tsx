@@ -27,6 +27,8 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, codeTag, controlBtn, dataTable, evidenceHeader, evidenceSection, formGroup, formInput, formLabel, formSelect, formTextarea, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody, tableContainer } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -254,45 +256,45 @@ export const ThreatIntelPage: React.FC = () => {
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {actionSuccess && (
-        <div className="alert-box success">
+        <div className={alertBox('success')}>
           <CheckCircle2 size={16} />
           <span>{actionSuccess}</span>
         </div>
       )}
 
       {/* Action Header & Tools */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Database size={18} color="var(--accent-cyan)" />
+            <h2 className="text-[1.1rem] font-bold text-fg flex items-center gap-2">
+              <Database size={18} color="var(--color-accent)" />
               <span>Local Threat Intelligence / IOC Store</span>
             </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <p className="text-[0.78rem] text-fg-muted">
               All IOCs are stored locally in SQLite. CIPHER does not automatically transmit indicators to external threat feeds.
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button className="control-btn" onClick={() => setIsCheckModalOpen(true)}>
+          <div className="flex gap-2 flex-wrap">
+            <button className={controlBtn()} onClick={() => setIsCheckModalOpen(true)}>
               <Search size={14} />
               <span>Check Indicator</span>
             </button>
-            <button className="control-btn" onClick={() => setIsJsonImportOpen(true)}>
+            <button className={controlBtn()} onClick={() => setIsJsonImportOpen(true)}>
               <FileCode size={14} />
               <span>JSON Import</span>
             </button>
-            <button className="control-btn" onClick={() => setIsCsvImportOpen(true)}>
+            <button className={controlBtn()} onClick={() => setIsCsvImportOpen(true)}>
               <FileSpreadsheet size={14} />
               <span>CSV Import</span>
             </button>
-            <button className="control-btn primary" onClick={() => setIsAddModalOpen(true)}>
+            <button className={controlBtn('primary')} onClick={() => setIsAddModalOpen(true)}>
               <Plus size={14} />
               <span>Add IOC</span>
             </button>
@@ -301,61 +303,61 @@ export const ThreatIntelPage: React.FC = () => {
       </motion.div>
 
       {/* IOC Intelligence Metric Strip */}
-      <motion.div variants={itemVariants} className="ioc-metric-strip">
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num">{totalMatching}</div>
-          <div className="ioc-metric-label">Total Indicators</div>
+      <motion.div variants={itemVariants} className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-3">
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className="font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg">{totalMatching}</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">Total Indicators</div>
         </div>
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num" style={{ color: 'var(--accent-blue)' }}>
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className={cn('font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg', 'text-accent')}>
             {iocs.filter((i) => i.ioc_type === 'IP').length}
           </div>
-          <div className="ioc-metric-label">IP Addresses</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">IP Addresses</div>
         </div>
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num" style={{ color: 'var(--accent-cyan)' }}>
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className={cn('font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg', 'text-accent')}>
             {iocs.filter((i) => i.ioc_type === 'DOMAIN').length}
           </div>
-          <div className="ioc-metric-label">Malicious Domains</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">Malicious Domains</div>
         </div>
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num" style={{ color: 'var(--high-color)' }}>
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className={cn('font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg', 'text-high')}>
             {iocs.filter((i) => i.ioc_type === 'URL').length}
           </div>
-          <div className="ioc-metric-label">Phishing URLs</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">Phishing URLs</div>
         </div>
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num" style={{ color: 'var(--accent-purple)' }}>
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className={cn('font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg', 'text-accent')}>
             {iocs.filter((i) => i.ioc_type === 'HASH').length}
           </div>
-          <div className="ioc-metric-label">File Hashes</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">File Hashes</div>
         </div>
-        <div className="ioc-metric-tile">
-          <div className="ioc-metric-num" style={{ color: 'var(--benign-color)' }}>
+        <div className="rounded-none border border-line-card bg-surface px-4 py-3 [transition:all_0.15s_ease] hover:border-elevated hover:transform-[translateY(-2px)]">
+          <div className={cn('font-mono text-[1.4rem] leading-[1.1] font-extrabold text-fg', 'text-benign')}>
             {iocs.filter((i) => i.enabled).length}
           </div>
-          <div className="ioc-metric-label">Active & Enforcing</div>
+          <div className="mt-[0.2rem] text-[0.7rem] font-semibold text-fg-muted uppercase">Active & Enforcing</div>
         </div>
       </motion.div>
 
       {/* Filter Controls */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
-          <div className="form-group" style={{ flex: '1 1 200px', margin: 0 }}>
-            <label className="form-label">Search Indicator</label>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className={cn(formGroup, 'flex-[1_1_200px] m-0')}>
+            <label className={formLabel}>Search Indicator</label>
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder="e.g. 198.51.100.24 or evil-domain.com"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="form-group" style={{ width: '140px', margin: 0 }}>
-            <label className="form-label">IOC Type</label>
+          <div className={cn(formGroup, 'w-[140px] m-0')}>
+            <label className={formLabel}>IOC Type</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -367,10 +369,10 @@ export const ThreatIntelPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="form-group" style={{ width: '140px', margin: 0 }}>
-            <label className="form-label">Severity</label>
+          <div className={cn(formGroup, 'w-[140px] m-0')}>
+            <label className={formLabel}>Severity</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
             >
@@ -382,15 +384,15 @@ export const ThreatIntelPage: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingBottom: '0.5rem' }}>
+          <div className="flex items-center gap-[0.4rem] pb-2">
             <input
               type="checkbox"
               id="enabledOnly"
               checked={enabledOnly}
               onChange={(e) => setEnabledOnly(e.target.checked)}
-              style={{ cursor: 'pointer' }}
+              className="cursor-pointer"
             />
-            <label htmlFor="enabledOnly" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <label htmlFor="enabledOnly" className="text-[0.8rem] text-fg-2 cursor-pointer">
               Active Only
             </label>
           </div>
@@ -398,12 +400,12 @@ export const ThreatIntelPage: React.FC = () => {
       </motion.div>
 
       {/* IOC Table */}
-      <motion.div variants={itemVariants} className="card">
-        <div className="card-header">
-          <div className="card-title">
+      <motion.div variants={itemVariants} className={card}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
             <span>Registered Indicators of Compromise</span>
           </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <span className="text-[0.78rem] text-fg-muted">
             Showing {filteredIocs.length} of {totalMatching} matching indicators
           </span>
         </div>
@@ -413,36 +415,26 @@ export const ThreatIntelPage: React.FC = () => {
         ) : error ? (
           <ErrorState title="Failed to Load IOC Store" error={error} onRetry={fetchIocs} />
         ) : filteredIocs.length === 0 ? (
-          <div style={{ padding: '3rem 1.5rem', textAlign: 'center' }}>
+          <div className="py-12 px-6 text-center">
             <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: 'var(--benign-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 1rem auto',
-                border: '1px solid var(--benign-border)',
-              }}
+              className="w-[48px] h-[48px] rounded-[50%] bg-benign-bg flex items-center justify-center mt-0 mx-auto mb-4 border border-benign"
             >
-              <Database size={24} color="var(--benign-color)" />
+              <Database size={24} color="var(--color-benign)" />
             </div>
-            <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
+            <div className="font-bold text-[1rem] mb-[0.35rem] text-fg">
               {typeFilter || severityFilter || searchQuery
                 ? 'No Threat Indicators Match Query'
                 : 'Zero Indicators in Local Threat Store'}
             </div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.84rem', maxWidth: '420px', margin: '0 auto' }}>
+            <div className="text-fg-muted text-[0.84rem] max-w-[420px] my-0 mx-auto">
               {typeFilter || severityFilter || searchQuery
                 ? 'Try clearing your filter inputs to display all registered indicators.'
                 : 'Local IOC store is clean. Click "Add IOC" or "CSV Import" above to register malicious IPs, domains, or hashes.'}
             </div>
           </div>
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div className={tableContainer}>
+            <table className={dataTable}>
               <thead>
                 <tr>
                   <th>Type</th>
@@ -460,54 +452,54 @@ export const ThreatIntelPage: React.FC = () => {
                 {filteredIocs.map((ioc) => (
                   <tr key={ioc.ioc_id}>
                     <td>
-                      <span className="mono" style={{ fontSize: '0.72rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 6px', borderRadius: '4px' }}>
+                      <span className={cn(mono, 'text-[0.72rem] bg-elevated border border-line py-[2px] px-[6px] rounded-[4px]')}>
                         {ioc.ioc_type}
                       </span>
                     </td>
-                    <td className="mono" style={{ fontWeight: 600 }}>
+                    <td className={cn(mono, 'font-semibold!')}>
                       {ioc.indicator}
                     </td>
                     <td>
                       <SeverityBadge severity={ioc.severity} size="sm" />
                     </td>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>
                       {(ioc.confidence * 100).toFixed(0)}%
                     </td>
                     <td>
-                      <span style={{ fontSize: '0.78rem' }}>{ioc.category || 'THREAT'}</span>
+                      <span className="text-[0.78rem]">{ioc.category || 'THREAT'}</span>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <span className={cn(mono, 'text-[0.72rem] text-fg-muted')}>
                         {ioc.source}
                       </span>
                     </td>
-                    <td className="mono" style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                    <td className={cn(mono, 'text-[0.7rem]! text-fg-muted!')}>
                       {ioc.first_seen?.split('T')[0] || 'N/A'}
                     </td>
                     <td>
                       <button
-                        className="control-btn"
-                        style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                        className={cn(controlBtn(), 'py-[2px] px-[6px] text-[0.7rem]')}
+
                         onClick={() => handleToggleIoc(ioc)}
                         title={ioc.enabled ? 'Click to Disable' : 'Click to Enable'}
                       >
                         {ioc.enabled ? (
                           <>
-                            <ToggleRight size={14} color="var(--benign-color)" />
-                            <span style={{ color: 'var(--benign-color)' }}>Enabled</span>
+                            <ToggleRight size={14} color="var(--color-benign)" />
+                            <span className="text-benign">Enabled</span>
                           </>
                         ) : (
                           <>
-                            <ToggleLeft size={14} color="var(--text-muted)" />
-                            <span style={{ color: 'var(--text-muted)' }}>Disabled</span>
+                            <ToggleLeft size={14} color="var(--color-fg-muted)" />
+                            <span className="text-fg-muted">Disabled</span>
                           </>
                         )}
                       </button>
                     </td>
                     <td>
                       <button
-                        className="control-btn danger"
-                        style={{ padding: '3px 6px' }}
+                        className={cn(controlBtn('danger'), 'py-[3px] px-[6px]')}
+
                         onClick={() => setIocToDelete(ioc)}
                         title="Delete IOC"
                       >
@@ -529,11 +521,11 @@ export const ThreatIntelPage: React.FC = () => {
         title="Register Indicator of Compromise (IOC)"
         footer={
           <>
-            <button className="control-btn" onClick={() => setIsAddModalOpen(false)}>
+            <button className={controlBtn()} onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </button>
             <button
-              className="control-btn primary"
+              className={controlBtn('primary')}
               onClick={handleAddIoc}
               disabled={isSubmitting || !newIndicator.trim()}
             >
@@ -542,19 +534,19 @@ export const ThreatIntelPage: React.FC = () => {
           </>
         }
       >
-        <form onSubmit={handleAddIoc} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        <form onSubmit={handleAddIoc} className="flex flex-col gap-[0.85rem]">
           {formError && (
-            <div className="alert-box danger">
+            <div className={alertBox('danger')}>
               <AlertTriangle size={14} />
               <span>{formError}</span>
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Indicator Type</label>
+          <div className="grid grid-cols-[1fr_1fr] gap-3">
+            <div className={cn(formGroup, 'm-0')}>
+              <label className={formLabel}>Indicator Type</label>
               <select
-                className="form-select"
+                className={formSelect}
                 value={newType}
                 onChange={(e) => setNewType(e.target.value as IOCType)}
               >
@@ -565,10 +557,10 @@ export const ThreatIntelPage: React.FC = () => {
               </select>
             </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Severity Level</label>
+            <div className={cn(formGroup, 'm-0')}>
+              <label className={formLabel}>Severity Level</label>
               <select
-                className="form-select"
+                className={formSelect}
                 value={newSeverity}
                 onChange={(e) => setNewSeverity(e.target.value as Severity)}
               >
@@ -580,11 +572,11 @@ export const ThreatIntelPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Indicator Value</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Indicator Value</label>
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder={
                 newType === 'IP'
                   ? '198.51.100.23'
@@ -600,25 +592,25 @@ export const ThreatIntelPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Confidence (0.0 - 1.0)</label>
+          <div className="grid grid-cols-[1fr_1fr] gap-3">
+            <div className={cn(formGroup, 'm-0')}>
+              <label className={formLabel}>Confidence (0.0 - 1.0)</label>
               <input
                 type="number"
                 step="0.05"
                 min="0.0"
                 max="1.0"
-                className="form-input"
+                className={formInput}
                 value={newConfidence}
                 onChange={(e) => setNewConfidence(Number(e.target.value))}
               />
             </div>
 
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">Attack Category</label>
+            <div className={cn(formGroup, 'm-0')}>
+              <label className={formLabel}>Attack Category</label>
               <input
                 type="text"
-                className="form-input"
+                className={formInput}
                 placeholder="C2, BOTNET, PHISHING, RANSOMWARE"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
@@ -626,22 +618,22 @@ export const ThreatIntelPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Description / Threat Context</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Description / Threat Context</label>
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder="Known command-and-control server observed in recent campaign"
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
             />
           </div>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Tags (comma-separated)</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Tags (comma-separated)</label>
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder="malware, apt29, trojan"
               value={newTags}
               onChange={(e) => setNewTags(e.target.value)}
@@ -659,78 +651,78 @@ export const ThreatIntelPage: React.FC = () => {
         }}
         title="Direct Indicator Lookup Check (POST /api/threat-intel/check)"
         footer={
-          <button className="control-btn" onClick={() => setIsCheckModalOpen(false)}>
+          <button className={controlBtn()} onClick={() => setIsCheckModalOpen(false)}>
             Close
           </button>
         }
       >
-        <form onSubmit={handleCheckIndicator} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+        <form onSubmit={handleCheckIndicator} className="flex flex-col gap-4">
+          <p className="text-[0.82rem] text-fg-2">
             Instantly checks an IP, domain, URL, or hash against active local intelligence. Operates purely locally without network queries.
           </p>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="flex gap-2">
             <input
               type="text"
-              className="form-input"
+              className={formInput}
               placeholder="Enter IP, domain, URL, or hash..."
               value={checkInput}
               onChange={(e) => setCheckInput(e.target.value)}
               required
             />
-            <button type="submit" className="control-btn primary" disabled={isChecking}>
+            <button type="submit" className={controlBtn('primary')} disabled={isChecking}>
               <Search size={14} />
               <span>{isChecking ? 'Checking...' : 'Check'}</span>
             </button>
           </div>
 
           {checkResult && (
-            <div className="evidence-section" style={{ marginTop: '0.5rem' }}>
-              <div className="evidence-header">
+            <div className={cn(evidenceSection, 'mt-2')}>
+              <div className={evidenceHeader}>
                 {checkResult.matched ? (
                   <>
-                    <AlertTriangle size={14} color="var(--crit-color)" />
-                    <span style={{ color: 'var(--crit-color)' }}>THREAT INDICATOR MATCHED</span>
+                    <AlertTriangle size={14} color="var(--color-crit)" />
+                    <span className="text-crit">THREAT INDICATOR MATCHED</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={14} color="var(--benign-color)" />
-                    <span style={{ color: 'var(--benign-color)' }}>NO ACTIVE IOC MATCH FOUND</span>
+                    <CheckCircle2 size={14} color="var(--color-benign)" />
+                    <span className="text-benign">NO ACTIVE IOC MATCH FOUND</span>
                   </>
                 )}
               </div>
 
               {checkResult.matched && checkResult.matches.length > 0 ? (
-                <div className="kv-grid">
-                  <div className="kv-item">
-                    <span className="kv-label">Indicator</span>
-                    <span className="kv-value mono">{checkResult.matches[0].indicator}</span>
+                <div className={kvGrid}>
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Indicator</span>
+                    <span className={cn(mono, kvValue)}>{checkResult.matches[0].indicator}</span>
                   </div>
-                  <div className="kv-item">
-                    <span className="kv-label">Severity</span>
-                    <span className="kv-value">
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Severity</span>
+                    <span className={kvValue}>
                       <SeverityBadge severity={checkResult.matches[0].severity} size="sm" />
                     </span>
                   </div>
-                  <div className="kv-item">
-                    <span className="kv-label">Confidence</span>
-                    <span className="kv-value mono">
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Confidence</span>
+                    <span className={cn(mono, kvValue)}>
                       {(checkResult.matches[0].confidence * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <div className="kv-item">
-                    <span className="kv-label">Source</span>
-                    <span className="kv-value mono">{checkResult.matches[0].source}</span>
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Source</span>
+                    <span className={cn(mono, kvValue)}>{checkResult.matches[0].source}</span>
                   </div>
                   {checkResult.matches[0].description && (
-                    <div className="kv-item" style={{ gridColumn: '1 / -1' }}>
-                      <span className="kv-label">Context</span>
-                      <span className="kv-value">{checkResult.matches[0].description}</span>
+                    <div className={cn(kvItem, '[grid-column:1_/_-1]')}>
+                      <span className={kvLabel}>Context</span>
+                      <span className={kvValue}>{checkResult.matches[0].description}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                <p className="text-[0.82rem] text-fg-2">
                   The indicator is not registered in CIPHER's local threat store.
                 </p>
               )}
@@ -750,11 +742,11 @@ export const ThreatIntelPage: React.FC = () => {
         title="Bulk Import IOCs (JSON)"
         footer={
           <>
-            <button className="control-btn" onClick={() => setIsJsonImportOpen(false)}>
+            <button className={controlBtn()} onClick={() => setIsJsonImportOpen(false)}>
               Cancel
             </button>
             <button
-              className="control-btn primary"
+              className={controlBtn('primary')}
               onClick={handleImportJson}
               disabled={isSubmitting || !jsonText.trim()}
             >
@@ -763,21 +755,21 @@ export const ThreatIntelPage: React.FC = () => {
           </>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+        <div className="flex flex-col gap-3">
+          <p className="text-[0.82rem] text-fg-2">
             Paste a JSON array of IOC objects (maximum 1,000 entries per batch).
           </p>
 
           <textarea
-            className="form-textarea"
-            style={{ height: '180px' }}
+            className={cn(formTextarea, 'h-[180px]')}
+
             placeholder={`[\n  {\n    "ioc_type": "IP",\n    "indicator": "198.51.100.99",\n    "severity": "HIGH",\n    "confidence": 0.9,\n    "category": "C2"\n  }\n]`}
             value={jsonText}
             onChange={(e) => setJsonText(e.target.value)}
           />
 
           {importResult && (
-            <div className="alert-box info">
+            <div className={alertBox('info')}>
               <span>
                 Processed {importResult.total_submitted} items: {importResult.imported_count} imported,{' '}
                 {importResult.rejected_count} rejected.
@@ -798,11 +790,11 @@ export const ThreatIntelPage: React.FC = () => {
         title="Bulk Import IOCs (CSV)"
         footer={
           <>
-            <button className="control-btn" onClick={() => setIsCsvImportOpen(false)}>
+            <button className={controlBtn()} onClick={() => setIsCsvImportOpen(false)}>
               Cancel
             </button>
             <button
-              className="control-btn primary"
+              className={controlBtn('primary')}
               onClick={handleImportCsv}
               disabled={isSubmitting || !csvText.trim()}
             >
@@ -811,21 +803,21 @@ export const ThreatIntelPage: React.FC = () => {
           </>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-            Paste raw CSV text. Required header columns: <code>ioc_type,indicator,severity,confidence,category,description</code>.
+        <div className="flex flex-col gap-3">
+          <p className="text-[0.82rem] text-fg-2">
+            Paste raw CSV text. Required header columns: <code className={codeTag}>ioc_type,indicator,severity,confidence,category,description</code>.
           </p>
 
           <textarea
-            className="form-textarea"
-            style={{ height: '180px' }}
+            className={cn(formTextarea, 'h-[180px]')}
+
             placeholder={`ioc_type,indicator,severity,confidence,category,description\nIP,203.0.113.15,HIGH,0.85,SCANNER,Known port scanner\nDOMAIN,malicious-c2.xyz,CRITICAL,0.95,BOTNET,Active botnet C2`}
             value={csvText}
             onChange={(e) => setCsvText(e.target.value)}
           />
 
           {importResult && (
-            <div className="alert-box info">
+            <div className={alertBox('info')}>
               <span>
                 Processed {importResult.total_submitted} items: {importResult.imported_count} imported,{' '}
                 {importResult.rejected_count} rejected.
@@ -846,9 +838,9 @@ export const ThreatIntelPage: React.FC = () => {
             <div>
               <p>
                 Are you sure you want to permanently delete IOC{' '}
-                <strong className="mono">{iocToDelete.indicator}</strong> ({iocToDelete.ioc_type})?
+                <strong className={mono}>{iocToDelete.indicator}</strong> ({iocToDelete.ioc_type})?
               </p>
-              <p style={{ marginTop: '0.5rem', color: 'var(--crit-color)' }}>
+              <p className="mt-2 text-crit">
                 This indicator will no longer elevate risk scores in subsequent threat evaluations.
               </p>
             </div>

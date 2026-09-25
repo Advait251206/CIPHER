@@ -4,141 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CIPHER Security Warning</title>
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card-bg: #111827;
-      --border: #374151;
-      --danger: #ef4444;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .warning-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 12px;
-      max-width: 540px;
-      width: 100%;
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-    }
-    .warning-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .warning-icon {
-      width: 36px;
-      height: 36px;
-      color: var(--danger);
-    }
-    .warning-title {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      color: var(--danger);
-    }
-    .warning-subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .target-box {
-      background: #1f2937;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 12px;
-      color: #f87171;
-      word-break: break-all;
-    }
-    .metrics-row {
-      display: flex;
-      gap: 24px;
-      background: #182234;
-      padding: 12px 16px;
-      border-radius: 8px;
-    }
-    .metric-col { display: flex; flex-direction: column; gap: 4px; }
-    .metric-name { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-    .metric-val { font-size: 16px; font-weight: 800; color: var(--danger); }
-    .evidence-section { display: flex; flex-direction: column; gap: 8px; }
-    .evidence-heading { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-    .evidence-list { list-style: square; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #d1d5db; }
-    .actions { display: flex; gap: 12px; margin-top: 8px; }
-    .btn {
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-      text-decoration: none;
-      text-align: center;
-    }
-    .btn-back { background: #2563eb; color: white; flex: 2; }
-    .btn-back:hover { background: #1d4ed8; }
-    .btn-proceed { background: #374151; color: var(--muted); flex: 1; font-size: 12px; }
-    .btn-proceed:hover { background: #4b5563; color: white; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="warning-card">
-    <div class="warning-header">
-      <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<body class="flex min-h-screen items-center justify-center bg-warn-bg p-[20px] font-warn text-warn-text">
+  <div class="flex w-full max-w-[540px] flex-col gap-[20px] rounded-[12px] border border-[rgba(239,68,68,0.4)] bg-warn-card p-[32px] [box-shadow:0_10px_25px_rgba(0,0,0,0.6)]">
+    <div class="flex items-center gap-[12px]">
+      <svg class="size-[36px] text-risk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
         <line x1="12" y1="9" x2="12" y2="13"/>
         <line x1="12" y1="17" x2="12.01" y2="17"/>
       </svg>
       <div>
-        <h1 class="warning-title">CIPHER SECURITY WARNING</h1>
-        <p class="warning-subtitle">Potential phishing or fraudulent website intercepted</p>
+        <h1 class="text-[20px] font-extrabold tracking-[0.05em] text-risk">CIPHER SECURITY WARNING</h1>
+        <p class="mt-[2px] text-[13px] text-warn-muted">Potential phishing or fraudulent website intercepted</p>
       </div>
     </div>
 
-    <div class="target-box" id="targetUrl">https://example-phishing-site.xyz</div>
+    <div class="rounded-[6px] bg-[#1f2937] px-[14px] py-[10px] [font-family:monospace] text-[12px] break-all text-[#f87171]" id="targetUrl">https://example-phishing-site.xyz</div>
 
-    <div class="metrics-row">
-      <div class="metric-col">
-        <span class="metric-name">Threat Severity</span>
-        <span class="metric-val" id="severityVal">CRITICAL</span>
+    <div class="flex gap-[24px] rounded-[8px] bg-[#182234] px-[16px] py-[12px]">
+      <div class="flex flex-col gap-[4px]">
+        <span class="text-[10px] font-bold text-warn-muted uppercase">Threat Severity</span>
+        <span class="text-[16px] font-extrabold text-risk" id="severityVal">CRITICAL</span>
       </div>
-      <div class="metric-col">
-        <span class="metric-name">Calibrated Risk</span>
-        <span class="metric-val" id="riskVal">94 / 100</span>
+      <div class="flex flex-col gap-[4px]">
+        <span class="text-[10px] font-bold text-warn-muted uppercase">Calibrated Risk</span>
+        <span class="text-[16px] font-extrabold text-risk" id="riskVal">94 / 100</span>
       </div>
-      <div class="metric-col">
-        <span class="metric-name">Confidence</span>
-        <span class="metric-val" id="confVal">96%</span>
+      <div class="flex flex-col gap-[4px]">
+        <span class="text-[10px] font-bold text-warn-muted uppercase">Confidence</span>
+        <span class="text-[16px] font-extrabold text-risk" id="confVal">96%</span>
       </div>
     </div>
 
-    <div class="evidence-section">
-      <span class="evidence-heading">Detection Evidence:</span>
-      <ul class="evidence-list" id="evidenceList">
+    <div class="flex flex-col gap-[8px]">
+      <span class="text-[12px] font-bold text-warn-muted uppercase">Detection Evidence:</span>
+      <ul class="flex flex-col gap-[6px] pl-[20px] text-[13px] text-[#d1d5db] [list-style:square]" id="evidenceList">
         <li>Statistical lexical anomalies consistent with phishing lures</li>
         <li>Suspicious domain structure and unverified host identity</li>
       </ul>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-back" id="backBtn">Go Back to Safety (Recommended)</button>
-      <button class="btn btn-proceed" id="proceedBtn">Continue Anyway (Unsafe)</button>
+    <div class="mt-[8px] flex gap-[12px]">
+      <button class="flex-[2] cursor-pointer rounded-[6px] border-none bg-[#2563eb] px-[20px] py-[10px] text-center text-[13px] font-bold text-white no-underline [transition:all_0.15s] hover:bg-[#1d4ed8]" id="backBtn">Go Back to Safety (Recommended)</button>
+      <button class="flex-1 cursor-pointer rounded-[6px] border-none bg-[#374151] px-[20px] py-[10px] text-center text-[12px] font-bold text-warn-muted no-underline [transition:all_0.15s] hover:bg-[#4b5563] hover:text-white" id="proceedBtn">Continue Anyway (Unsafe)</button>
     </div>
   </div>
 

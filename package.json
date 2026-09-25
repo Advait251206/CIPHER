@@ -2,17 +2,19 @@
   "name": "cipher-soc-platform",
   "version": "1.0.0",
   "private": true,
-  "description": "CIPHER — Cyber Intrusion Prevention & Heuristic Event Response",
+  "description": "CIPHER \u2014 Cyber Intrusion Prevention & Heuristic Event Response",
   "scripts": {
     "dev": "concurrently --kill-others --names \"BACKEND,FRONTEND\" --prefix-colors \"cyan,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload",
     "dev:frontend": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build",
+    "build": "npm run build:extension && npm --prefix frontend run build",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "python -c \"import subprocess, sys; sys.exit(subprocess.call([sys.executable, '-m', 'pytest', 'tests'], cwd='backend'))\"",
-    "test:frontend": "npm --prefix frontend test"
+    "test:frontend": "npm --prefix frontend test",
+    "build:extension": "tailwindcss -i cipher-browser-extension/styles.src.css -o cipher-browser-extension/styles.css --minify"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "@tailwindcss/cli": "^4.3.3"
   }
 }

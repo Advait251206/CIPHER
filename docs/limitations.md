@@ -13,7 +13,7 @@ A core tenet of defensible cybersecurity engineering is technical honesty. This 
 - Modern automated exploit frameworks and novel evasion techniques (e.g., fragmented packet injection, polymorphic payloads) may exhibit flow profiles differing from this baseline.
 
 ### Representation Imbalances in Minority Classes
-- As documented in the [Model Results](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/model_results.md), certain attack categories contain limited test set support:
+- As documented in the [Model Results](../docs/model_results.md), certain attack categories contain limited test set support:
   - `INFILTRATION`: 5 test samples.
   - `OTHER_ATTACK` (Heartbleed): 1 test sample.
   - `BOTNET`: Precision is lower (69.39%) due to statistical overlap with legitimate polling behavior.
@@ -60,7 +60,7 @@ A core tenet of defensible cybersecurity engineering is technical honesty. This 
   - `PORT_SCAN_THRESHOLD = 10` distinct ports in 60 seconds.
   - `BRUTE_FORCE_THRESHOLD = 5` attempts in 60 seconds.
   - `DOS_PACKET_RATE_THRESHOLD = 50,000` packets/second.
-  - `DOS_BYTE_RATE_THRESHOLD = 5,000,000` bytes/second.
+  - `DOS_BYTE_RATE_THRESHOLD = 50,000,000` bytes/second.
   - `DDOS_SOURCES_THRESHOLD = 3` sources in 60 seconds.
 - These thresholds are not universal physical laws. Highly specialized environments (e.g., financial trading desks with microsecond bursts or legitimate horizontal vulnerability scanners) may require custom threshold tuning to avoid false positives or false negatives.
 

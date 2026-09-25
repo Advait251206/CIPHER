@@ -114,9 +114,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Website Inspection Renderer
   function renderWebsiteVerdict(data) {
     if (data.status === "UNAVAILABLE") {
-      backendStatusEl.className = "backend-status offline";
+      backendStatusEl.classList.remove("online");
+      backendStatusEl.classList.add("offline");
       backendStatusText.textContent = "Backend Offline";
-      verdictBadge.className = "verdict-badge";
+      verdictBadge.classList.remove("safe", "warn", "risk");
       verdictBadge.textContent = "OFFLINE";
       riskScoreVal.textContent = "--";
       confidenceVal.textContent = "--";
@@ -125,7 +126,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    backendStatusEl.className = "backend-status online";
+    backendStatusEl.classList.remove("offline");
+    backendStatusEl.classList.add("online");
     backendStatusText.textContent = "127.0.0.1 Connected";
 
     const score = data.risk_score || 0;
@@ -136,7 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     confidenceVal.textContent = `${conf}%`;
     riskProgressBar.style.width = `${score}%`;
 
-    verdictBadge.className = "verdict-badge";
+    verdictBadge.classList.remove("safe", "warn", "risk");
     if (score >= 70 || cls === "LIKELY_PHISHING") {
       verdictBadge.classList.add("risk");
       verdictBadge.textContent = "PHISHING DETECTED";
@@ -168,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     targetUrlEl.textContent = currentTab.url;
-    verdictBadge.className = "verdict-badge";
+    verdictBadge.classList.remove("safe", "warn", "risk");
     verdictBadge.textContent = "ANALYZING...";
     riskProgressBar.style.width = "40%";
     riskProgressBar.style.backgroundColor = "var(--color-accent)";
@@ -216,7 +218,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (chrome.runtime.lastError || !extracted || !extracted.success) {
         emailResultCard.classList.remove("hidden");
-        emailVerdictBadge.className = "verdict-badge warn";
+        emailVerdictBadge.classList.remove("safe", "risk");
+        emailVerdictBadge.classList.add("warn");
         emailVerdictBadge.textContent = "NO MESSAGE FOUND";
         emailRiskVal.textContent = "--";
         emailSeverityVal.textContent = "N/A";
@@ -226,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // Dispatch to background for local CIPHER API analysis
-      emailVerdictBadge.className = "verdict-badge";
+      emailVerdictBadge.classList.remove("safe", "warn", "risk");
       emailVerdictBadge.textContent = "INSPECTING...";
       emailResultCard.classList.remove("hidden");
 
@@ -240,7 +243,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }, (res) => {
         if (!res || res.status === "UNAVAILABLE") {
-          emailVerdictBadge.className = "verdict-badge";
+          emailVerdictBadge.classList.remove("safe", "warn", "risk");
           emailVerdictBadge.textContent = "OFFLINE";
           emailEvidenceList.innerHTML = "<li>CIPHER backend is unavailable. Ensure port 8000 is online.</li>";
           return;
@@ -250,7 +253,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const cls = res.classification || "UNKNOWN";
         const sev = res.severity || "LOW";
 
-        emailVerdictBadge.className = "verdict-badge";
+        emailVerdictBadge.classList.remove("safe", "warn", "risk");
         if (risk >= 60 || cls === "MALICIOUS_EMAIL") {
           emailVerdictBadge.classList.add("risk");
           emailVerdictBadge.textContent = "MALICIOUS EMAIL";
@@ -279,7 +282,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           urlPillsList.innerHTML = "";
           res.urls_analyzed.forEach((u) => {
             const pill = document.createElement("div");
-            pill.className = `url-pill ${u.risk_score >= 50 ? "risk" : ""}`;
+            pill.className =
+            "flex items-center justify-between rounded-[4px] border bg-[#0f172a] px-[6px] py-[3px] font-mono text-[10px] " +
+            (u.risk_score >= 50 ? "border-[rgba(239,68,68,0.4)] text-[#f87171]" : "border-line");
             pill.innerHTML = `<span>${u.url.length > 35 ? u.url.slice(0, 35) + "..." : u.url}</span><strong>${u.classification} (${u.risk_score})</strong>`;
             urlPillsList.appendChild(pill);
           });

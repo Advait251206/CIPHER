@@ -171,7 +171,7 @@ The **CIPHER** backend provides a clean, local-first REST API built with FastAPI
 ## 5. Phishing URL Detection Endpoints
 
 ### `POST /api/phishing/analyze`
-- **Description**: Inspects a URL through the 28-feature static extraction pipeline, Random Forest classifier, and lexical heuristics.
+- **Description**: Inspects a URL through the 15-feature static extraction pipeline, Random Forest classifier, and lexical heuristics.
 - **Request Body**:
 ```json
 {

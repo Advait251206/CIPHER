@@ -237,7 +237,7 @@ def test_feature_vector_contains_exact_67_features():
 
 # 12. Feature Ordering Matches Model Metadata
 def test_feature_ordering_matches_model_metadata():
-    meta_path = Path("models/network/network_model_metadata.json")
+    meta_path = Path(__file__).resolve().parents[1] / "models" / "network" / "network_model_metadata.json"
     assert meta_path.exists(), "Model metadata file must exist"
 
     with open(meta_path, "r") as f:

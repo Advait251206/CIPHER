@@ -5,6 +5,7 @@ prevention response, and persistent event logging.
 """
 
 import uuid
+import ipaddress
 import logging
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timezone
@@ -16,6 +17,8 @@ from app.detection.threat_scorer import ThreatScorer
 from app.prevention.prevention_engine import PreventionEngine
 from app.database.database import Database
 from app.network.schemas import NetworkFlowAnalyzeRequest, NetworkDetectionResponse
+
+from app.detection.safelist import is_trusted_source
 
 logger = logging.getLogger("cipher.network.service")
 
@@ -63,29 +66,7 @@ class NetworkService:
         )
 
         is_bcast_mcast = False
-        is_trusted_traffic = False
-        import ipaddress
-        
-        # Check source IP for trusted CDNs / Providers to avoid DDoS false positives
-        if request.source_ip:
-            try:
-                sip = ipaddress.ip_address(request.source_ip)
-                trusted_subnets = [
-                    ipaddress.ip_network("140.82.0.0/16"),   # GitHub
-                    ipaddress.ip_network("20.0.0.0/8"),      # Microsoft/Azure
-                    ipaddress.ip_network("192.168.0.0/16"),  # Local Network
-                    ipaddress.ip_network("10.0.0.0/8"),      # Local Network
-                ]
-                for subnet in trusted_subnets:
-                    if sip in subnet:
-                        is_trusted_traffic = True
-                        break
-            except ValueError:
-                pass
-
-        # If it's reply traffic from a web server (source port 80, 443, etc.), it's likely a download, not a DDoS.
-        if request.source_port in [80, 443, 8080, 8443, 53]:
-            is_trusted_traffic = True
+        is_trusted_traffic = is_trusted_source(request.source_ip, request.source_port)
 
         if request.destination_ip:
             try:

@@ -17,7 +17,7 @@ phishing_service = PhishingService()
     response_model=PhishingAnalyzeResponse,
     status_code=status.HTTP_200_OK,
     summary="Analyze URL for Phishing Threats",
-    description="Extracts 28 lexical/structural features, executes local ML inference, runs heuristic security engine, and returns unified risk assessment."
+    description="Extracts 15 lexical/structural features, executes local ML inference, runs heuristic security engine, and returns unified risk assessment."
 )
 def analyze_phishing_url(request: PhishingAnalyzeRequest):
     loader = ModelLoader()

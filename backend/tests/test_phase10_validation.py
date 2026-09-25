@@ -149,7 +149,7 @@ def test_scenario_h_full_provenance_chain():
 
 def test_runner_and_report_generation(tmp_path):
     """Verifies that full runner executes all scenarios and writes report files."""
-    data = run_all_scenarios()
+    data = run_all_scenarios(output_dir=tmp_path)
     assert data["summary"]["total_scenarios"] == 8
     assert data["summary"]["passed"] == 8
     assert data["summary"]["failed"] == 0

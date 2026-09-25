@@ -24,7 +24,7 @@ CIPHER executes **100% locally on the host machine (`127.0.0.1`)** with zero ext
                  │                                               │
      PhiUSIIL URL Dataset (235k)                     CIC-IDS2017 Flows (2.83M)
                  │                                               │
-        28 Lexical Features                             67 Flow Statistics
+        15 Lexical Features                             67 Flow Statistics
                  │                                               │
        Random Forest Predictor                         Dual Random Forest
                  │                                   (Binary Gate + Multiclass)
@@ -61,7 +61,7 @@ CIPHER executes **100% locally on the host machine (`127.0.0.1`)** with zero ext
 
 | Component | Status | Description |
 | :--- | :--- | :--- |
-| **Phishing URL Detection** | **COMPLETE** | 28 lexical features, Random Forest, URL heuristics, risk scoring, SQLite logging. |
+| **Phishing URL Detection** | **COMPLETE** | 15 lexical features, Random Forest, URL heuristics, risk scoring, SQLite logging. |
 | **Network IDS ML Models** | **COMPLETE** | Dual Random Forest (Binary + 9-Class Multiclass) trained on 2.5M CIC-IDS2017 flows. |
 | **Network Flow Preprocessing** | **COMPLETE** | Memory-safe Parquet pipeline, Inf/NaN sanitization, deduplication, stratified split. |
 | **Network Heuristic Rules** | **COMPLETE** | Deterministic rules for Port Scan, DoS flood, DDoS, Brute Force, Botnet. |
@@ -224,7 +224,7 @@ weighted avg     0.9991    0.9990    0.9990    374833
 - `NET-PSCAN-01`: Half-Open SYN Scan (SYN set, zero ACK, zero response, short duration).
 - `NET-PSCAN-02`: Zero-Response Scan Probe (unresponsive outbound probe packets).
 - `NET-DOS-01`: Extreme Packet Flood Rate (forward rate > 50,000 pkts/s).
-- `NET-DOS-02`: Volumetric Bandwidth Flood (> 5 MB/s transfer rate).
+- `NET-DOS-02`: Volumetric Bandwidth Flood (> 50 MB/s transfer rate).
 - `NET-DOS-03`: Asymmetric Flood Burst (mean IAT < 50µs, Down/Up ratio = 0).
 - `NET-DDOS-01`: Uniform Flood DDoS (high rate with packet length variance < 5.0).
 - `NET-BRUTE-01`: Auth Service Churn (truncated connection bursts to ports 21, 22, 23, 445, 3389).
@@ -653,7 +653,7 @@ All thresholds are environment-driven with conservative defaults:
 | `CIPHER_HEURISTIC_BRUTE_FORCE_THRESHOLD` | `5` | Minimum connection attempts to auth ports to trigger brute-force storm |
 | `CIPHER_HEURISTIC_BRUTE_FORCE_WINDOW` | `60.0` | Sliding window in seconds for auth attempt tracking |
 | `CIPHER_HEURISTIC_DOS_PACKET_RATE` | `50000.0` | Packet rate threshold in pkts/s for volumetric DoS |
-| `CIPHER_HEURISTIC_DOS_BYTE_RATE` | `5000000.0` | Bandwidth threshold in bytes/s ($5$ MB/s) for volumetric DoS |
+| `CIPHER_HEURISTIC_DOS_BYTE_RATE` | `50000000.0` | Bandwidth threshold in bytes/s ($50$ MB/s) for volumetric DoS |
 | `CIPHER_HEURISTIC_DDOS_SOURCES_THRESHOLD` | `3` | Minimum distinct sources targeting same destination for DDoS multi-source rule |
 | `CIPHER_HEURISTIC_DDOS_WINDOW` | `60.0` | Sliding window in seconds for DDoS destination aggregation |
 | `CIPHER_HEURISTIC_MAX_STATE_ENTRIES` | `10000` | Bounded capacity for in-memory temporal tracking tables |

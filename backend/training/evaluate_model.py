@@ -194,7 +194,7 @@ B. FALSE NEGATIVES ({fn:,} occurrences, FNR = {fnr*100:.3f}%):
 --------------------------------------------------------------------------------
 5. PRODUCTION READINESS & LIMITATIONS
 --------------------------------------------------------------------------------
-- Real-time Browser Feasibility: All 28 features are derived purely from URL lexical
+- Real-time Browser Feasibility: All 15 features are derived purely from URL lexical
   and structural parsing in pure Python (<1ms latency).
 - Webpage Content Independence: The model does NOT assume HTML/DOM availability.
   When DOM features are provided by the upcoming browser extension, an augmented

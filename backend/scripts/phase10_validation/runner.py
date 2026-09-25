@@ -5,7 +5,7 @@ Orchestrates Scenarios A through H, aggregates evidence, and invokes report gene
 
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from .scenarios import (
     run_scenario_a_benign,
@@ -17,12 +17,13 @@ from .scenarios import (
     run_scenario_g_prevention,
     run_scenario_h_full_chain,
 )
+from pathlib import Path
 from .report import generate_validation_reports
 
 logger = logging.getLogger("cipher.phase10.runner")
 
 
-def run_all_scenarios() -> Dict[str, Any]:
+def run_all_scenarios(output_dir: Optional[Path] = None) -> Dict[str, Any]:
     """
     Sequentially executes Scenarios A through H, capturing metrics, evidence, and safety boundaries.
     """
@@ -120,7 +121,8 @@ def run_all_scenarios() -> Dict[str, Any]:
     }
 
     # Generate machine-readable and human-readable artifacts
-    generate_validation_reports(overall_data)
+    # output_dir=None writes the committed artifacts/phase10 reports; tests pass a temp dir.
+    generate_validation_reports(overall_data, output_dir=output_dir)
 
     print("\n" + "=" * 80)
     print(f"  VALIDATION COMPLETED: {passed_count}/{len(scenario_results)} PASSED in {duration_secs:.2f}s")

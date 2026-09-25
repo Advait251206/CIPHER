@@ -17,7 +17,7 @@ This reference document compiles verified numerical statistics, architectural th
 - **PhiUSIIL Phishing URL Dataset**:
   - Raw instances loaded: **235,795**
   - Deduplicated instances: **235,370 unique URLs** (425 duplicates dropped)
-  - Features extracted: **28 lexical, structural, and information-theoretic features**
+  - Features extracted: **15 lexical, structural, and information-theoretic features**
   - Train partition (70%): **164,759 URLs**
   - Validation partition (15%): **35,305 URLs**
   - Held-out test partition (15%): **35,306 URLs**
@@ -52,7 +52,7 @@ This reference document compiles verified numerical statistics, architectural th
   - Port scan trigger threshold: $\ge 10$ distinct destination ports within **60 seconds**
   - Brute force trigger threshold: $\ge 5$ authentication attempts within **60 seconds**
   - Volumetric DoS packet rate threshold: $> 50,000$ packets/second
-  - Volumetric DoS byte rate threshold: $> 5,000,000$ bytes/second
+  - Volumetric DoS byte rate threshold: $> 50,000,000$ bytes/second
   - Distributed DoS source threshold: $\ge 3$ distinct sources within **60 seconds**
 - **Intrusion Prevention Engine**:
   - Supported operational modes: **3 modes** (`detect_only`, `simulate`, `enforce`)

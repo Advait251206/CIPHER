@@ -4,92 +4,95 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CIPHER Browser Guard</title>
-  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="app-container">
+<!-- Classes like active / hidden / online / offline / safe / warn / risk stay on
+     elements as state hooks for popup.js; the styling for each state is
+     expressed with Tailwind variants ([&.active]:…) on the same element. -->
+<body class="w-[380px] overflow-x-hidden bg-app font-sans text-[13px] text-fg">
+  <div class="flex flex-col gap-[12px] p-[14px]">
     <!-- Header -->
-    <header class="header">
-      <div class="brand">
-        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <header class="flex items-center justify-between border-b border-b-line pb-[10px]">
+      <div class="flex items-center gap-[8px]">
+        <svg class="size-[22px] text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           <path d="m9 12 2 2 4-4"/>
         </svg>
-        <div class="brand-text">
-          <span class="brand-title">CIPHER</span>
-          <span class="brand-sub">BROWSER GUARD</span>
+        <div>
+          <span class="text-[15px] font-extrabold tracking-[0.05em] text-[#60a5fa]">CIPHER</span>
+          <span class="ml-[4px] text-[9px] font-bold tracking-[0.08em] text-muted">BROWSER GUARD</span>
         </div>
       </div>
-      <div class="backend-status" id="backendStatus" title="Local Backend Connection">
-        <span class="status-dot"></span>
-        <span class="status-label" id="backendStatusText">Connecting...</span>
+      <div class="backend-status flex items-center gap-[6px] text-[11px] text-muted [&.offline_.status-dot]:bg-risk [&.online_.status-dot]:bg-safe [&.online_.status-dot]:[box-shadow:0_0_6px_rgba(16,185,129,0.6)]" id="backendStatus" title="Local Backend Connection">
+        <span class="status-dot size-[7px] rounded-[50%] bg-[#64748b] [transition:background-color_0.2s]"></span>
+        <span id="backendStatusText">Connecting...</span>
       </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" id="tabWebsiteBtn">Current Website</button>
-      <button class="tab-btn" id="tabEmailBtn">Email Scanner</button>
+    <div class="flex rounded-[6px] border border-line bg-[#0f172a] p-[2px]">
+      <button class="tab-btn flex-1 cursor-pointer rounded-[4px] border-none bg-transparent px-[10px] py-[6px] text-[11px] font-semibold text-fg-2 [transition:all_0.15s] [&.active]:bg-card [&.active]:text-fg [&.active]:[box-shadow:0_1px_3px_rgba(0,0,0,0.4)] active" id="tabWebsiteBtn">Current Website</button>
+      <button class="tab-btn flex-1 cursor-pointer rounded-[4px] border-none bg-transparent px-[10px] py-[6px] text-[11px] font-semibold text-fg-2 [transition:all_0.15s] [&.active]:bg-card [&.active]:text-fg [&.active]:[box-shadow:0_1px_3px_rgba(0,0,0,0.4)]" id="tabEmailBtn">Email Scanner</button>
     </div>
 
     <!-- Tab 1: Current Website Inspection -->
-    <main class="tab-content active" id="tabWebsiteContent">
-      <div class="url-card">
-        <span class="section-label">ANALYZED TARGET</span>
-        <div class="url-text" id="targetUrl" title="Inspecting active tab URL">Detecting active tab...</div>
+    <main class="tab-content hidden flex-col gap-[10px] [&.active]:flex active" id="tabWebsiteContent">
+      <div class="flex flex-col gap-[4px] rounded-[6px] border border-line bg-card px-[10px] py-[8px]">
+        <span class="text-[10px] font-bold tracking-[0.06em] text-muted uppercase">ANALYZED TARGET</span>
+        <div class="overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-[#38bdf8]" id="targetUrl" title="Inspecting active tab URL">Detecting active tab...</div>
       </div>
 
       <!-- Verdict Banner -->
-      <div class="verdict-card" id="verdictCard">
-        <div class="verdict-header">
-          <span class="verdict-badge" id="verdictBadge">SCANNING</span>
-          <div class="metrics">
-            <div class="metric-item">
-              <span class="metric-label">RISK SCORE</span>
-              <span class="metric-val" id="riskScoreVal">-- / 100</span>
+      <div class="flex flex-col gap-[10px] rounded-[8px] border border-line bg-card p-[12px]" id="verdictCard">
+        <div class="flex items-center justify-between">
+          <span class="verdict-badge rounded-[4px] bg-[#334155] px-[10px] py-[4px] text-[12px] font-extrabold tracking-[0.05em] text-[#f1f5f9] [&.risk]:border [&.risk]:border-[rgba(239,68,68,0.4)] [&.risk]:bg-[rgba(239,68,68,0.15)] [&.risk]:text-[#f87171] [&.safe]:border [&.safe]:border-[rgba(16,185,129,0.4)] [&.safe]:bg-[rgba(16,185,129,0.15)] [&.safe]:text-[#34d399] [&.warn]:border [&.warn]:border-[rgba(245,158,11,0.4)] [&.warn]:bg-[rgba(245,158,11,0.15)] [&.warn]:text-[#fbbf24]" id="verdictBadge">SCANNING</span>
+          <div class="flex gap-[12px]">
+            <div class="flex flex-col items-end">
+              <span class="text-[9px] font-bold text-muted">RISK SCORE</span>
+              <span class="font-mono text-[13px] font-bold text-fg" id="riskScoreVal">-- / 100</span>
             </div>
-            <div class="metric-item">
-              <span class="metric-label">CONFIDENCE</span>
-              <span class="metric-val" id="confidenceVal">--%</span>
+            <div class="flex flex-col items-end">
+              <span class="text-[9px] font-bold text-muted">CONFIDENCE</span>
+              <span class="font-mono text-[13px] font-bold text-fg" id="confidenceVal">--%</span>
             </div>
           </div>
         </div>
 
-        <div class="risk-bar-container">
-          <div class="risk-bar" id="riskProgressBar"></div>
+        <div class="h-[6px] w-full overflow-hidden rounded-[3px] bg-[#1e293b]">
+          <div class="h-full w-[0%] rounded-[3px] bg-safe [transition:width_0.4s_ease,background-color_0.4s_ease]" id="riskProgressBar"></div>
         </div>
       </div>
 
       <!-- Evidence -->
-      <div class="evidence-card">
-        <span class="section-label">DETECTION EVIDENCE</span>
-        <ul class="evidence-list" id="evidenceList">
+      <div class="flex max-h-[140px] flex-col gap-[6px] overflow-y-auto rounded-[6px] border border-line bg-card p-[10px]">
+        <span class="text-[10px] font-bold tracking-[0.06em] text-muted uppercase">DETECTION EVIDENCE</span>
+        <ul class="flex list-none flex-col gap-[4px] [&_li]:relative [&_li]:pl-[12px] [&_li]:text-[11px] [&_li]:leading-[1.35] [&_li]:text-fg-2 [&_li]:before:absolute [&_li]:before:left-0 [&_li]:before:text-accent [&_li]:before:content-['•']" id="evidenceList">
           <li>Inspecting URL structure and security indicators...</li>
         </ul>
       </div>
 
       <!-- Actions -->
-      <div class="actions">
-        <button class="btn btn-secondary" id="reAnalyzeBtn">
+      <div class="flex gap-[8px]">
+        <button class="inline-flex cursor-pointer items-center justify-center gap-[6px] rounded-[6px] border border-line bg-[#1e293b] px-[12px] py-[8px] text-[11px] font-semibold text-fg-2 [transition:all_0.15s] hover:bg-[#334155] hover:text-fg" id="reAnalyzeBtn">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
           Re-Analyze
         </button>
-        <button class="btn btn-primary" id="openDashboardBtn">
+        <button class="inline-flex flex-1 cursor-pointer items-center justify-center gap-[6px] rounded-[6px] border-none bg-[#2563eb] px-[12px] py-[8px] text-[11px] font-semibold text-white [transition:all_0.15s] hover:bg-[#1d4ed8]" id="openDashboardBtn">
           Open SOC Dashboard
         </button>
       </div>
     </main>
 
     <!-- Tab 2: Webmail Content Scanner -->
-    <main class="tab-content" id="tabEmailContent">
-      <div class="webmail-status-box" id="webmailStatusBox">
-        <span class="section-label">WEBMAIL STATUS</span>
-        <div class="webmail-indicator" id="webmailIndicatorText">Checking active tab provider...</div>
+    <main class="tab-content hidden flex-col gap-[10px] [&.active]:flex" id="tabEmailContent">
+      <div class="flex flex-col gap-[4px] rounded-[6px] border border-line bg-card p-[10px]" id="webmailStatusBox">
+        <span class="text-[10px] font-bold tracking-[0.06em] text-muted uppercase">WEBMAIL STATUS</span>
+        <div class="text-[12px] font-semibold text-[#38bdf8]" id="webmailIndicatorText">Checking active tab provider...</div>
       </div>
 
-      <button class="btn btn-primary full-width" id="scanEmailBtn">
+      <button class="inline-flex w-full flex-1 cursor-pointer items-center justify-center gap-[6px] rounded-[6px] border-none bg-[#2563eb] px-[12px] py-[8px] text-[11px] font-semibold text-white [transition:all_0.15s] hover:bg-[#1d4ed8]" id="scanEmailBtn">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
           <polyline points="22,6 12,13 2,6"/>
@@ -98,49 +101,49 @@
       </button>
 
       <!-- Email Result Box -->
-      <div class="email-result-card hidden" id="emailResultCard">
-        <div class="verdict-header">
-          <span class="verdict-badge" id="emailVerdictBadge">--</span>
-          <div class="metrics">
-            <div class="metric-item">
-              <span class="metric-label">EMAIL RISK</span>
-              <span class="metric-val" id="emailRiskVal">-- / 100</span>
+      <div class="hidden flex-col gap-[8px] rounded-[8px] border border-line bg-card p-[10px] [&:not(.hidden)]:flex" id="emailResultCard">
+        <div class="flex items-center justify-between">
+          <span class="verdict-badge rounded-[4px] bg-[#334155] px-[10px] py-[4px] text-[12px] font-extrabold tracking-[0.05em] text-[#f1f5f9] [&.risk]:border [&.risk]:border-[rgba(239,68,68,0.4)] [&.risk]:bg-[rgba(239,68,68,0.15)] [&.risk]:text-[#f87171] [&.safe]:border [&.safe]:border-[rgba(16,185,129,0.4)] [&.safe]:bg-[rgba(16,185,129,0.15)] [&.safe]:text-[#34d399] [&.warn]:border [&.warn]:border-[rgba(245,158,11,0.4)] [&.warn]:bg-[rgba(245,158,11,0.15)] [&.warn]:text-[#fbbf24]" id="emailVerdictBadge">--</span>
+          <div class="flex gap-[12px]">
+            <div class="flex flex-col items-end">
+              <span class="text-[9px] font-bold text-muted">EMAIL RISK</span>
+              <span class="font-mono text-[13px] font-bold text-fg" id="emailRiskVal">-- / 100</span>
             </div>
-            <div class="metric-item">
-              <span class="metric-label">SEVERITY</span>
-              <span class="metric-val" id="emailSeverityVal">--</span>
+            <div class="flex flex-col items-end">
+              <span class="text-[9px] font-bold text-muted">SEVERITY</span>
+              <span class="font-mono text-[13px] font-bold text-fg" id="emailSeverityVal">--</span>
             </div>
           </div>
         </div>
 
-        <div class="evidence-card">
-          <span class="section-label">EMAIL RATIONALE</span>
-          <ul class="evidence-list" id="emailEvidenceList"></ul>
+        <div class="flex max-h-[140px] flex-col gap-[6px] overflow-y-auto rounded-[6px] border border-line bg-card p-[10px]">
+          <span class="text-[10px] font-bold tracking-[0.06em] text-muted uppercase">EMAIL RATIONALE</span>
+          <ul class="flex list-none flex-col gap-[4px] [&_li]:relative [&_li]:pl-[12px] [&_li]:text-[11px] [&_li]:leading-[1.35] [&_li]:text-fg-2 [&_li]:before:absolute [&_li]:before:left-0 [&_li]:before:text-accent [&_li]:before:content-['•']" id="emailEvidenceList"></ul>
         </div>
 
-        <div class="embedded-urls-box hidden" id="embeddedUrlsBox">
-          <span class="section-label">EMBEDDED URLS</span>
-          <div class="url-pills" id="urlPillsList"></div>
+        <div class="mt-[4px] hidden flex-col gap-[4px] [&:not(.hidden)]:flex" id="embeddedUrlsBox">
+          <span class="text-[10px] font-bold tracking-[0.06em] text-muted uppercase">EMBEDDED URLS</span>
+          <div class="flex max-h-[80px] flex-col gap-[4px] overflow-y-auto" id="urlPillsList"></div>
         </div>
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-      <span class="footer-text">CIPHER v1.2 &bull; Local-First 127.0.0.1</span>
-      <button class="settings-toggle-btn" id="settingsToggleBtn" title="Extension Settings">⚙</button>
+    <footer class="flex items-center justify-between border-t border-t-line pt-[6px]">
+      <span class="text-[10px] text-muted">CIPHER v1.2 &bull; Local-First 127.0.0.1</span>
+      <button class="cursor-pointer border-none bg-transparent text-[14px] text-muted hover:text-fg" id="settingsToggleBtn" title="Extension Settings">⚙</button>
     </footer>
 
     <!-- Settings Overlay -->
-    <div class="settings-drawer hidden" id="settingsDrawer">
-      <div class="settings-header">
+    <div class="hidden flex-col gap-[10px] rounded-[8px] border border-line bg-[#0f172a] p-[12px] [&:not(.hidden)]:flex" id="settingsDrawer">
+      <div class="flex justify-between text-[12px] font-bold">
         <span>Settings</span>
-        <button class="close-btn" id="closeSettingsBtn">&times;</button>
+        <button class="cursor-pointer border-none bg-transparent text-[16px] text-muted" id="closeSettingsBtn">&times;</button>
       </div>
-      <div class="settings-body">
-        <label class="setting-label" for="backendUrlInput">CIPHER Backend URL:</label>
-        <input type="text" id="backendUrlInput" class="setting-input" value="http://127.0.0.1:8000">
-        <button class="btn btn-primary full-width" id="saveSettingsBtn">Save Settings</button>
+      <div>
+        <label class="text-[11px] text-fg-2" for="backendUrlInput">CIPHER Backend URL:</label>
+        <input type="text" id="backendUrlInput" class="mt-[4px] mb-[8px] w-full rounded-[4px] border border-line bg-[#1e293b] px-[8px] py-[6px] font-mono text-[11px] text-white" value="http://127.0.0.1:8000">
+        <button class="inline-flex w-full flex-1 cursor-pointer items-center justify-center gap-[6px] rounded-[6px] border-none bg-[#2563eb] px-[12px] py-[8px] text-[11px] font-semibold text-white [transition:all_0.15s] hover:bg-[#1d4ed8]" id="saveSettingsBtn">Save Settings</button>
       </div>
     </div>
   </div>

@@ -31,12 +31,12 @@ export const Toast: React.FC<ToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 size={18} color="var(--benign-color)" />;
+        return <CheckCircle2 size={18} color="var(--color-benign)" />;
       case 'error':
-        return <AlertOctagon size={18} color="var(--crit-color)" />;
+        return <AlertOctagon size={18} color="var(--color-crit)" />;
       case 'info':
       default:
-        return <Info size={18} color="var(--accent-blue)" />;
+        return <Info size={18} color="var(--color-accent)" />;
     }
   };
 
@@ -48,44 +48,16 @@ export const Toast: React.FC<ToastProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          style={{
-            position: 'fixed',
-            bottom: '24px',
-            right: '24px',
-            backgroundColor: 'var(--bg-surface-elevated, #1a1a1a)',
-            border: `1px solid var(--border-color, #2A2A2A)`,
-            borderRadius: '8px',
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-            zIndex: 10000,
-            maxWidth: '400px',
-          }}
+          className="fixed right-[24px] bottom-[24px] z-[10000] flex max-w-[400px] items-center gap-[12px] rounded-[8px] border border-line bg-elevated px-[16px] py-[12px] [box-shadow:0_8px_24px_rgba(0,0,0,0.4)]"
           role="alert"
         >
           {getIcon()}
-          <span style={{ 
-            color: 'var(--text-primary)', 
-            fontSize: '0.875rem',
-            lineHeight: 1.4 
-          }}>
+          <span className="text-[0.875rem] leading-[1.4] text-fg">
             {message}
           </span>
-          <button 
+          <button
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              padding: '4px',
-              marginLeft: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
+            className="ml-[8px] flex cursor-pointer items-center justify-center border-none bg-transparent p-[4px] text-fg-muted"
           >
             &times;
           </button>

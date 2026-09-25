@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { api } from '../../api/client';
 import { ExtensionStatusResponse } from '../../api/types';
 import { Compass, Download, ShieldCheck } from 'lucide-react';
+import { controlBtn } from '../../ui/classes';
 
 interface ExtensionModalProps {
   isOpen: boolean;
@@ -30,63 +31,46 @@ export const ExtensionModal: React.FC<ExtensionModalProps> = ({ isOpen, onClose 
       onClose={onClose}
       wide={true}
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-          <Compass size={20} color="var(--accent-cyan)" />
-          <span style={{ fontWeight: 700 }}>Add CIPHER Browser Guard Extension</span>
+        <div className="flex items-center gap-[0.6rem]">
+          <Compass size={20} color="var(--color-accent)" />
+          <span className="font-bold">Add CIPHER Browser Guard Extension</span>
         </div>
       }
       footer={
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+        <div className="flex w-full items-center justify-between">
+          <span className="text-[0.75rem] text-fg-muted">
             Manifest V3 &bull; Privacy-first &bull; Local 127.0.0.1
           </span>
-          <button className="control-btn" onClick={onClose}>
+          <button className={controlBtn()} onClick={onClose}>
             Close
           </button>
         </div>
       }
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div className="flex flex-col gap-5">
         {/* Intro */}
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+        <p className="text-[0.85rem] leading-[1.5] text-fg-2">
           <strong>CIPHER Browser Guard</strong> inspects emails on Gmail, Outlook, and Yahoo Mail in real-time,
-          evaluates hyperlinks against our 28-feature and 32-feature Random Forest models, and alerts you before credential theft occurs.
+          evaluates hyperlinks against our 15-feature and 32-feature Random Forest models, and alerts you before credential theft occurs.
         </p>
 
         {/* Download Option */}
-        <div
-          style={{
-            padding: '1.1rem',
-            borderRadius: '8px',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.12) 100%)',
-            border: '1px solid rgba(6, 182, 212, 0.35)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.85rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.2rem' }}>
-            <Download size={18} color="var(--accent-cyan)" />
-            <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>Download Extension Package</strong>
+        <div className="flex flex-col gap-[0.85rem] rounded-[8px] border border-[rgba(6,182,212,0.35)] bg-[linear-gradient(135deg,rgba(6,182,212,0.12)_0%,rgba(59,130,246,0.12)_100%)] p-[1.1rem]">
+          <div className="mb-[0.2rem] flex items-center gap-2">
+            <Download size={18} color="var(--color-accent)" />
+            <strong className="text-[0.95rem] text-fg">Download Extension Package</strong>
           </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4, margin: '0 0 0.5rem 0' }}>
+          <p className="mb-2 text-[0.82rem] leading-[1.4] text-fg-2">
             Download the complete Manifest V3 package (.zip) for manually loading into Chromium browsers via the Extensions page (developer mode).
           </p>
           <div>
             <a
               href={api.extension.getDownloadUrl()}
               download="cipher-browser-guard.zip"
-              className="control-btn primary"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1.25rem',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxShadow: '0 0 15px rgba(6, 182, 212, 0.3)',
-              }}
+              className={controlBtn(
+                'primary',
+                'inline-flex items-center gap-2 px-5 py-2 text-[0.85rem] font-semibold no-underline [box-shadow:0_0_15px_rgba(6,182,212,0.3)]'
+              )}
             >
               <Download size={16} />
               <span>Download cipher-browser-guard.zip</span>

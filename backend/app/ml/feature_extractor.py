@@ -134,7 +134,7 @@ class FeatureExtractor:
 
     def extract_features(self, url: str) -> Dict[str, Any]:
         """
-        Extracts 28 lexical features from a single URL string.
+        Extracts 15 lexical features from a single URL string.
         Guaranteed to be deterministic, offline, and < 1ms.
         """
         if not url or not isinstance(url, str):

@@ -15,7 +15,7 @@ This document presents the empirical evaluation metrics measured on the independ
 ### Test Partition Configuration
 - **Dataset**: PhiUSIIL Phishing URL Dataset
 - **Evaluation Set Size**: **35,306 unique, unseen URLs** (15% held-out test partition)
-- **Features Extracted**: 28 static lexical, structural, and information-theoretic features
+- **Features Extracted**: 15 static lexical, structural, and information-theoretic features
 - **Model**: `RandomForestClassifier` (`n_estimators=100`, `max_depth=22`, `random_state=42`)
 
 ### Quantitative Metrics

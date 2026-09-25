@@ -29,12 +29,15 @@ class PreventionEngine:
         self.blocklist = blocklist_manager or IPBlocklistManager()
         self.rate_limiter = rate_limiter or FlowRateLimiter()
 
-        # Operational mode: default is ALWAYS enforce
-        env_mode = os.getenv("CIPHER_PREVENTION_MODE", PreventionMode.ENFORCE.value).lower()
+        # Operational mode: detect_only unless CIPHER_PREVENTION_MODE says
+        # otherwise, and an unrecognised value falls back to detect_only too.
+        # Prevention must fail safe: a typo in the environment must never turn
+        # blocking on.
+        env_mode = os.getenv("CIPHER_PREVENTION_MODE", PreventionMode.DETECT_ONLY.value).lower()
         self.mode = mode or env_mode
         if self.mode not in [m.value for m in PreventionMode]:
-            logger.warning(f"Invalid CIPHER_PREVENTION_MODE '{self.mode}'. Falling back to 'enforce'.")
-            self.mode = PreventionMode.ENFORCE.value
+            logger.warning(f"Invalid CIPHER_PREVENTION_MODE '{self.mode}'. Falling back to 'detect_only'.")
+            self.mode = PreventionMode.DETECT_ONLY.value
 
         logger.info(f"Initialized CIPHER Prevention Engine in [{self.mode.upper()}] mode")
 

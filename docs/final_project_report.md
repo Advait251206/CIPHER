@@ -8,7 +8,7 @@
 ## 1. Executive Summary
 
 **CIPHER** is an end-to-end, host-level intrusion detection and prevention system (IDPS) engineered to overcome the operational fragmentation, alert fatigue, and cloud privacy hazards inherent in modern cybersecurity workflows. Executing entirely on local infrastructure (`127.0.0.1`), CIPHER combines:
-1. **Phishing URL Detection**: Static 28-feature Random Forest model trained on the PhiUSIIL dataset, operating alongside lexical heuristic rules.
+1. **Phishing URL Detection**: Static 15-feature Random Forest model trained on the PhiUSIIL dataset, operating alongside lexical heuristic rules.
 2. **Network Intrusion Detection**: Dual Random Forest model (Binary Gate + 9-Class Multiclass) trained on 2.49M deduplicated flows from the CIC-IDS2017 benchmark across 67 features.
 3. **Live Packet Sensor**: Npcap/Scapy flow aggregation engine tracking up to 50,000 active bidirectional flows with automated feature calculation.
 4. **Deterministic Heuristic & Signature Engine**: 14 stateful rules for reconnaissance, brute-force storms, volumetric floods, and anomalies.
@@ -52,7 +52,7 @@ CIPHER follows a layered pipeline architecture:
 [ Raw Network Packets / Npcap ]       [ URL Submissions / REST API ]
                │                                     │
      Live Network Sensor                   URL Feature Extractor
-    (50k Active Flow Table)                 (28 Lexical Features)
+    (50k Active Flow Table)                 (15 Lexical Features)
                │                                     │
      67-Feature Flow Dict                            │
                │                                     │
@@ -109,7 +109,7 @@ The system is organized into two primary sub-projects:
 
 ### Phishing URL Detector
 - **Dataset**: PhiUSIIL (235,370 unique URLs post-deduplication; 425 duplicate URLs dropped).
-- **Features**: 28 static lexical, structural, and information-theoretic features.
+- **Features**: 15 static lexical, structural, and information-theoretic features.
 - **Model**: `RandomForestClassifier` (`n_estimators=100`, `max_depth=22`, `min_samples_split=5`, `min_samples_leaf=2`).
 - **Data Split**: Stratified 70% Train (164,759), 15% Validation (35,305), 15% Test (35,306).
 
@@ -129,7 +129,7 @@ CIPHER prevents single-point detection failure by combining statistical inferenc
   - Multi-port horizontal reconnaissance sweeps ($\ge 10$ ports / 60s).
   - Half-open SYN scan probes with zero ACK and zero backward response.
   - Authentication storm retries targeting SSH, FTP, Telnet, SMB, and RDP ($\ge 5$ attempts / 60s).
-  - Volumetric flooding anomalies ($> 50,000$ pkts/s or $> 5,000,000$ bytes/s).
+  - Volumetric flooding anomalies ($> 50,000$ pkts/s or $> 50,000,000$ bytes/s).
   - Multi-source distributed DDoS floods ($\ge 3$ sources targeting the same destination).
 - **Signatures (4 Rules)**: Deterministic pattern matching on protocol profiles, service ports, and raw IPv4 URL hostnames.
 - **Threat Scoring Synergy**: ThreatScorer weights ML (70%) and Heuristics (30%), with rule-dominant override capabilities when high-confidence heuristic thresholds are met.

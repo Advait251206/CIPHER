@@ -15,6 +15,9 @@ import {
   Shield,
 } from 'lucide-react';
 import { PreventionMode } from '../../api/types';
+import { cn } from '../../lib/cn';
+import { navBadge } from '../../ui/classes';
+
 
 export type NavigationTab =
   | 'overview'
@@ -54,76 +57,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }> = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={16} /> },
     { id: 'events', label: 'Security Events', icon: <Activity size={16} /> },
-    { id: 'incidents', label: 'Incident Chains', icon: <Flame size={16} />, badge: openIncidentsCount > 0 ? <span className="nav-badge danger">{openIncidentsCount}</span> : undefined },
+    { id: 'incidents', label: 'Incident Chains', icon: <Flame size={16} />, badge: openIncidentsCount > 0 ? <span className={navBadge('danger')}>{openIncidentsCount}</span> : undefined },
     { id: 'network_idps', label: 'Network IDPS', icon: <Network size={16} /> },
     { id: 'phishing', label: 'Phishing Detection', icon: <Globe size={16} /> },
     { id: 'email', label: 'Email Analyzer', icon: <Mail size={16} /> },
     { id: 'threat-intel', label: 'Threat Intel', icon: <Database size={16} /> },
     { id: 'rules', label: 'Detection Rules', icon: <Sliders size={16} /> },
-    { id: 'prevention', label: 'Active Prevention', icon: <ShieldAlert size={16} />, badge: <span className="nav-badge" style={{ fontSize: '0.65rem' }}>{preventionMode.replace('_', ' ')}</span> },
-    { id: 'sensor', label: 'Network IDS', icon: <Radio size={16} />, badge: sensorRunning ? <span className="nav-badge active" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span className="pulse-dot" />LIVE</span> : undefined },
-    { id: 'health', label: 'System Health', icon: <HeartPulse size={16} />, badge: !backendConnected ? <span className="nav-badge danger">OFFLINE</span> : undefined },
+    { id: 'prevention', label: 'Active Prevention', icon: <ShieldAlert size={16} />, badge: <span className={navBadge('neutral', 'text-[0.65rem]')}>{preventionMode.replace('_', ' ')}</span> },
+    { id: 'sensor', label: 'Network IDS', icon: <Radio size={16} />, badge: sensorRunning ? <span className={navBadge('active', 'flex items-center gap-[5px]')}><span className="inline-block size-[8px] animate-pulse-green rounded-[50%] bg-benign" />LIVE</span> : undefined },
+    { id: 'health', label: 'System Health', icon: <HeartPulse size={16} />, badge: !backendConnected ? <span className={navBadge('danger')}>OFFLINE</span> : undefined },
   ];
 
   return (
-    <aside style={{
-      width: '260px',
-      background: 'var(--bg-sidebar)',
-      borderRight: '1px solid var(--border-subtle)',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      flexShrink: 0
-    }}>
-      <div style={{
-        padding: '1.5rem 1.25rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        borderBottom: '1px solid var(--border-subtle)'
-      }}>
-        <div style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <aside className="flex h-screen w-[260px] shrink-0 flex-col border-r border-r-line bg-sidebar">
+      <div className="flex items-center gap-3 border-b border-b-line px-5 py-6">
+        <div className="flex items-center justify-center text-fg">
           <Shield size={24} />
         </div>
         <div>
-          <div style={{ fontSize: '1rem', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text-primary)' }}>CIPHER | SOC</div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Local IDPS Engine</div>
+          <div className="text-[1rem] font-bold tracking-wider text-fg">CIPHER | SOC</div>
+          <div className="text-[0.65rem] text-fg-muted uppercase">Local IDPS Engine</div>
         </div>
       </div>
 
-      <nav style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-6">
         {navItems.map((item) => {
           const isActive = currentTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => onSelectTab(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.75rem 1rem',
-                width: '100%',
-                background: isActive ? 'var(--bg-card-hover)' : 'transparent',
-                border: 'none',
-                borderLeft: isActive ? '3px solid var(--border-accent)' : '3px solid transparent',
-                borderRadius: '0 4px 4px 0',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontSize: '0.8rem',
-                fontWeight: isActive ? 600 : 500,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                textAlign: 'left'
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.color = 'var(--text-primary)';
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.color = 'var(--text-secondary)';
-              }}
+              className={cn(
+                'flex w-full cursor-pointer items-center justify-between rounded-[0_4px_4px_0] border-0 border-l-[3px] border-solid px-4 py-3 text-left text-[0.8rem] [transition:all_0.15s_ease]',
+                isActive
+                  ? 'border-l-accent bg-card-hover font-semibold text-fg'
+                  : 'border-l-transparent bg-transparent font-medium text-fg-2 hover:text-fg'
+              )}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <span style={{ color: isActive ? 'var(--border-accent)' : 'inherit' }}>{item.icon}</span>
+              <div className="flex items-center gap-3">
+                <span className={isActive ? 'text-accent' : undefined}>{item.icon}</span>
                 {item.label}
               </div>
               {item.badge && item.badge}
@@ -131,8 +103,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
-      
-      <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)', fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+
+      <div className="border-t border-t-line p-4 text-center text-[0.7rem] text-fg-muted">
         v1.2.0022
       </div>
     </aside>

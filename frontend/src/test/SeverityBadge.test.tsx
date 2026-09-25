@@ -10,34 +10,34 @@ describe('SeverityBadge Component', () => {
     expect(badge).toBeInTheDocument();
     expect(badge).toHaveTextContent('CRITICAL');
     expect(badge).toHaveAttribute('data-severity', 'CRITICAL');
-    expect(badge).toHaveClass('critical');
+    expect(badge).toHaveAttribute('data-variant', 'critical');
   });
 
   it('renders HIGH severity correctly', () => {
     render(<SeverityBadge severity="HIGH" />);
     const badge = screen.getByTestId('severity-badge');
     expect(badge).toHaveTextContent('HIGH');
-    expect(badge).toHaveClass('high');
+    expect(badge).toHaveAttribute('data-variant', 'high');
   });
 
   it('renders MEDIUM severity correctly', () => {
     render(<SeverityBadge severity="MEDIUM" />);
     const badge = screen.getByTestId('severity-badge');
     expect(badge).toHaveTextContent('MEDIUM');
-    expect(badge).toHaveClass('medium');
+    expect(badge).toHaveAttribute('data-variant', 'medium');
   });
 
   it('renders LOW severity correctly', () => {
     render(<SeverityBadge severity="LOW" />);
     const badge = screen.getByTestId('severity-badge');
     expect(badge).toHaveTextContent('LOW');
-    expect(badge).toHaveClass('low');
+    expect(badge).toHaveAttribute('data-variant', 'low');
   });
 
   it('renders BENIGN / LEGITIMATE severity correctly', () => {
     render(<SeverityBadge severity="BENIGN" />);
     const badge = screen.getByTestId('severity-badge');
     expect(badge).toHaveTextContent('BENIGN');
-    expect(badge).toHaveClass('benign');
+    expect(badge).toHaveAttribute('data-variant', 'benign');
   });
 });

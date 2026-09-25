@@ -10,6 +10,8 @@ import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { HeartPulse, Server, Database, Cpu, Radio, Shield, CheckCircle2, AlertOctagon } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { card, cardHeader, cardTitle, clickableCard, kvGrid, kvItem, kvLabel, kvValue, modalBody, modalHeader, modalPanel, modalTitle, modeBadge, mono, pageBody } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -211,7 +213,7 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -219,35 +221,23 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
       {/* Overview Status Banner */}
       <motion.div
         variants={itemVariants}
-        className="card"
-        style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--benign-color)' }}
+        className={cn(card, 'mb-6 border-l-[4px] border-l-benign')}
+
       >
-        <div className="card-header">
-          <div className="card-title">
-            <HeartPulse size={18} color="var(--benign-color)" />
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <HeartPulse size={18} color="var(--color-benign)" />
             <span>Local SOC Diagnostic Health</span>
           </div>
           <span
-            className="mono"
-            style={{
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              padding: '0.3rem 0.75rem',
-              borderRadius: '6px',
-              background: health?.status === 'ok' ? 'var(--benign-bg)' : 'var(--med-bg)',
-              color: health?.status === 'ok' ? 'var(--benign-color)' : 'var(--med-color)',
-              border: `1px solid ${health?.status === 'ok' ? 'var(--benign-border)' : 'var(--med-border)'}`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-            }}
+            className={cn(mono, 'text-[0.78rem] font-bold py-[0.3rem] px-3 rounded-[6px] flex items-center gap-[0.45rem]', (health?.status === 'ok' ? 'bg-benign-bg' : 'bg-med-bg'), (health?.status === 'ok' ? 'text-benign' : 'text-med'), 'border', health?.status === 'ok' ? 'border-benign' : 'border-med')}
           >
-            {health?.status === 'ok' && <span className="pulse-dot" />}
+            {health?.status === 'ok' && <span className="inline-block size-[8px] animate-pulse-green rounded-[50%] bg-benign" />}
             {health?.status === 'ok' ? 'ALL SYSTEMS NOMINAL' : health?.status?.toUpperCase() || 'UNKNOWN'}
           </span>
         </div>
 
-        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+        <p className="text-[0.82rem] text-fg-2 leading-[1.5] m-0">
           All diagnostics are polled locally from in-process backend engines. No external cloud dependencies, external telemetry, or remote telemetry feeds are contacted.
         </p>
       </motion.div>
@@ -255,37 +245,37 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
       {/* Subsystem Component Health Grid */}
       <motion.div
         variants={itemVariants}
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}
+        className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-5 mb-6"
       >
         {/* 1. FastAPI Core */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('api')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Server size={16} color="var(--accent-cyan)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('api')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Server size={16} color="var(--color-accent)" />
               <span>API Gateway</span>
             </div>
             {health ? (
-              <CheckCircle2 size={16} color="var(--benign-color)" />
+              <CheckCircle2 size={16} color="var(--color-benign)" />
             ) : (
-              <AlertOctagon size={16} color="var(--crit-color)" />
+              <AlertOctagon size={16} color="var(--color-crit)" />
             )}
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">API Version</span>
-              <span className="kv-value mono">{health?.version || '1.1.0'}</span>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>API Version</span>
+              <span className={cn(mono, kvValue)}>{health?.version || '1.1.0'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Environment</span>
-              <span className="kv-value mono">{systemStatus?.environment || 'local'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Environment</span>
+              <span className={cn(mono, kvValue)}>{systemStatus?.environment || 'local'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Local Only</span>
-              <span className="kv-value">{health?.local_only ? 'True (Air-Gapped)' : 'False'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Local Only</span>
+              <span className={kvValue}>{health?.local_only ? 'True (Air-Gapped)' : 'False'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Server Uptime</span>
-              <span className="kv-value mono">
+            <div className={kvItem}>
+              <span className={kvLabel}>Server Uptime</span>
+              <span className={cn(mono, kvValue)}>
                 {liveUptime !== null
                   ? formatUptime(liveUptime)
                   : 'N/A'}
@@ -295,28 +285,28 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
         </div>
 
         {/* 2. SQLite Local Database */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('sqlite')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Database size={16} color="var(--accent-blue)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('sqlite')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Database size={16} color="var(--color-accent)" />
               <span>Local Storage (SQLite)</span>
             </div>
             {health?.database_connected ? (
-              <CheckCircle2 size={16} color="var(--benign-color)" />
+              <CheckCircle2 size={16} color="var(--color-benign)" />
             ) : (
-              <AlertOctagon size={16} color="var(--crit-color)" />
+              <AlertOctagon size={16} color="var(--color-crit)" />
             )}
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">DB Connection</span>
-              <span className="kv-value" style={{ color: health?.database_connected ? 'var(--benign-color)' : 'var(--crit-color)' }}>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>DB Connection</span>
+              <span className={cn(kvValue, (health?.database_connected ? 'text-benign' : 'text-crit'))}>
                 {health?.database_connected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            <div className="kv-item" style={{ gridColumn: '1 / -1' }}>
-              <span className="kv-label">Database Path</span>
-              <span className="kv-value mono" style={{ fontSize: '0.75rem' }}>
+            <div className={cn(kvItem, '[grid-column:1_/_-1]')}>
+              <span className={kvLabel}>Database Path</span>
+              <span className={cn(mono, kvValue, 'text-[0.75rem]')}>
                 {systemStatus?.database_path || 'cipher.db'}
               </span>
             </div>
@@ -324,109 +314,109 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
         </div>
 
         {/* 3. Phishing ML Subsystem */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('phishing_ml')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Cpu size={16} color="var(--accent-cyan)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('phishing_ml')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Cpu size={16} color="var(--color-accent)" />
               <span>Phishing ML Subsystem</span>
             </div>
             {health?.model_loaded ? (
-              <CheckCircle2 size={16} color="var(--benign-color)" />
+              <CheckCircle2 size={16} color="var(--color-benign)" />
             ) : (
-              <AlertOctagon size={16} color="var(--med-color)" />
+              <AlertOctagon size={16} color="var(--color-med)" />
             )}
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Model Status</span>
-              <span className="kv-value">
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Model Status</span>
+              <span className={kvValue}>
                 {health?.model_loaded ? 'Loaded (Pre-warmed)' : 'Not Loaded'}
               </span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Model Version</span>
-              <span className="kv-value mono">{systemStatus?.model_version || 'phiusiil-rf-v1'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Model Version</span>
+              <span className={cn(mono, kvValue)}>{systemStatus?.model_version || 'phiusiil-rf-v1'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Features Extracted</span>
-              <span className="kv-value mono">{systemStatus?.feature_count || 28} lexical features</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Features Extracted</span>
+              <span className={cn(mono, kvValue)}>{systemStatus?.feature_count || 28} lexical features</span>
             </div>
           </div>
         </div>
 
         {/* 4. Network IDS Subsystem */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('network_ids')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Cpu size={16} color="var(--accent-cyan)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('network_ids')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Cpu size={16} color="var(--color-accent)" />
               <span>Network IDS Subsystem</span>
             </div>
             {netHealth?.model_loaded ? (
-              <CheckCircle2 size={16} color="var(--benign-color)" />
+              <CheckCircle2 size={16} color="var(--color-benign)" />
             ) : (
-              <AlertOctagon size={16} color="var(--med-color)" />
+              <AlertOctagon size={16} color="var(--color-med)" />
             )}
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Model Status</span>
-              <span className="kv-value">
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Model Status</span>
+              <span className={kvValue}>
                 {netHealth?.model_loaded ? 'Dual RF Gate Active' : 'Not Loaded'}
               </span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">CIC Features</span>
-              <span className="kv-value mono">{netHealth?.feature_count || 67} features</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>CIC Features</span>
+              <span className={cn(mono, kvValue)}>{netHealth?.feature_count || 67} features</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Model Version</span>
-              <span className="kv-value mono">{netHealth?.model_version || 'cicids2017-dual-rf-v1'}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Model Version</span>
+              <span className={cn(mono, kvValue)}>{netHealth?.model_version || 'cicids2017-dual-rf-v1'}</span>
             </div>
           </div>
         </div>
 
         {/* 5. IPS Prevention Engine */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('ips')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Shield size={16} color="var(--accent-blue)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('ips')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Shield size={16} color="var(--color-accent)" />
               <span>Prevention Engine (IPS)</span>
             </div>
-            <span className={`mode-badge ${netHealth?.prevention_mode || 'enforce'}`}>
+            <span className={modeBadge(netHealth?.prevention_mode || 'enforce')}>
               {(netHealth?.prevention_mode || 'enforce').replace('_', ' ')}
             </span>
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Current Mode</span>
-              <span className="kv-value mono">{netHealth?.prevention_mode || 'enforce'}</span>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Current Mode</span>
+              <span className={cn(mono, kvValue)}>{netHealth?.prevention_mode || 'enforce'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Rate Limiter</span>
-              <span className="kv-value">Sliding Window Active</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Rate Limiter</span>
+              <span className={kvValue}>Sliding Window Active</span>
             </div>
           </div>
         </div>
 
         {/* 6. Live Packet Sensor */}
-        <div className="card clickable-card" onClick={() => setSelectedCard('sensor')}>
-          <div className="card-header">
-            <div className="card-title">
-              <Radio size={16} color="var(--accent-cyan)" />
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('sensor')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Radio size={16} color="var(--color-accent)" />
               <span>Packet Capture Sensor</span>
             </div>
-            <span className={`mode-badge ${sensorStatus?.running ? 'detect_only' : 'simulate'}`}>
+            <span className={modeBadge(sensorStatus?.running ? 'detect_only' : 'simulate')}>
               {sensorStatus?.running ? 'RUNNING' : 'STOPPED'}
             </span>
           </div>
-          <div className="kv-grid">
-            <div className="kv-item">
-              <span className="kv-label">Interface</span>
-              <span className="kv-value mono">{sensorStatus?.interface || 'Unbound'}</span>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Interface</span>
+              <span className={cn(mono, kvValue)}>{sensorStatus?.interface || 'Unbound'}</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Packets Captured</span>
-              <span className="kv-value mono">{sensorStatus?.packets_captured ?? 0}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Packets Captured</span>
+              <span className={cn(mono, kvValue)}>{sensorStatus?.packets_captured ?? 0}</span>
             </div>
           </div>
         </div>
@@ -434,37 +424,37 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
 
       {/* Detailed Component Modal */}
       {selectedCard && SYSTEM_DETAILS[selectedCard] && (
-        <div className="modal-overlay" onClick={() => setSelectedCard(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">{SYSTEM_DETAILS[selectedCard].title}</h2>
-              <button className="modal-close" onClick={() => setSelectedCard(null)}>
+        <div className="fixed top-0 left-0 z-[9999] flex h-screen w-screen items-center justify-center bg-[rgba(11,11,11,0.85)] [backdrop-filter:blur(2px)]" onClick={() => setSelectedCard(null)}>
+          <div className={modalPanel} onClick={(e) => e.stopPropagation()}>
+            <div className={modalHeader}>
+              <h2 className={modalTitle}>{SYSTEM_DETAILS[selectedCard].title}</h2>
+              <button className="m-0 cursor-pointer border-none bg-transparent p-0 text-[1.5rem] leading-none text-fg-2 hover:text-accent" onClick={() => setSelectedCard(null)}>
                 &times;
               </button>
             </div>
             
-            <div className="modal-body">
-              <p className="modal-description">{SYSTEM_DETAILS[selectedCard].description}</p>
+            <div className={modalBody}>
+              <p className="mb-6 text-[0.9rem] leading-[1.5] text-fg-2">{SYSTEM_DETAILS[selectedCard].description}</p>
               
-              <div className="modal-section">
+              <div className="mb-6 last:mb-0 [&_h3]:mb-[0.85rem] [&_h3]:border-b [&_h3]:border-b-line [&_h3]:pb-2 [&_h3]:text-[0.85rem] [&_h3]:tracking-[0.05em] [&_h3]:text-accent [&_h3]:uppercase">
                 <h3>Technical Details</h3>
-                <div className="kv-grid" style={{ marginBottom: '1rem' }}>
-                  <div className="kv-item">
-                    <span className="kv-label">Framework / Tech</span>
-                    <span className="kv-value mono">{SYSTEM_DETAILS[selectedCard].framework}</span>
+                <div className={cn(kvGrid, 'mb-4')}>
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Framework / Tech</span>
+                    <span className={cn(mono, kvValue)}>{SYSTEM_DETAILS[selectedCard].framework}</span>
                   </div>
-                  <div className="kv-item">
-                    <span className="kv-label">Trained Dataset</span>
-                    <span className="kv-value mono">{SYSTEM_DETAILS[selectedCard].dataset}</span>
+                  <div className={kvItem}>
+                    <span className={kvLabel}>Trained Dataset</span>
+                    <span className={cn(mono, kvValue)}>{SYSTEM_DETAILS[selectedCard].dataset}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-section">
+              <div className="mb-6 last:mb-0 [&_h3]:mb-[0.85rem] [&_h3]:border-b [&_h3]:border-b-line [&_h3]:pb-2 [&_h3]:text-[0.85rem] [&_h3]:tracking-[0.05em] [&_h3]:text-accent [&_h3]:uppercase">
                 <h3>Capabilities & Extracted Features ({SYSTEM_DETAILS[selectedCard].features.length})</h3>
-                <div className="features-grid">
+                <div className="flex flex-wrap gap-2">
                   {SYSTEM_DETAILS[selectedCard].features.map((feature, idx) => (
-                    <div key={idx} className="feature-badge">
+                    <div key={idx} className="rounded-[4px] border border-line bg-app px-[0.65rem] py-[0.35rem] font-mono text-[0.75rem] text-fg">
                       {feature}
                     </div>
                   ))}

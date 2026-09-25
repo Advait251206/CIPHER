@@ -1,93 +1,85 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import { ShieldCheck, ShieldAlert, Power } from 'lucide-react';
+import { cn } from '../../lib/cn';
 
-interface WafState {
-  sql_injection: { enabled: boolean; enforce: boolean };
-  xss: { enabled: boolean; enforce: boolean };
-  brute_force: { enabled: boolean; enforce: boolean };
-}
+// The backend exposes GET/POST /api/waf/config with one mode per feature:
+// { sql_protection: 'off' | 'detect' | 'enforce', xss_protection: ..., brute_force_protection: ... }
+type WafMode = 'off' | 'detect' | 'enforce';
+type WafConfig = Record<string, WafMode>;
+
+const FEATURES: Array<{ key: string; title: string }> = [
+  { key: 'sql_protection', title: 'SQL Injection (SQLi)' },
+  { key: 'xss_protection', title: 'Cross-Site Scripting (XSS)' },
+  { key: 'brute_force_protection', title: 'Brute Force' },
+];
 
 export const WafControlPanel: React.FC = () => {
-  const [wafState, setWafState] = useState<WafState | null>(null);
+  const [config, setConfig] = useState<WafConfig | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchWafState = async () => {
+  const fetchConfig = async () => {
     try {
-      // Temporary fetch to our new endpoint
-      const res = await fetch('http://localhost:8000/api/v1/waf/status');
-      if (res.ok) {
-        const data = await res.json();
-        setWafState(data.config);
-      }
+      setConfig(await api.waf.getConfig());
     } catch (err) {
-      console.error('Failed to fetch WAF state', err);
+      console.error('Failed to fetch WAF config', err);
     }
   };
 
   useEffect(() => {
-    fetchWafState();
-    const interval = setInterval(fetchWafState, 5000);
+    fetchConfig();
+    const interval = setInterval(fetchConfig, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const toggleWaf = async (attackType: string, field: 'enabled' | 'enforce') => {
-    if (!wafState) return;
+  // Clicking the active mode turns that protection off again.
+  const setMode = async (feature: string, mode: WafMode) => {
+    if (!config) return;
     setLoading(true);
     try {
-      const currentState = wafState[attackType as keyof WafState][field];
-      const res = await fetch(`http://localhost:8000/api/v1/waf/toggle/${attackType}?${field}=${!currentState}`, {
-        method: 'POST'
-      });
-      if (res.ok) {
-        await fetchWafState();
-      }
+      const next: WafMode = config[feature] === mode ? 'off' : mode;
+      setConfig(await api.waf.setMode(feature, next));
     } catch (err) {
-      console.error('Failed to toggle WAF', err);
+      console.error('Failed to update WAF config', err);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!wafState) return null;
+  if (!config) return null;
 
-  const renderToggle = (title: string, type: string) => {
-    const config = wafState[type as keyof WafState];
+  const renderToggle = (title: string, feature: string) => {
+    const mode = config[feature] ?? 'off';
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-sidebar)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {config.enforce ? <ShieldCheck size={20} color="var(--crit-color)" /> : (config.enabled ? <ShieldAlert size={20} color="var(--high-color)" /> : <Power size={20} color="var(--text-muted)" />)}
-          <span style={{ color: 'var(--text-primary)', fontWeight: 500, fontSize: '0.9rem' }}>{title}</span>
+      <div key={feature} className="flex items-center justify-between p-3 bg-sidebar rounded-[6px] border border-line">
+        <div className="flex items-center gap-3">
+          {mode === 'enforce' ? (
+            <ShieldCheck size={20} color="var(--color-crit)" />
+          ) : mode === 'detect' ? (
+            <ShieldAlert size={20} color="var(--color-high)" />
+          ) : (
+            <Power size={20} color="var(--color-fg-muted)" />
+          )}
+          <span className="text-fg font-medium text-[0.9rem]">{title}</span>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
-            onClick={() => toggleWaf(type, 'enabled')}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode(feature, 'detect')}
             disabled={loading}
-            style={{ 
-              padding: '0.3rem 0.6rem', 
-              fontSize: '0.8rem', 
-              borderRadius: '4px',
-              border: 'none',
-              cursor: 'pointer',
-              background: config.enabled ? 'var(--high-color)' : 'var(--bg-surface)',
-              color: config.enabled ? '#000' : 'var(--text-primary)'
-            }}
+            className={cn(
+              'py-[0.3rem] px-[0.6rem] text-[0.8rem] rounded-[4px] border-none cursor-pointer',
+              mode !== 'off' ? 'bg-high text-black' : 'bg-surface text-fg'
+            )}
           >
             Detect
           </button>
-          <button 
-            onClick={() => toggleWaf(type, 'enforce')}
-            disabled={loading || !config.enabled}
-            style={{ 
-              padding: '0.3rem 0.6rem', 
-              fontSize: '0.8rem', 
-              borderRadius: '4px',
-              border: 'none',
-              cursor: config.enabled ? 'pointer' : 'not-allowed',
-              background: config.enforce ? 'var(--crit-color)' : 'var(--bg-surface)',
-              color: config.enforce ? '#fff' : 'var(--text-primary)',
-              opacity: config.enabled ? 1 : 0.5
-            }}
+          <button
+            onClick={() => setMode(feature, 'enforce')}
+            disabled={loading}
+            className={cn(
+              'py-[0.3rem] px-[0.6rem] text-[0.8rem] rounded-[4px] border-none cursor-pointer',
+              mode === 'enforce' ? 'bg-crit text-white' : 'bg-surface text-fg'
+            )}
           >
             Enforce (Block)
           </button>
@@ -97,14 +89,12 @@ export const WafControlPanel: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      <h3 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div className="flex flex-col gap-3">
+      <h3 className="text-[0.9rem] text-fg flex items-center gap-2">
         <ShieldCheck size={18} /> Active WAF Protection
       </h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '1rem' }}>
-        {renderToggle('SQL Injection (SQLi)', 'sql_injection')}
-        {renderToggle('Cross-Site Scripting (XSS)', 'xss')}
-        {renderToggle('Brute Force', 'brute_force')}
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4 bg-surface border border-line rounded-[6px] p-4">
+        {FEATURES.map((f) => renderToggle(f.title, f.key))}
       </div>
     </div>
   );

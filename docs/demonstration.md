@@ -47,7 +47,7 @@ npm run dev
   - Point out local privacy banner: *"Analysis is performed locally on this machine. CIPHER does not automatically transmit submitted indicators to external services."*
   - Select preset "Suspicious IP Host" (`http://192.168.1.1/login.php?user=admin&token=secure`).
   - Click **Analyze URL**:
-  - Show 28-feature lexical extraction, Shannon entropy values, Random Forest attack probability, and heuristic keyword flags.
+  - Show 15-feature lexical extraction, Shannon entropy values, Random Forest attack probability, and heuristic keyword flags.
   - Review the actionable recommendation.
 
 ### 4. Benign vs. Port Scan Live Detection (Minute 5–7)

@@ -73,6 +73,8 @@ def test_disabled_rule_is_ignored():
         "source_ip": "10.0.0.1",
         "destination_ip": "10.0.0.2",
         "features": {
+            "Total Fwd Packets": 500,
+            "Total Backward Packets": 0,
             "Flow Packets/s": DOS_PACKET_RATE_THRESHOLD + 10000,
             "Fwd Packets/s": DOS_PACKET_RATE_THRESHOLD + 10000
         }
@@ -251,6 +253,8 @@ def test_dos_packet_rate_heuristic():
         "source_ip": "10.2.2.1",
         "destination_ip": "10.2.2.2",
         "features": {
+            "Total Fwd Packets": 500,
+            "Total Backward Packets": 0,
             "Flow Packets/s": DOS_PACKET_RATE_THRESHOLD + 5000,
             "Fwd Packets/s": DOS_PACKET_RATE_THRESHOLD + 5000
         }
@@ -269,11 +273,36 @@ def test_dos_byte_rate_heuristic():
         "source_ip": "10.2.2.3",
         "destination_ip": "10.2.2.2",
         "features": {
+            "Total Fwd Packets": 500,
+            "Total Backward Packets": 0,
             "Flow Bytes/s": DOS_BYTE_RATE_THRESHOLD + 1_000_000
         }
     }
     matches = engine.evaluate(event)
     assert any(m.rule_id == "HEUR-DOS-002" for m in matches)
+
+
+def test_dos_rate_rules_ignore_tiny_flows():
+    """A huge computed rate on a handful of packets is not a flood.
+
+    Per-second rates over very short flows explode (2 packets in 1 us is
+    2,000,000 pkts/s), so the DoS rate rules require real packet volume.
+    """
+    engine = RuleEngine()
+    event = {
+        "source_ip": "10.2.2.9",
+        "destination_ip": "10.2.2.2",
+        "features": {
+            "Total Fwd Packets": 2,
+            "Total Backward Packets": 0,
+            "Flow Packets/s": DOS_PACKET_RATE_THRESHOLD * 40,
+            "Fwd Packets/s": DOS_PACKET_RATE_THRESHOLD * 40,
+            "Flow Bytes/s": DOS_BYTE_RATE_THRESHOLD * 40,
+        }
+    }
+    matched = {m.rule_id for m in engine.evaluate(event)}
+    assert "HEUR-DOS-001" not in matched
+    assert "HEUR-DOS-002" not in matched
 
 
 def test_dos_asymmetric_burst_heuristic():
@@ -495,6 +524,8 @@ def test_api_direct_evaluate():
         "source_ip": "10.99.99.1",
         "destination_ip": "10.99.99.2",
         "features": {
+            "Total Fwd Packets": 500,
+            "Total Backward Packets": 0,
             "Flow Packets/s": 65000,
             "Fwd Packets/s": 65000
         }
@@ -523,9 +554,12 @@ def test_pipeline_integration_attaches_rule_findings(tmp_path):
         "event_id": str(uuid.uuid4()),
         "source": "network",
         "attack_type": "BENIGN",
-        "source_ip": "192.168.1.15",
+        # External source: private ranges are safelisted for DOS/DDOS findings
+        "source_ip": "203.0.113.15",
         "destination_ip": "10.250.250.1",
         "features": {
+            "Total Fwd Packets": 500,
+            "Total Backward Packets": 0,
             "Flow Packets/s": 80000,
             "Fwd Packets/s": 80000
         }

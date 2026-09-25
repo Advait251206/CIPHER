@@ -74,7 +74,8 @@ def test_network_analyze_benign_flow():
 
 def test_network_analyze_port_scan_flow():
     payload = {
-        "source_ip": "10.0.0.50",
+        # External source: private ranges are safelisted (see detection/safelist.py)
+        "source_ip": "203.0.113.50",
         "destination_ip": "192.168.1.1",
         "source_port": 40123,
         "destination_port": 8080,
@@ -145,3 +146,31 @@ def test_invalid_network_analyze_payload():
     # Missing required 'features' dict
     response = client.post("/api/network/analyze", json={"source_ip": "10.0.0.1"})
     assert response.status_code in [422, 400]
+
+
+def test_safelisted_private_source_is_not_flagged():
+    """Scans from safelisted sources are reported BENIGN by design.
+
+    The safelist exists to stop downloads being called floods, but it also
+    covers the private ranges, so internal scans are suppressed. Set
+    CIPHER_TRUSTED_SUBNETS to just the provider ranges to detect them.
+    """
+    payload = {
+        "source_ip": "10.0.0.50",
+        "destination_ip": "192.168.1.1",
+        "source_port": 40123,
+        "destination_port": 8080,
+        "protocol": "TCP",
+        "features": {
+            "Destination Port": 8080,
+            "Flow Duration": 40,
+            "Total Fwd Packets": 1,
+            "Total Backward Packets": 0,
+            "Flow Packets/s": 25000.0,
+            "SYN Flag Count": 1,
+            "ACK Flag Count": 0,
+        },
+    }
+    data = client.post("/api/network/analyze", json=payload).json()
+    assert data["attack_type"] == "BENIGN"
+    assert any("safelisted" in r.lower() or "trusted" in r.lower() for r in data["reasons"])

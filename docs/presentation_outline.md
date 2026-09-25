@@ -23,7 +23,7 @@ This outline is designed for a concise, high-impact 10–15 minute capstone or t
 
 ### Slide 3: Proposed Solution
 - **CIPHER**: A cohesive, unified defensive platform bridging machine learning with deterministic rule enforcement.
-- Dual threat detection: Phishing URL analysis (28 features) + Network IDS (67 features).
+- Dual threat detection: Phishing URL analysis (15 features) + Network IDS (67 features).
 - Defense-in-depth: ML inference $\to$ Heuristics/Signatures $\to$ Local IOC Matching $\to$ Calibrated ThreatScorer (0–100).
 - Stateful multi-stage event correlation + non-destructive IPS simulation + modern React SOC dashboard.
 

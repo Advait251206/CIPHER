@@ -81,7 +81,7 @@ app = FastAPI(
 
 Local-First, Privacy-Preserving Intrusion Detection and Threat Analysis Engine.
 - **Privacy Guarantee**: All ML inference runs locally on this device. Zero telemetry, zero external cloud inference.
-- **Subsystem 1 (Phishing)**: 28-feature Random Forest ML model trained on PhiUSIIL with independent URL Heuristic Threat Detection.
+- **Subsystem 1 (Phishing)**: 15-feature Random Forest ML model trained on PhiUSIIL with independent URL Heuristic Threat Detection.
 - **Subsystem 2 (Network IDPS)**: Dual Random Forest ML model (Binary Gate + 9-Class Multiclass) trained on CIC-IDS2017 with deterministic flow heuristics.
 - **Unified Defense**: Standardized threat scoring (0-100), severity classification, evidence-backed explanations, and multi-mode IPS architecture (detect_only, simulate, enforce).
     """,
@@ -91,10 +91,22 @@ Local-First, Privacy-Preserving Intrusion Detection and Threat Analysis Engine.
     lifespan=lifespan
 )
 
-# Enable CORS for local development (frontend running on Vite, Next.js, or local extension)
+# CORS: only the dashboard's own origins may call the API from a browser.
+# A wildcard would let any website the analyst visits drive this local API
+# (including /api/extension/launch). The browser extension is unaffected: it
+# calls the API from its background worker under host_permissions.
+# Override with CIPHER_CORS_ORIGINS (comma-separated) if the UI is served elsewhere.
+CORS_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        "CIPHER_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

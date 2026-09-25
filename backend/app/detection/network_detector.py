@@ -114,7 +114,7 @@ class NetworkDetector:
         elif is_web_port and pkt_len_var > 15.0:
             volumetric_byte_limit = 250_000_000   # 250 MB/s (2 Gbps) for variable web traffic
 
-        if (flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000) and total_pkts > 1000 and not is_cdn:
+        if (flow_pkts_per_s > 50000 or fwd_pkts_per_s > 50000) and total_pkts >= 1000 and not is_cdn:
             score += 65
             reasons.append(
                 f"Abnormal forward packet rate ({fwd_pkts_per_s:,.0f} pkts/s) exceeding normal client behavior"

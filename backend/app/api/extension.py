@@ -8,6 +8,7 @@ import io
 import zipfile
 import shutil
 import subprocess
+from urllib.parse import urlparse
 import platform
 import logging
 from pathlib import Path
@@ -110,6 +111,21 @@ def download_extension_zip():
     )
 
 
+def _validated_launch_url(url: str) -> str:
+    """Accept only absolute http(s) URLs for the browser's command line.
+
+    Anything else is rejected, most importantly strings starting with "-",
+    which Chrome would parse as command-line flags.
+    """
+    parsed = urlparse(url.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.netloc or url.strip().startswith("-"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="target_url must be an absolute http(s) URL.",
+        )
+    return url.strip()
+
+
 @router.post("/launch")
 def launch_browser_with_extension(req: LaunchBrowserRequest = LaunchBrowserRequest()):
     """
@@ -123,7 +139,7 @@ def launch_browser_with_extension(req: LaunchBrowserRequest = LaunchBrowserReque
         )
 
     ext_abs_path = str(EXTENSION_DIR.resolve())
-    target_url = req.target_url
+    target_url = _validated_launch_url(req.target_url)
 
     try:
         import tempfile

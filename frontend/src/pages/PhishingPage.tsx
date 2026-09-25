@@ -6,6 +6,18 @@ import { RiskGauge } from '../components/common/RiskGauge';
 import { Globe, Search, ShieldCheck, AlertTriangle, Info, CheckCircle2, FileText, Printer } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import { Toast, type ToastType } from '../components/common/Toast';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, controlBtn, evidenceHeader, evidenceSection, formGroup, formInput, formLabel, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody } from '../ui/classes';
+
+// One segment of the URL anatomy breakdown. A flagged segment turns its label
+// and value red too (the old .url-part-chip.flagged descendant rules).
+const UrlPart: React.FC<{ label: string; value: React.ReactNode; flagged?: boolean }> = ({ label, value, flagged }) => (
+  <div className={cn('inline-flex flex-col rounded-none border border-line-card bg-surface px-[0.65rem] py-[0.35rem]', flagged && 'border-crit bg-crit-bg')}>
+    <span className={cn('text-[0.64rem] font-bold tracking-[0.04em] text-fg-muted uppercase', flagged && 'text-crit')}>{label}</span>
+    <span className={cn('font-mono text-[0.78rem] font-semibold text-fg', flagged && 'text-crit')}>{value}</span>
+  </div>
+);
+
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -303,14 +315,14 @@ export const PhishingPage: React.FC = () => {
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Privacy and Local Processing Notice */}
-      <motion.div variants={itemVariants} className="alert-box info">
-        <Info size={18} style={{ flexShrink: 0 }} />
+      <motion.div variants={itemVariants} className={alertBox('info')}>
+        <Info size={18} className="shrink-0" />
         <div>
           <strong>Local Privacy Architecture:</strong> Analysis is performed locally on this machine. CIPHER does not automatically transmit submitted indicators to external services.
           28 structural and lexical features are extracted and evaluated locally using a PhiUSIIL-trained Random Forest model and heuristic rules.
@@ -319,10 +331,10 @@ export const PhishingPage: React.FC = () => {
       </motion.div>
 
       {/* URL Submission Form */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.5rem' }}>
-        <div className="card-header">
-          <div className="card-title">
-            <Globe size={18} color="var(--accent-cyan)" />
+      <motion.div variants={itemVariants} className={cn(card, 'mb-6')}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
+            <Globe size={18} color="var(--color-accent)" />
             <span>Phishing URL Inspector (POST /api/phishing/analyze)</span>
           </div>
         </div>
@@ -332,14 +344,14 @@ export const PhishingPage: React.FC = () => {
             e.preventDefault();
             handleAnalyze();
           }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          className="flex flex-col gap-4"
         >
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Enter Target URL to Inspect</label>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Enter Target URL to Inspect</label>
+            <div className="flex gap-3">
               <input
                 type="text"
-                className="form-input"
+                className={formInput}
                 placeholder="https://example.com/login or http://suspicious-domain.xyz"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
@@ -349,9 +361,9 @@ export const PhishingPage: React.FC = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
-                className="control-btn primary"
+                className={cn(controlBtn('primary'), 'shrink-0')}
                 disabled={isAnalyzing || !urlInput.trim()}
-                style={{ flexShrink: 0 }}
+
               >
                 <Search size={14} />
                 <span>{isAnalyzing ? 'Analyzing...' : 'Inspect URL'}</span>
@@ -361,19 +373,16 @@ export const PhishingPage: React.FC = () => {
 
 
           {/* Sample URL Loader */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+          <div className="flex flex-col gap-2">
+            <span className="text-[0.74rem] text-fg-muted uppercase tracking-wider font-semibold">
               Load Sample URL
             </span>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div className="flex gap-2 flex-wrap">
               {(['Legitimate', 'Phishing', 'Malware / Suspicious'] as const).map((cat) => (
                 <button
                   key={cat}
                   type="button"
-                  className={`control-btn${
-                    cat === 'Legitimate' ? ' success' : cat === 'Phishing' ? ' danger' : ''
-                  }`}
-                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}
+                  className={controlBtn(cat === 'Legitimate' ? 'success' : cat === 'Phishing' ? 'danger' : 'default', 'text-[0.75rem] py-[0.3rem] px-[0.65rem]')}
                   onClick={() => handleSelectSampleUrl(cat)}
                   disabled={isAnalyzing}
                 >
@@ -387,46 +396,28 @@ export const PhishingPage: React.FC = () => {
 
         {/* Real-Time URL Anatomical Dissection */}
         {currentDissection && (
-          <div className="url-dissector-deck">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem' }}>
-              <Globe size={14} color="var(--accent-blue)" />
-              <span style={{ fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-primary)', letterSpacing: '0.04em' }}>
+          <div className="mt-4 rounded-none border border-line bg-elevated p-4">
+            <div className="flex items-center gap-[0.45rem] mb-[0.35rem]">
+              <Globe size={14} color="var(--color-accent)" />
+              <span className="text-[0.74rem] font-bold uppercase text-fg tracking-[0.04em]">
                 Forensic URL Structural Breakdown
               </span>
             </div>
-            <div className="url-parts-grid">
-              <div className={`url-part-chip ${!currentDissection.isHttps ? 'flagged' : ''}`}>
-                <span className="url-part-label">Protocol</span>
-                <span className="url-part-value">{currentDissection.protocol}</span>
-              </div>
-              <div className={`url-part-chip ${currentDissection.subdomain !== 'None' && currentDissection.subdomain.split('.').length > 1 ? 'flagged' : ''}`}>
-                <span className="url-part-label">Subdomain</span>
-                <span className="url-part-value">{currentDissection.subdomain}</span>
-              </div>
-              <div className={`url-part-chip ${currentDissection.isIp ? 'flagged' : ''}`}>
-                <span className="url-part-label">Domain / Host</span>
-                <span className="url-part-value">{currentDissection.domain}</span>
-              </div>
-              <div className={`url-part-chip ${currentDissection.tld === '.xyz' || currentDissection.isIp ? 'flagged' : ''}`}>
-                <span className="url-part-label">TLD Class</span>
-                <span className="url-part-value">{currentDissection.tld}</span>
-              </div>
-              <div className="url-part-chip">
-                <span className="url-part-label">Path</span>
-                <span className="url-part-value">{currentDissection.pathname}</span>
-              </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <UrlPart label="Protocol" value={currentDissection.protocol} flagged={!currentDissection.isHttps} />
+              <UrlPart label="Subdomain" value={currentDissection.subdomain} flagged={currentDissection.subdomain !== 'None' && currentDissection.subdomain.split('.').length > 1} />
+              <UrlPart label="Domain / Host" value={currentDissection.domain} flagged={currentDissection.isIp} />
+              <UrlPart label="TLD Class" value={currentDissection.tld} flagged={currentDissection.tld === '.xyz' || currentDissection.isIp} />
+              <UrlPart label="Path" value={currentDissection.pathname} />
               {currentDissection.search !== 'None' && (
-                <div className="url-part-chip flagged">
-                  <span className="url-part-label">Query Tokens</span>
-                  <span className="url-part-value">{currentDissection.search}</span>
-                </div>
+                <UrlPart label="Query Tokens" value={currentDissection.search} flagged />
               )}
             </div>
           </div>
         )}
 
         {error && (
-          <div className="alert-box danger" style={{ marginTop: '1rem' }}>
+          <div className={cn(alertBox('danger'), 'mt-4')}>
             <AlertTriangle size={16} />
             <span>{error}</span>
           </div>
@@ -439,81 +430,72 @@ export const PhishingPage: React.FC = () => {
           initial={{ opacity: 0, y: 12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="card"
+          className={card}
         >
-          <div className="card-header">
-            <div className="card-title">
-              <ShieldCheck size={18} color="var(--accent-cyan)" />
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <ShieldCheck size={18} color="var(--color-accent)" />
               <span>Phishing Security Assessment</span>
             </div>
             <SeverityBadge severity={result.severity} />
           </div>
 
-          <div style={{ marginBottom: '1.25rem' }}>
+          <div className="mb-5">
             <RiskGauge score={result.risk_score} label="Unified Threat Score" />
           </div>
 
-          <div className="kv-grid" style={{ marginBottom: '1.25rem' }}>
-            <div className="kv-item">
-              <span className="kv-label">Classification Verdict</span>
+          <div className={cn(kvGrid, 'mb-5')}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Classification Verdict</span>
               <span
-                className="kv-value"
-                style={{
-                  fontWeight: 700,
-                  color:
-                    result.classification === 'LIKELY_PHISHING'
-                      ? 'var(--crit-color)'
-                      : result.classification === 'SUSPICIOUS'
-                      ? 'var(--med-color)'
-                      : 'var(--benign-color)',
-                }}
+                className={cn(kvValue, 'font-bold', result.classification === 'LIKELY_PHISHING' ? 'text-crit' : result.classification === 'SUSPICIOUS' ? 'text-med' : 'text-benign')}
               >
                 {result.classification.replace('_', ' ')}
               </span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Classifier Confidence</span>
-              <span className="kv-value mono">{(result.confidence * 100).toFixed(1)}%</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Classifier Confidence</span>
+              <span className={cn(mono, kvValue)}>{(result.confidence * 100).toFixed(1)}%</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">ML Phishing Probability</span>
-              <span className="kv-value mono">{(result.ml_score * 100).toFixed(1)}%</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>ML Phishing Probability</span>
+              <span className={cn(mono, kvValue)}>{(result.ml_score * 100).toFixed(1)}%</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Heuristic Threat Score</span>
-              <span className="kv-value mono">{result.heuristic_score} / 100</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Heuristic Threat Score</span>
+              <span className={cn(mono, kvValue)}>{result.heuristic_score} / 100</span>
             </div>
-            <div className="kv-item">
-              <span className="kv-label">Model Version</span>
-              <span className="kv-value mono">{result.model_version}</span>
+            <div className={kvItem}>
+              <span className={kvLabel}>Model Version</span>
+              <span className={cn(mono, kvValue)}>{result.model_version}</span>
             </div>
             {result.event_id && (
-              <div className="kv-item">
-                <span className="kv-label">Recorded Event ID</span>
-                <span className="kv-value mono">{result.event_id}</span>
+              <div className={kvItem}>
+                <span className={kvLabel}>Recorded Event ID</span>
+                <span className={cn(mono, kvValue)}>{result.event_id}</span>
               </div>
             )}
           </div>
 
           {/* Action Recommendation */}
-          <div className="evidence-section" style={{ marginBottom: '1rem' }}>
-            <div className="evidence-header">
+          <div className={cn(evidenceSection, 'mb-4')}>
+            <div className={evidenceHeader}>
               <CheckCircle2 size={14} />
               <span>Recommended Security Guidance</span>
             </div>
-            <p style={{ color: 'var(--text-primary)', fontSize: '0.88rem', fontWeight: 600 }}>
+            <p className="text-fg text-[0.88rem] font-semibold">
               {result.recommendation}
             </p>
           </div>
 
           {/* Feature Explanations / Reasons */}
           {result.reasons && result.reasons.length > 0 && (
-            <div className="evidence-section">
-              <div className="evidence-header">
+            <div className={evidenceSection}>
+              <div className={evidenceHeader}>
                 <Info size={14} />
                 <span>Detection Explanations & Evidence ({result.reasons.length})</span>
               </div>
-              <ul style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <ul className="pl-5 text-fg-2 text-[0.82rem] flex flex-col gap-[0.35rem]">
                 {result.reasons.map((reason, idx) => (
                   <li key={idx}>{reason}</li>
                 ))}
@@ -522,15 +504,15 @@ export const PhishingPage: React.FC = () => {
           )}
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
-            <button className="control-btn" onClick={generateReportTxt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', color: '#334155', border: '1px solid #cbd5e1' }}>
+          <div className="flex gap-3 mt-6 pt-6 border-t border-t-line flex-wrap">
+            <button className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] not-disabled:hover:bg-[#f1f5f9] not-disabled:hover:text-[#334155] not-disabled:hover:border-[#cbd5e1]')} onClick={generateReportTxt}>
               <FileText size={16} /> TXT Report
             </button>
-            <button className="control-btn primary" onClick={generateReportPdf} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent-cyan)', color: 'white', border: 'none' }}>
+            <button className={cn(controlBtn('primary'), 'flex items-center gap-2 bg-accent text-white border-none')} onClick={generateReportPdf}>
               <Printer size={16} /> Print / Save as PDF
             </button>
-            <div style={{ flex: 1 }}></div>
-            <button className="control-btn" onClick={handleResolve} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--benign-color)', color: '#0B0B0B', border: 'none', fontWeight: 600 }}>
+            <div className="flex-1"></div>
+            <button className={cn(controlBtn(), 'flex items-center gap-2 bg-benign text-[#0B0B0B] border-none font-semibold not-disabled:hover:bg-benign not-disabled:hover:text-[#0B0B0B]')} onClick={handleResolve}>
               <CheckCircle2 size={16} /> Resolve Threat
             </button>
           </div>

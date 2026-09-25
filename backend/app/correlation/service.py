@@ -15,6 +15,8 @@ from app.correlation.normalizer import EventNormalizer
 from app.correlation.correlator import EventCorrelator, CorrelatedChain
 from app.correlation.incident import IncidentManager
 
+from app.detection.safelist import is_trusted_source
+
 logger = logging.getLogger("cipher.correlation.service")
 
 
@@ -51,23 +53,7 @@ class CorrelationService:
             rule_matches = get_rule_engine().evaluate(raw_event)
             if rule_matches:
                 # Safelist trusted IPs and ports to prevent DOS/DDOS rule false positives
-                is_trusted = False
-                import ipaddress
-                if norm_event.source_ip:
-                    try:
-                        sip = ipaddress.ip_address(norm_event.source_ip)
-                        for subnet in [
-                            ipaddress.ip_network("140.82.0.0/16"),
-                            ipaddress.ip_network("20.0.0.0/8"),
-                            ipaddress.ip_network("192.168.0.0/16"),
-                            ipaddress.ip_network("10.0.0.0/8"),
-                        ]:
-                            if sip in subnet:
-                                is_trusted = True
-                                break
-                    except: pass
-                if norm_event.source_port in [80, 443, 8080, 8443, 53]:
-                    is_trusted = True
+                is_trusted = is_trusted_source(norm_event.source_ip, norm_event.source_port)
 
                 if is_trusted:
                     rule_matches = [m for m in rule_matches if m.category not in ("DOS", "DDOS")]

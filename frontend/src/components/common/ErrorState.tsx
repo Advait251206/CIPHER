@@ -1,5 +1,7 @@
 import React from 'react';
 import { AlertOctagon, RefreshCw } from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { controlBtn, stateContainer, stateDesc, stateIcon, stateTitle } from '../../ui/classes';
 
 interface ErrorStateProps {
   title?: string;
@@ -20,21 +22,20 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       : 'Network connection failed or backend server is not running on http://127.0.0.1:8000.';
 
   return (
-    <div className="state-container" data-testid="error-state">
-      <div className="state-icon" style={{ background: 'var(--crit-bg)', color: 'var(--crit-color)' }}>
+    <div className={stateContainer} data-testid="error-state">
+      <div className={cn(stateIcon, 'bg-crit-bg text-crit')}>
         <AlertOctagon size={28} />
       </div>
-      <div className="state-title" style={{ color: 'var(--crit-color)' }}>
+      <div className={cn(stateTitle, 'text-crit')}>
         {title}
       </div>
-      <div className="state-desc" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+      <div className={cn(stateDesc, 'font-mono text-[0.78rem]')}>
         {errorMessage}
       </div>
       {onRetry && (
         <button
-          className="control-btn primary"
+          className={controlBtn('primary', 'mt-3')}
           onClick={onRetry}
-          style={{ marginTop: '0.75rem' }}
         >
           <RefreshCw size={14} />
           <span>Retry Connection</span>

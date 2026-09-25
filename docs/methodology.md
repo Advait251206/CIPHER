@@ -23,7 +23,7 @@ This document provides a systematic account of the methodology, algorithms, feat
   - Exact duplicate row removal: Identified and eliminated duplicate entries.
   - URL-level deduplication: **425 duplicate URLs removed**, leaving **235,370 unique, verified URLs**.
   - Strict deduplication before splitting guarantees zero URL leakage between training and evaluation partitions.
-- **Feature Extraction Pipeline (28 Features)**:
+- **Feature Extraction Pipeline (15 Features)**:
   - Extracted solely via static lexical, structural, and information-theoretic parsing without making live HTTP/DNS queries.
   - *Length & Component metrics*: `URLLength`, `DomainLength`, `PathLength`, `QueryLength`, `TLDLength`, `NoOfSubDomain`.
   - *Character & Obfuscation metrics*: `NoOfLettersInURL`, `LetterRatioInURL`, `NoOfDegitsInURL`, `DegitRatioInURL`, `CharContinuationRate`, `SpacialCharRatioInURL`, `NoOfDotsInURL`, `NoOfHyphensInURL`, `NoOfOtherSpecialCharsInURL`.
@@ -119,7 +119,7 @@ This document provides a systematic account of the methodology, algorithms, feat
   - `HEUR-BRUTEFORCE-001`: Auth Port Storm ($\ge 5$ connection attempts to ports 21, 22, 23, 445, 3389 in 60s).
   - `HEUR-BRUTEFORCE-002`: Auth Port Churn (rapid connection retries).
   - `HEUR-DOS-001`: Volumetric Packet Rate Anomaly ($> 50,000$ packets/s).
-  - `HEUR-DOS-002`: Volumetric Byte Rate Anomaly ($> 5,000,000$ bytes/s).
+  - `HEUR-DOS-002`: Volumetric Byte Rate Anomaly ($> 50,000,000$ bytes/s).
   - `HEUR-DOS-003`: Extreme Traffic Asymmetry.
   - `HEUR-DDOS-001`: Multi-Source Distributed Flood ($\ge 3$ distinct sources targeting same destination).
   - `HEUR-ANOMALY-001`: Suspicious TCP Flag Combinations (SYN-FIN, NULL, Xmas scans).
@@ -163,7 +163,7 @@ This document provides a systematic account of the methodology, algorithms, feat
   2. *Live Events*: Unified stream table, filtering, auto-refresh, and structured evidence modal.
   3. *Incidents*: Multi-stage incident chains, escalation indicators, event timeline, resolution workflow.
   4. *Network IDS*: Dual Random Forest metrics, feature importance charts, interactive flow sandbox.
-  5. *Phishing*: URL analysis interface with presets, 28-feature inspection, risk gauge, security guidance.
+  5. *Phishing*: URL analysis interface with presets, 15-feature inspection, risk gauge, security guidance.
   6. *Threat Intelligence*: IOC repository management, indicator search, active/disabled toggles, bulk import.
   7. *Detection Rules*: 14 heuristic and signature rules, live toggle controls, rule evaluation sandbox.
   8. *Prevention*: IPS mode governance (`detect_only`, `simulate`, `enforce`), TTL blocklist management.

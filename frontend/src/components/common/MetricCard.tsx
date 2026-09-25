@@ -1,4 +1,5 @@
 import React from 'react';
+import { cn } from '../../lib/cn';
 
 interface MetricCardProps {
   title: string;
@@ -15,54 +16,33 @@ interface MetricCardProps {
 
 export const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, subtitle, trend, highlight }) => {
   return (
-    <div 
-      style={{
-        background: 'var(--bg-surface)',
-        border: `1px solid var(--border-subtle)`,
-        borderTop: highlight ? '3px solid var(--border-accent)' : '3px solid var(--border-subtle)',
-        borderRadius: '6px',
-        padding: '1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.75rem',
-        position: 'relative',
-        overflow: 'hidden',
-        transition: 'transform 0.15s ease, border-color 0.15s ease'
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        if (!highlight) e.currentTarget.style.borderTopColor = '#666';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        if (!highlight) e.currentTarget.style.borderTopColor = 'var(--border-subtle)';
-      }}
+    <div
+      className={cn(
+        'relative flex flex-col gap-3 overflow-hidden rounded-[6px] border border-t-[3px] border-line bg-surface p-6',
+        '[transition:transform_0.15s_ease,border-color_0.15s_ease] hover:transform-[translateY(-2px)]',
+        highlight ? 'border-t-accent' : 'hover:border-t-[#666]'
+      )}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)' }}>
-        <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div className="flex items-center justify-between text-fg-2">
+        <h4 className="text-[0.85rem] font-semibold tracking-wider uppercase">
           {title}
         </h4>
-        {icon && <div style={{ color: highlight ? 'var(--border-accent)' : 'var(--text-muted)' }}>{icon}</div>}
+        {icon && <div className={highlight ? 'text-accent' : 'text-fg-muted'}>{icon}</div>}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem', marginTop: '0.25rem' }}>
-        <span style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.02em' }}>
+      <div className="mt-1 flex items-end gap-3">
+        <span className="text-[2.5rem] leading-none font-bold tracking-[-0.02em] text-fg">
           {value}
         </span>
         {trend && (
-          <span style={{ 
-            fontSize: '0.8rem', 
-            fontWeight: 600, 
-            color: trend.isPositive ? 'var(--benign-color)' : 'var(--crit-color)',
-            marginBottom: '6px'
-          }}>
+          <span className={cn('mb-[6px] text-[0.8rem] font-semibold', trend.isPositive ? 'text-benign' : 'text-crit')}>
             {trend.isPositive ? '▲' : '▼'} {trend.value}% {trend.label}
           </span>
         )}
       </div>
 
       {subtitle && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
+        <div className="mt-auto text-[0.75rem] text-fg-muted">
           {subtitle}
         </div>
       )}

@@ -8,6 +8,8 @@ import { ErrorState } from '../components/common/ErrorState';
 import { Modal } from '../components/common/Modal';
 import { Sliders, ToggleLeft, ToggleRight, Info, Eye, Play, CheckCircle, ShieldAlert } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '../lib/cn';
+import { alertBox, card, cardHeader, cardTitle, controlBtn, dataTable, evidenceHeader, evidenceSection, formGroup, formLabel, formSelect, formTextarea, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody, tableContainer } from '../ui/classes';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -134,14 +136,14 @@ export const DetectionRulesPage: React.FC = () => {
 
   return (
     <motion.div
-      className="page-body"
+      className={pageBody}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Authoritative Scoring Notice */}
-      <div className="alert-box info">
-        <Info size={18} style={{ flexShrink: 0 }} />
+      <div className={alertBox('info')}>
+        <Info size={18} className="shrink-0" />
         <div>
           <strong>Deterministic Detection Authority:</strong> Rule evaluations produce structured evidence and confidence weights.
           <em> The frontend does not calculate or override threat scores. Backend ThreatScorer remains the sole scoring authority.</em>
@@ -149,26 +151,26 @@ export const DetectionRulesPage: React.FC = () => {
       </div>
 
       {actionNotice && (
-        <div className="alert-box success">
+        <div className={alertBox('success')}>
           <CheckCircle size={16} />
           <span>{actionNotice}</span>
         </div>
       )}
 
       {/* Header Tools */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Sliders size={18} color="var(--accent-cyan)" />
+            <h2 className="text-[1.1rem] font-bold text-fg flex items-center gap-2">
+              <Sliders size={18} color="var(--color-accent)" />
               <span>Deterministic Rule Registry</span>
             </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            <p className="text-[0.78rem] text-fg-muted">
               10 Network Heuristics & 4 Signatures configured for zero-delay deterministic attack identification.
             </p>
           </div>
 
-          <button className="control-btn primary" onClick={() => setIsSandboxOpen(true)}>
+          <button className={controlBtn('primary')} onClick={() => setIsSandboxOpen(true)}>
             <Play size={14} />
             <span>Rule Evaluation Sandbox</span>
           </button>
@@ -176,9 +178,9 @@ export const DetectionRulesPage: React.FC = () => {
       </motion.div>
 
       {/* Filter Bar */}
-      <motion.div variants={itemVariants} className="card" style={{ marginBottom: '1.25rem' }}>
+      <motion.div variants={itemVariants} className={cn(card, 'mb-5')}>
         {/* Quick Category Filter Pills */}
-        <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.85rem' }}>
+        <div className="flex gap-[0.45rem] flex-wrap mb-[0.85rem]">
           {[
             { label: 'All Rules', val: '' },
             { label: 'Port Scan', val: 'PORT_SCAN' },
@@ -191,8 +193,8 @@ export const DetectionRulesPage: React.FC = () => {
             <button
               key={cat.val}
               type="button"
-              className={`control-btn ${categoryFilter === cat.val ? 'primary' : ''}`}
-              style={{ fontSize: '0.74rem', padding: '0.25rem 0.65rem' }}
+              className={controlBtn(categoryFilter === cat.val ? 'primary' : 'default', 'text-[0.74rem] py-1 px-[0.65rem]')}
+
               onClick={() => setCategoryFilter(cat.val)}
             >
               {cat.label}
@@ -200,11 +202,11 @@ export const DetectionRulesPage: React.FC = () => {
           ))}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
-          <div className="form-group" style={{ width: '180px', margin: 0 }}>
-            <label className="form-label">Attack Category</label>
+        <div className="flex flex-wrap gap-4 items-end pt-2 border-t border-t-line">
+          <div className={cn(formGroup, 'w-[180px] m-0')}>
+            <label className={formLabel}>Attack Category</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -218,10 +220,10 @@ export const DetectionRulesPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="form-group" style={{ width: '160px', margin: 0 }}>
-            <label className="form-label">Severity</label>
+          <div className={cn(formGroup, 'w-[160px] m-0')}>
+            <label className={formLabel}>Severity</label>
             <select
-              className="form-select"
+              className={formSelect}
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
             >
@@ -233,15 +235,15 @@ export const DetectionRulesPage: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', paddingBottom: '0.5rem' }}>
+          <div className="flex items-center gap-[0.4rem] pb-2">
             <input
               type="checkbox"
               id="enabledOnlyRules"
               checked={enabledOnly}
               onChange={(e) => setEnabledOnly(e.target.checked)}
-              style={{ cursor: 'pointer' }}
+              className="cursor-pointer"
             />
-            <label htmlFor="enabledOnlyRules" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <label htmlFor="enabledOnlyRules" className="text-[0.8rem] text-fg-2 cursor-pointer">
               Enabled Only ({enabledCount} active)
             </label>
           </div>
@@ -249,12 +251,12 @@ export const DetectionRulesPage: React.FC = () => {
       </motion.div>
 
       {/* Rules Table */}
-      <motion.div variants={itemVariants} className="card">
-        <div className="card-header">
-          <div className="card-title">
+      <motion.div variants={itemVariants} className={card}>
+        <div className={cardHeader}>
+          <div className={cardTitle}>
             <span>Registered Rules ({rules.length})</span>
           </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          <span className="text-[0.78rem] text-fg-muted">
             {enabledCount} of {rules.length} rules active
           </span>
         </div>
@@ -266,8 +268,8 @@ export const DetectionRulesPage: React.FC = () => {
         ) : rules.length === 0 ? (
           <EmptyState title="No rules found." description="No registered rules match the selected filter." />
         ) : (
-          <div className="table-container">
-            <table className="data-table">
+          <div className={tableContainer}>
+            <table className={dataTable}>
               <thead>
                 <tr>
                   <th>Rule ID</th>
@@ -284,53 +286,53 @@ export const DetectionRulesPage: React.FC = () => {
               <tbody>
                 {rules.map((rule) => (
                   <tr key={rule.rule_id}>
-                    <td className="mono" style={{ fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                    <td className={cn(mono, 'font-bold! text-accent!')}>
                       {rule.rule_id}
                     </td>
-                    <td style={{ fontWeight: 600 }}>{rule.name}</td>
+                    <td className="font-semibold!">{rule.name}</td>
                     <td>
-                      <span className="mono" style={{ fontSize: '0.72rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-subtle)', padding: '2px 6px', borderRadius: '4px' }}>
+                      <span className={cn(mono, 'text-[0.72rem] bg-elevated border border-line py-[2px] px-[6px] rounded-[4px]')}>
                         {rule.rule_type || (rule.rule_id?.startsWith('SIG') ? 'SIGNATURE' : 'HEURISTIC')}
                       </span>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '0.75rem' }}>{rule.category}</span>
+                      <span className={cn(mono, 'text-[0.75rem]')}>{rule.category}</span>
                     </td>
                     <td>
                       <SeverityBadge severity={rule.severity} size="sm" />
                     </td>
-                    <td className="mono" style={{ fontSize: '0.75rem' }}>
+                    <td className={cn(mono, 'text-[0.75rem]!')}>
                       {(rule.confidence * 100).toFixed(0)}%
                     </td>
                     <td>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span className="text-[0.75rem] text-fg-muted">
                         {rule.scope || (rule as any).target_event_type || 'flow'}
                       </span>
                     </td>
                     <td>
                       <button
-                        className="control-btn"
-                        style={{ padding: '2px 6px', fontSize: '0.7rem' }}
+                        className={cn(controlBtn(), 'py-[2px] px-[6px] text-[0.7rem]')}
+
                         onClick={() => handleToggleRule(rule)}
                         title={rule.enabled ? 'Click to Disable' : 'Click to Enable'}
                       >
                         {rule.enabled ? (
                           <>
-                            <ToggleRight size={14} color="var(--benign-color)" />
-                            <span style={{ color: 'var(--benign-color)' }}>Enabled</span>
+                            <ToggleRight size={14} color="var(--color-benign)" />
+                            <span className="text-benign">Enabled</span>
                           </>
                         ) : (
                           <>
-                            <ToggleLeft size={14} color="var(--text-muted)" />
-                            <span style={{ color: 'var(--text-muted)' }}>Disabled</span>
+                            <ToggleLeft size={14} color="var(--color-fg-muted)" />
+                            <span className="text-fg-muted">Disabled</span>
                           </>
                         )}
                       </button>
                     </td>
                     <td>
                       <button
-                        className="control-btn"
-                        style={{ padding: '2px 6px' }}
+                        className={cn(controlBtn(), 'py-[2px] px-[6px]')}
+
                         onClick={() => handleInspectRule(rule.rule_id)}
                         title="View Rule Thresholds & Description"
                       >
@@ -352,32 +354,32 @@ export const DetectionRulesPage: React.FC = () => {
           onClose={() => setSelectedRuleDetail(null)}
           title={`Rule Detail: ${selectedRuleDetail.rule.rule_id}`}
           footer={
-            <button className="control-btn" onClick={() => setSelectedRuleDetail(null)}>
+            <button className={controlBtn()} onClick={() => setSelectedRuleDetail(null)}>
               Close
             </button>
           }
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="evidence-section">
-              <div className="evidence-header">
+          <div className="flex flex-col gap-4">
+            <div className={evidenceSection}>
+              <div className={evidenceHeader}>
                 <Info size={14} />
                 <span>Description & Detection Logic</span>
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <p className="text-[0.85rem] text-fg-2">
                 {selectedRuleDetail.rule.description}
               </p>
             </div>
 
-            <div className="evidence-section">
-              <div className="evidence-header">
+            <div className={evidenceSection}>
+              <div className={evidenceHeader}>
                 <Sliders size={14} />
                 <span>Configured System Thresholds</span>
               </div>
-              <div className="kv-grid">
+              <div className={kvGrid}>
                 {Object.entries(selectedRuleDetail.thresholds).map(([k, v]) => (
-                  <div key={k} className="kv-item">
-                    <span className="kv-label">{k}</span>
-                    <span className="kv-value mono">{String(v)}</span>
+                  <div key={k} className={kvItem}>
+                    <span className={kvLabel}>{k}</span>
+                    <span className={cn(mono, kvValue)}>{String(v)}</span>
                   </div>
                 ))}
               </div>
@@ -397,11 +399,11 @@ export const DetectionRulesPage: React.FC = () => {
         title="Direct Rule Evaluation Sandbox (POST /api/rules/evaluate)"
         footer={
           <>
-            <button className="control-btn" onClick={() => setIsSandboxOpen(false)}>
+            <button className={controlBtn()} onClick={() => setIsSandboxOpen(false)}>
               Close
             </button>
             <button
-              className="control-btn primary"
+              className={controlBtn('primary')}
               onClick={handleRunEvaluation}
               disabled={evaluating}
             >
@@ -411,61 +413,56 @@ export const DetectionRulesPage: React.FC = () => {
           </>
         }
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+        <div className="flex flex-col gap-4">
+          <p className="text-[0.82rem] text-fg-2">
             Test a sample security event payload against all enabled rules to verify match triggers and evidence extraction.
           </p>
 
-          <div className="form-group" style={{ margin: 0 }}>
-            <label className="form-label">Event / Flow JSON Payload</label>
+          <div className={cn(formGroup, 'm-0')}>
+            <label className={formLabel}>Event / Flow JSON Payload</label>
             <textarea
-              className="form-textarea"
-              style={{ height: '140px' }}
+              className={cn(formTextarea, 'h-[140px]')}
+
               value={evalPayloadText}
               onChange={(e) => setEvalPayloadText(e.target.value)}
             />
           </div>
 
           {sandboxError && (
-            <div className="alert-box danger">
+            <div className={alertBox('danger')}>
               <ShieldAlert size={16} />
               <span>{sandboxError}</span>
             </div>
           )}
 
           {evalResult && (
-            <div className="evidence-section">
-              <div className="evidence-header">
-                <CheckCircle size={14} color="var(--benign-color)" />
+            <div className={evidenceSection}>
+              <div className={evidenceHeader}>
+                <CheckCircle size={14} color="var(--color-benign)" />
                 <span>Evaluation Results</span>
               </div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+              <p className="text-[0.82rem] text-fg-2 mb-2">
                 Evaluated against {evalResult.total_evaluated} enabled rules. Triggered {evalResult.total_matched} matches.
               </p>
 
               {evalResult.matches.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                <div className="text-fg-muted text-[0.82rem]">
                   No rules matched this payload.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="flex flex-col gap-2">
                   {evalResult.matches.map((m, idx) => (
                     <div
                       key={idx}
-                      style={{
-                        background: 'var(--crit-bg)',
-                        border: '1px solid var(--crit-border)',
-                        padding: '0.5rem 0.75rem',
-                        borderRadius: '6px',
-                      }}
+                      className="bg-crit-bg border border-crit py-2 px-3 rounded-[6px]"
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span className="mono" style={{ fontWeight: 700, color: 'var(--crit-color)' }}>
+                      <div className="flex justify-between items-center">
+                        <span className={cn(mono, 'font-bold text-crit')}>
                           {m.rule_id}: {m.rule_name}
                         </span>
                         <SeverityBadge severity={m.severity} size="sm" />
                       </div>
-                      <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                      <p className="text-[0.78rem] text-fg-2 mt-1">
                         {m.evidence}
                       </p>
                     </div>
