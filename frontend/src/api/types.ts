@@ -325,7 +325,7 @@ export interface IOCItem {
   ioc_id: string;
   ioc_type: IOCType;
   indicator: string;
-  normalized_indicator: string;
+  indicator_normalized: string;
   severity: Severity;
   confidence: number;
   category?: string;
@@ -425,6 +425,24 @@ export interface SystemStatusResponse {
   feature_names: string[];
   database_path: string;
   uptime_seconds: number;
+}
+
+export interface VulnerableAppStatusResponse {
+  status: string;
+  url: string;
+  timestamp: string;
+}
+
+export interface VulnerableUser {
+  id: number;
+  username: string;
+  password: string;
+  full_name: string;
+  email: string;
+}
+
+export interface UpdatePasswordRequest {
+  new_password: string;
 }
 
 // ----------------------

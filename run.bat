@@ -23,7 +23,8 @@ if '%errorlevel%' NEQ '0' (
     echo.
     set "PROJECT_ROOT=%~dp0"
     
-    echo [1/4] Opening Port 5174 for Kali access...
+    echo [1/4] Opening Ports 5173 (Dashboard) and 5174 (Vulnerable App) for network access...
+    powershell -Command "New-NetFirewallRule -DisplayName 'CIPHER_TEMP_DASHBOARD' -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow"
     powershell -Command "New-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI' -Direction Inbound -LocalPort 5174 -Protocol TCP -Action Allow"
     
     echo [2/4] Launching Backend Terminal...
@@ -45,8 +46,9 @@ if '%errorlevel%' NEQ '0' (
     echo ---------------------------------------------------
     pause
     
-    echo Closing Port 5174...
-    powershell -Command "Remove-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI'"
+    echo Closing Ports...
+    powershell -Command "Remove-NetFirewallRule -DisplayName 'CIPHER_TEMP_DASHBOARD' -ErrorAction SilentlyContinue"
+    powershell -Command "Remove-NetFirewallRule -DisplayName 'CIPHER_TEMP_KALI' -ErrorAction SilentlyContinue"
     
     echo Closing CIPHER terminals...
     taskkill /FI "WindowTitle eq CIPHER Backend*" /T /F >nul 2>&1

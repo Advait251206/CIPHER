@@ -88,6 +88,7 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [blockedIps, setBlockedIps] = useState<Set<string>>(new Set());
+  const [permBlockedIps, setPermBlockedIps] = useState<Map<string, string>>(new Map());
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -707,8 +708,13 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
     try {
       const list = await api.network.getBlocklist('ACTIVE');
       setBlockedIps(new Set(list.map(b => b.ip)));
+      
+      const intelList = await api.threatIntel.list({ ioc_type: 'IP', limit: 500 });
+      const permMap = new Map<string, string>();
+      intelList.iocs.forEach(ioc => permMap.set(ioc.indicator_normalized, ioc.ioc_id));
+      setPermBlockedIps(permMap);
     } catch (err) {
-      console.error('Failed to fetch blocklist', err);
+      console.error('Failed to fetch blocklists', err);
     }
   };
 
@@ -769,7 +775,12 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
 
   const executeUnblock = async (ip: string) => {
     try {
-      await api.network.unblockIp(ip);
+      if (permBlockedIps.has(ip)) {
+        await api.threatIntel.delete(permBlockedIps.get(ip)!);
+      }
+      if (blockedIps.has(ip) || !permBlockedIps.has(ip)) {
+        await api.network.unblockIp(ip).catch(() => {});
+      }
       setActionSuccess(`IP ${ip} successfully unblocked.`);
       setTimeout(() => setActionSuccess(null), 5000);
       await fetchBlocklist();
@@ -1155,7 +1166,7 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
               </button>
               {/* Block Actions */}
               {selectedIncident.incident.source_ip && (
-                blockedIps.has(selectedIncident.incident.source_ip) ? (
+                (blockedIps.has(selectedIncident.incident.source_ip) || permBlockedIps.has(selectedIncident.incident.source_ip)) ? (
                   <button
                     className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] hover:bg-[#e2e8f0]')}
                     onClick={() => executeUnblock(selectedIncident.incident.source_ip!)}

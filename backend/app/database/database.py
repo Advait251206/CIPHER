@@ -754,3 +754,15 @@ class Database:
                 "incidents_by_severity": by_severity,
                 "top_attacking_sources": top_sources
             }
+
+
+    def delete_event(self, event_id: str) -> bool:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM security_events WHERE event_id = ?', (event_id,))
+                conn.commit()
+                return cursor.rowcount > 0
+        except Exception as e:
+            logger.error(f'Database error deleting event {event_id}: {e}')
+            return False

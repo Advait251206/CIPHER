@@ -3,11 +3,11 @@ import { api } from '../api/client';
 import { PhishingAnalyzeResponse } from '../api/types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { RiskGauge } from '../components/common/RiskGauge';
-import { Globe, Search, ShieldCheck, AlertTriangle, Info, CheckCircle2, FileText, Printer } from 'lucide-react';
+import { Globe, Search, ShieldCheck, AlertTriangle, Info, CheckCircle2, FileText, Printer, Compass, Download, Cpu } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import { Toast, type ToastType } from '../components/common/Toast';
 import { cn } from '../lib/cn';
-import { alertBox, card, cardHeader, cardTitle, controlBtn, evidenceHeader, evidenceSection, formGroup, formInput, formLabel, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody } from '../ui/classes';
+import { alertBox, card, cardHeader, cardTitle, codeTag, controlBtn, evidenceHeader, evidenceSection, formGroup, formInput, formLabel, kvGrid, kvItem, kvLabel, kvValue, mono, pageBody } from '../ui/classes';
 
 const getLegalFrameworks = (categories: string[]) => {
   const frameworks: { name: string, desc: string }[] = [
@@ -88,6 +88,13 @@ export const PhishingPage: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<PhishingAnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modelLoaded, setModelLoaded] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    api.health.getHealth()
+      .then(h => setModelLoaded(h.model_loaded))
+      .catch(() => setModelLoaded(false));
+  }, []);
 
   // Toast notification
   const [toast, setToast] = useState<{ message: string; type: ToastType; visible: boolean }>({
@@ -645,6 +652,143 @@ export const PhishingPage: React.FC = () => {
           </div>
         </motion.div>
       )}
+      
+      {/* Extension and ML Telemetry Cards */}
+      <motion.div 
+        variants={itemVariants}
+        className="grid grid-cols-[1fr_1fr] gap-6 mt-6"
+      >
+        {/* Browser Extension Card */}
+        <div className={card}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Compass size={18} color="var(--color-accent)" />
+              <span>CIPHER Browser Guard (Chromium Extension)</span>
+            </div>
+            <span>Manifest V3</span>
+          </div>
+
+          <p className="text-[0.84rem] text-fg-2 leading-[1.5] mt-0 mx-0 mb-4">
+            Protect against web phishing on any site directly within your browser.
+            Features automatic badge risk alerts and an active interstitial block screen for high-confidence phishing domains.
+          </p>
+
+          <div className="flex flex-col gap-[0.6rem] text-[0.8rem] text-fg-2 mb-5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={15} color="#10b981" />
+              <span><strong>Strict Privacy:</strong> Zero cloud analytics; communicates exclusively with <code className={codeTag}>http://127.0.0.1:8000</code></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={15} color="#10b981" />
+              <span><strong>Web Integration:</strong> Seamless background scanning of all visited URLs</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={15} color="#10b981" />
+              <span><strong>Active Shield:</strong> Intercepts malicious links before credentials can be submitted</span>
+            </div>
+          </div>
+
+          <div className="flex gap-[0.6rem] flex-wrap mb-[0.85rem]">
+            <button
+              type="button"
+              className={cn(controlBtn('primary'), 'flex items-center gap-[0.4rem] text-[0.78rem] py-[0.4rem] px-3')}
+              onClick={async () => {
+                try {
+                  if (api.extension?.launchChrome) {
+                    await api.extension.launchChrome();
+                    showToast('Chrome launched with CIPHER extension pre-loaded!', 'success');
+                  }
+                } catch (e: any) {
+                  showToast(e.detail || e.message || 'Failed to auto-launch Chrome', 'error');
+                }
+              }}
+            >
+              <Compass size={14} />
+              <span>Launch Chrome with Extension</span>
+            </button>
+
+            <a
+              href={api.extension?.getDownloadUrl ? api.extension.getDownloadUrl() : '/api/extension/download'}
+              download="cipher-browser-guard.zip"
+              className={cn(controlBtn(), 'inline-flex items-center gap-[0.4rem] text-[0.78rem] py-[0.4rem] px-3 no-underline')}
+            >
+              <Download size={13} />
+              <span>Download (.zip)</span>
+            </a>
+          </div>
+
+          <div className="p-3 rounded-[6px] bg-[rgba(15,23,42,0.7)] border border-line text-[0.78rem]">
+            <strong className="text-fg block mb-[0.3rem]">Manual Setup Guide:</strong>
+            <ol className="m-0 pl-[1.2rem] flex flex-col gap-1">
+              <li>Open <code className={codeTag}>chrome://extensions</code> and enable <strong>Developer Mode</strong>.</li>
+              <li>Click <strong>Load unpacked</strong> and choose <code className={codeTag}>cipher-browser-extension</code> in the project root.</li>
+            </ol>
+          </div>
+        </div>
+
+        {/* Model Telemetry Card */}
+        <div className={card}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Cpu size={18} color="var(--color-accent)" />
+              <span>URL Phishing Machine Learning Engine</span>
+            </div>
+            {modelLoaded ? (
+              <span>Model Active</span>
+            ) : (
+              <span>Loading...</span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-[0.85rem]">
+            <div className="grid grid-cols-[1fr_1fr] gap-3">
+              <div className="p-[0.6rem] rounded-[6px] bg-[rgba(30,41,59,0.4)]">
+                <div className="text-[0.72rem] text-fg-muted">Classifier Architecture</div>
+                <div className="text-[0.9rem] font-semibold text-fg">Random Forest (100 trees, depth=22)</div>
+              </div>
+              <div className="p-[0.6rem] rounded-[6px] bg-[rgba(30,41,59,0.4)]">
+                <div className="text-[0.72rem] text-fg-muted">Feature Dimensions</div>
+                <div className="text-[0.9rem] font-semibold text-fg">15 Lexical Features</div>
+              </div>
+            </div>
+
+            <div className="text-[0.8rem] font-semibold text-fg mt-1">
+              Held-Out Test Set Metrics (35,305 samples):
+            </div>
+
+            <div className="grid grid-cols-[repeat(3,1fr)] gap-2">
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">Accuracy</div>
+                <div className="text-[0.85rem] font-semibold text-[#10b981]">98.60%</div>
+              </div>
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">F1-Score</div>
+                <div className="text-[0.85rem] font-semibold text-accent">98.35%</div>
+              </div>
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">ROC-AUC</div>
+                <div className="text-[0.85rem] font-semibold text-[#38bdf8]">0.9970</div>
+              </div>
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">Precision</div>
+                <div className="text-[0.85rem] font-semibold">98.94%</div>
+              </div>
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">Recall</div>
+                <div className="text-[0.85rem] font-semibold">97.77%</div>
+              </div>
+              <div className="p-2 rounded-[4px] bg-[rgba(15,23,42,0.5)] text-center">
+                <div className="text-[0.68rem] text-fg-muted">Inference Speed</div>
+                <div className="text-[0.85rem] font-semibold">~120,000 /s</div>
+              </div>
+            </div>
+
+            <div className="text-[0.72rem] text-fg-muted mt-1">
+              Dataset: PhiUSIIL Phishing URL Dataset (164,759 training samples, deduplicated).
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       <Toast
         message={toast.message}

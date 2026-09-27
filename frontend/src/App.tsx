@@ -13,6 +13,7 @@ import { DetectionRulesPage } from './pages/DetectionRulesPage';
 import { PreventionPage } from './pages/PreventionPage';
 import { SensorPage } from './pages/SensorPage';
 import { SystemHealthPage } from './pages/SystemHealthPage';
+import { UsersPage } from './pages/UsersPage';
 import { ExtensionModal } from './components/common/ExtensionModal';
 import { api } from './api/client';
 import { Severity, PreventionMode } from './api/types';
@@ -252,6 +253,8 @@ export const App: React.FC = () => {
               {currentTab === 'prevention' && <PreventionPage refreshTrigger={refreshKey} onSetMode={handleSetMode} />}
 
               {currentTab === 'sensor' && <SensorPage />}
+
+              {currentTab === 'users' && <UsersPage />}
 
               {currentTab === 'health' && <SystemHealthPage />}
             </motion.div>

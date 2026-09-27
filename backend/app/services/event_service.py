@@ -86,3 +86,7 @@ class EventService:
 
     def get_stats(self) -> Dict[str, Any]:
         return self.db.get_stats()
+
+
+    def delete_event(self, event_id: str) -> bool:
+        return self.db.delete_event(event_id)

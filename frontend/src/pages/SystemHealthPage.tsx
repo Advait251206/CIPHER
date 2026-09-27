@@ -8,7 +8,7 @@ import {
 } from '../api/types';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
-import { HeartPulse, Server, Database, Cpu, Radio, Shield, CheckCircle2, AlertOctagon } from 'lucide-react';
+import { HeartPulse, Server, Database, Cpu, Radio, Shield, CheckCircle2, AlertOctagon, Globe } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { card, cardHeader, cardTitle, clickableCard, kvGrid, kvItem, kvLabel, kvValue, modalBody, modalHeader, modalPanel, modalTitle, modeBadge, mono, pageBody } from '../ui/classes';
@@ -132,6 +132,20 @@ const SYSTEM_DETAILS = {
       'Bi-directional flow matching',
       'Zero-copy packet parsing where possible'
     ]
+  },
+  vulnerable_app: {
+    title: 'Vulnerable Test Target',
+    description: 'A mock vulnerable web application designed specifically to test CIPHER\'s detection and prevention capabilities.',
+    dataset: 'N/A',
+    framework: 'FastAPI / SQLite (No Auth)',
+    features: [
+      'SQL Injection Vectors (Login/Search)',
+      'Cross-Site Scripting (XSS) via Comments',
+      'Path Traversal / LFI endpoints',
+      'Exposed Admin Panel',
+      'No Rate Limiting (Brute Force testable)',
+      'Unencrypted Session Cookies'
+    ]
   }
 };
 
@@ -144,6 +158,7 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
   const [netHealth, setNetHealth] = useState<NetworkHealthResponse | null>(null);
   const [sensorStatus, setSensorStatus] = useState<SensorStatusResponse | null>(null);
+  const [vulnAppStatus, setVulnAppStatus] = useState<import('../api/types').VulnerableAppStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [liveUptime, setLiveUptime] = useState<number | null>(null);
@@ -169,17 +184,19 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
     try {
       setLoading(true);
       setError(null);
-      const [hRes, sRes, netHRes, sensorRes] = await Promise.allSettled([
+      const [hRes, sRes, netHRes, sensorRes, vulnRes] = await Promise.allSettled([
         api.health.getHealth(),
         api.health.getSystemStatus(),
         api.network.getHealth(),
         api.network.getSensorStatus(),
+        api.health.getVulnerableAppStatus(),
       ]);
 
       if (hRes.status === 'fulfilled') setHealth(hRes.value);
       if (sRes.status === 'fulfilled') setSystemStatus(sRes.value);
       if (netHRes.status === 'fulfilled') setNetHealth(netHRes.value);
       if (sensorRes.status === 'fulfilled') setSensorStatus(sensorRes.value);
+      if (vulnRes.status === 'fulfilled') setVulnAppStatus(vulnRes.value);
 
       if (hRes.status === 'rejected' && netHRes.status === 'rejected') {
         throw new Error('Unable to connect to CIPHER backend service.');
@@ -261,10 +278,7 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
             )}
           </div>
           <div className={kvGrid}>
-            <div className={kvItem}>
-              <span className={kvLabel}>API Version</span>
-              <span className={cn(mono, kvValue)}>{health?.version || '1.1.0'}</span>
-            </div>
+
             <div className={kvItem}>
               <span className={kvLabel}>Environment</span>
               <span className={cn(mono, kvValue)}>{systemStatus?.environment || 'local'}</span>
@@ -417,6 +431,35 @@ export const SystemHealthPage: React.FC<SystemHealthPageProps> = ({ refreshTrigg
             <div className={kvItem}>
               <span className={kvLabel}>Packets Captured</span>
               <span className={cn(mono, kvValue)}>{sensorStatus?.packets_captured ?? 0}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 7. Vulnerable App Target */}
+        <div className={cn(card, clickableCard)} onClick={() => setSelectedCard('vulnerable_app')}>
+          <div className={cardHeader}>
+            <div className={cardTitle}>
+              <Globe size={16} color="var(--color-accent)" />
+              <span>Vulnerable App Target</span>
+            </div>
+            {vulnAppStatus?.status === 'online' ? (
+              <CheckCircle2 size={16} color="var(--color-benign)" />
+            ) : (
+              <AlertOctagon size={16} color="var(--color-crit)" />
+            )}
+          </div>
+          <div className={kvGrid}>
+            <div className={kvItem}>
+              <span className={kvLabel}>Status</span>
+              <span className={cn(kvValue, (vulnAppStatus?.status === 'online' ? 'text-benign' : 'text-crit'))}>
+                {vulnAppStatus?.status === 'online' ? 'Online' : 'Offline'}
+              </span>
+            </div>
+            <div className={cn(kvItem, '[grid-column:1_/_-1]')}>
+              <span className={kvLabel}>Target URL</span>
+              <span className={cn(mono, kvValue, 'text-[0.75rem]')}>
+                {vulnAppStatus?.url || 'http://localhost:5174/'}
+              </span>
             </div>
           </div>
         </div>

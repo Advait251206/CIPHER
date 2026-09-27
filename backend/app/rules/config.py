@@ -26,6 +26,6 @@ DDOS_WINDOW_SECONDS: float = float(os.getenv("CIPHER_HEURISTIC_DDOS_WINDOW", 60.
 MAX_STATE_ENTRIES: int = int(os.getenv("CIPHER_HEURISTIC_MAX_STATE_ENTRIES", 10000))
 
 # Well-known Service Ports
-AUTH_PORTS: Set[int] = {21, 22, 23, 445, 3389}  # FTP, SSH, Telnet, SMB, RDP
+AUTH_PORTS: Set[int] = {21, 22, 23, 445, 3389, 5174}  # FTP, SSH, Telnet, SMB, RDP, VulnApp
 IRC_PORTS: Set[int] = {6667, 6668, 6669, 7000}  # Legacy IRC communication
 WEB_PORTS: Set[int] = {80, 443, 8080, 8443}

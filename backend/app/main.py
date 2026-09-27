@@ -116,6 +116,10 @@ app.include_router(extension.router, prefix="/api")
 from app.api import waf
 app.include_router(waf.router, prefix="/api")
 
+# Vulnerable App Users Router
+from app.api import users
+app.include_router(users.router, prefix="/api")
+
 
 @app.get("/", tags=["Root"])
 def root_redirect():

@@ -153,6 +153,18 @@ export const api = {
   health: {
     getHealth: () => request<HealthResponse>('/health'),
     getSystemStatus: () => request<SystemStatusResponse>('/system/status'),
+    getVulnerableAppStatus: () => request<import('./types').VulnerableAppStatusResponse>('/vulnerable-app-status'),
+  },
+
+  // Vulnerable App Users Management
+  vulnerableUsers: {
+    list: () => request<import('./types').VulnerableUser[]>('/vulnerable-users/'),
+    delete: (id: number) => request<{status: string, message: string}>(`/vulnerable-users/${id}`, { method: 'DELETE' }),
+    updatePassword: (id: number, payload: import('./types').UpdatePasswordRequest) => 
+      request<{status: string, message: string}>(`/vulnerable-users/${id}/password`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      })
   },
 
   // Unified Security Events
@@ -170,6 +182,10 @@ export const api = {
     }) => request<EventsListResponse>('/events', { params }),
     get: (id: string) => request<SecurityEventItem>(`/events/${encodeURIComponent(id)}`),
     getStats: () => request<SystemStatsResponse>('/stats'),
+    delete: (id: string) => 
+      request<{status: string, deleted: boolean, event_id: string}>(`/events/${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      }),
   },
 
   // Correlated Incidents

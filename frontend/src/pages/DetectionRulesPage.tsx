@@ -6,6 +6,7 @@ import { LoadingState } from '../components/common/LoadingState';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Modal } from '../components/common/Modal';
+import { WafControlPanel } from '../components/common/WafControlPanel';
 import { Sliders, ToggleLeft, ToggleRight, Info, Eye, Play, CheckCircle, ShieldAlert } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import { cn } from '../lib/cn';
@@ -175,6 +176,11 @@ export const DetectionRulesPage: React.FC = () => {
             <span>Rule Evaluation Sandbox</span>
           </button>
         </div>
+      </motion.div>
+
+      {/* WAF Global Protection Panel */}
+      <motion.div variants={itemVariants} className="mb-5">
+        <WafControlPanel />
       </motion.div>
 
       {/* Filter Bar */}

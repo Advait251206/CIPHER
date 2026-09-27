@@ -1,4 +1,5 @@
 import re
+import os
 import logging
 from typing import Optional, Dict, Tuple
 
@@ -10,11 +11,15 @@ class WAFEngine:
     Uses regex signatures to detect SQLi, XSS, and tracks basic Brute Force states.
     """
     def __init__(self):
-        # Configuration toggles (can be updated via API)
+        default_mode = os.getenv("CIPHER_PREVENTION_MODE", "enforce").lower()
+        if default_mode not in ["detect", "enforce", "off"]:
+            default_mode = "enforce"
+
         self.config = {
-            "sql_protection": "detect",   # 'detect', 'enforce', or 'off'
-            "xss_protection": "detect",
-            "brute_force_protection": "detect"
+            "sql_protection": default_mode,   # 'detect', 'enforce', or 'off'
+            "xss_protection": default_mode,
+            "path_traversal_protection": default_mode,
+            "brute_force_protection": default_mode
         }
         
         # SQL Injection Signatures
@@ -34,6 +39,14 @@ class WAFEngine:
             re.compile(r"(?i)(on\w+\s*=)", re.IGNORECASE),  # onerror=, onload=
             re.compile(r"(?i)(<img\s+src=.*?onerror=)", re.IGNORECASE)
         ]
+        
+        # Path Traversal Signatures
+        self.path_traversal_patterns = [
+            re.compile(r"(?i)(\.\./\.\./)", re.IGNORECASE),
+            re.compile(r"(?i)(\.\.\\\.\.\\)", re.IGNORECASE),
+            re.compile(r"(?i)(%2e%2e%2f%2e%2e%2f)", re.IGNORECASE),
+            re.compile(r"(?i)(/etc/passwd|Windows\\win\.ini)", re.IGNORECASE)
+        ]
 
     def update_config(self, feature: str, mode: str):
         if feature in self.config and mode in ["off", "detect", "enforce"]:
@@ -45,17 +58,27 @@ class WAFEngine:
         Inspects raw HTTP payload (usually POST bodies or URL params)
         Returns: (Attack Type, Enforcement Mode) if malicious, else (None, "off")
         """
+        import urllib.parse
+        # Decode URL-encoded payloads (like from a browser form submission)
+        decoded_payload = urllib.parse.unquote(payload_str)
+
         # Check SQLi
         if self.config["sql_protection"] != "off":
             for pattern in self.sqli_patterns:
-                if pattern.search(payload_str):
+                if pattern.search(decoded_payload) or pattern.search(payload_str):
                     return "SQL_INJECTION", self.config["sql_protection"]
                     
         # Check XSS
         if self.config["xss_protection"] != "off":
             for pattern in self.xss_patterns:
-                if pattern.search(payload_str):
+                if pattern.search(decoded_payload) or pattern.search(payload_str):
                     return "XSS", self.config["xss_protection"]
+                    
+        # Check Path Traversal
+        if self.config.get("path_traversal_protection", "off") != "off":
+            for pattern in self.path_traversal_patterns:
+                if pattern.search(decoded_payload) or pattern.search(payload_str):
+                    return "DIRECTORY_TRAVERSAL", self.config["path_traversal_protection"]
                     
         return None, "off"
 

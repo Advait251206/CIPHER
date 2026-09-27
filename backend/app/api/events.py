@@ -61,3 +61,16 @@ def get_stats():
     """Aggregates local threat statistics: total scans, phishing count, suspicious count, average risk."""
     stats_data = event_service.get_stats()
     return SystemStatsResponse(**stats_data)
+
+
+@router.delete("/events/{event_id}", summary="Delete Security Event by ID")
+def delete_event(event_id: str):
+    """Deletes a specific security scan record by its unique UUID."""
+    success = event_service.delete_event(event_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Security event '{event_id}' was not found in local database."
+        )
+    return {"status": "success", "deleted": True, "event_id": event_id}
+

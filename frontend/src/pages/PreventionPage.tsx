@@ -6,7 +6,7 @@ import { LoadingState } from '../components/common/LoadingState';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { ShieldAlert, Lock, Unlock, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Lock, Unlock, Clock, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { alertBox, card, cardHeader, cardTitle, codeTag, controlBtn, dataTable, modeBadge, mono, navBadge, pageBody, tableContainer } from '../ui/classes';
@@ -46,7 +46,12 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
 
   // Unblock confirmation
   const [ipToUnblock, setIpToUnblock] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [isUnblocking, setIsUnblocking] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const fetchPreventionData = async () => {
@@ -95,6 +100,53 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
     }
   };
 
+  const handleConfirmDeleteEvent = async () => {
+    if (!eventToDelete) return;
+    try {
+      setIsDeleting(true);
+      await api.events.delete(eventToDelete);
+      setActionNotice(`Action log entry successfully deleted.`);
+      setEventToDelete(null);
+      setSelectedEvents(new Set());
+      fetchPreventionData();
+    } catch (err: any) {
+      setError(err.message || `Failed to delete log entry.`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedEvents.size === 0) return;
+    try {
+      setIsBulkDeleting(true);
+      await Promise.all(Array.from(selectedEvents).map(id => api.events.delete(id)));
+      setActionNotice(`Successfully deleted ${selectedEvents.size} log entries.`);
+      setShowBulkConfirm(false);
+      setSelectedEvents(new Set());
+      fetchPreventionData();
+    } catch (err: any) {
+      setError(err.message || `Failed to bulk delete log entries.`);
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const toggleSelectEvent = (id: string) => {
+    const next = new Set(selectedEvents);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedEvents(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEvents.size === preventionEvents.length) {
+      setSelectedEvents(new Set());
+    } else {
+      setSelectedEvents(new Set(preventionEvents.map(e => e.event_id)));
+    }
+  };
+
   const mode = health?.prevention_mode || 'enforce';
 
   return (
@@ -132,9 +184,9 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4 mt-3">
           <motion.div
-            onClick={() => onSetMode && mode !== 'detect_only' && onSetMode('detect_only')}
+            onClick={() => onSetMode && onSetMode('detect_only')}
             whileHover={{ y: -3, scale: 1.01 }}
-            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'detect_only' ? '[background:linear-gradient(135deg,rgba(22,163,74,0.1)_0%,rgba(22,163,74,0.15)_100%)]' : 'bg-elevated'), (mode === 'detect_only' ? '[box-shadow:0_4px_12px_rgba(22,163,74,0.15)]' : '[box-shadow:none]'), (mode === 'detect_only' ? 'cursor-default' : 'cursor-pointer'), 'border-[1.5px]', mode === 'detect_only' ? 'border-benign' : 'border-line')}
+            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'detect_only' ? '[background:linear-gradient(135deg,rgba(22,163,74,0.1)_0%,rgba(22,163,74,0.15)_100%)]' : 'bg-elevated'), (mode === 'detect_only' ? '[box-shadow:0_4px_12px_rgba(22,163,74,0.15)]' : '[box-shadow:none]'), 'cursor-pointer', 'border-[1.5px]', mode === 'detect_only' ? 'border-benign' : 'border-line')}
           >
             <div className="flex items-center justify-between mb-2">
               <span className={cn(mono, 'font-extrabold text-[0.85rem] text-low')}>
@@ -148,9 +200,9 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
           </motion.div>
 
           <motion.div
-            onClick={() => onSetMode && mode !== 'enforce' && onSetMode('enforce')}
+            onClick={() => onSetMode && onSetMode('enforce')}
             whileHover={{ y: -3, scale: 1.01 }}
-            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'enforce' ? '[background:linear-gradient(135deg,rgba(220,38,38,0.1)_0%,rgba(220,38,38,0.15)_100%)]' : 'bg-elevated'), (mode === 'enforce' ? '[box-shadow:0_4px_12px_rgba(220,38,38,0.15)]' : '[box-shadow:none]'), (mode === 'enforce' ? 'cursor-default' : 'cursor-pointer'), 'border-[1.5px]', mode === 'enforce' ? 'border-crit' : 'border-line')}
+            className={cn('p-5 rounded-[8px] [transition:all_0.2s_ease]', (mode === 'enforce' ? '[background:linear-gradient(135deg,rgba(220,38,38,0.1)_0%,rgba(220,38,38,0.15)_100%)]' : 'bg-elevated'), (mode === 'enforce' ? '[box-shadow:0_4px_12px_rgba(220,38,38,0.15)]' : '[box-shadow:none]'), 'cursor-pointer', 'border-[1.5px]', mode === 'enforce' ? 'border-crit' : 'border-line')}
           >
             <div className="flex items-center justify-between mb-2">
               <span className={cn(mono, 'font-extrabold text-[0.85rem] text-crit')}>
@@ -238,27 +290,66 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
               <Clock size={16} color="var(--color-accent)" />
               <span>Recent Prevention Actions Log</span>
             </div>
+            {selectedEvents.size > 0 && (
+              <button
+                className={cn(controlBtn(), 'border-crit text-crit hover:bg-crit hover:text-white px-3')}
+                onClick={() => setShowBulkConfirm(true)}
+              >
+                <Trash2 size={14} className="mr-2" />
+                Delete Selected ({selectedEvents.size})
+              </button>
+            )}
           </div>
           <div className={tableContainer}>
             <table className={dataTable}>
               <thead>
                 <tr>
+                  <th style={{ width: '40px' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedEvents.size > 0 && selectedEvents.size === preventionEvents.length}
+                      ref={(input) => {
+                        if (input) {
+                          input.indeterminate = selectedEvents.size > 0 && selectedEvents.size < preventionEvents.length;
+                        }
+                      }}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th>Timestamp</th>
                   <th>Source IP</th>
                   <th>Classification</th>
                   <th>Severity</th>
                   <th>Action Applied</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {preventionEvents.map((pe) => (
-                  <tr key={pe.event_id}>
+                  <tr key={pe.event_id} className={selectedEvents.has(pe.event_id) ? 'bg-line/20' : ''}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedEvents.has(pe.event_id)}
+                        onChange={() => toggleSelectEvent(pe.event_id)}
+                      />
+                    </td>
                     <td className={cn(mono, 'text-[0.75rem]!')}>{pe.timestamp}</td>
                     <td className={mono}>{pe.source_ip || 'N/A'}</td>
                     <td>{pe.attack_type || pe.classification}</td>
                     <td><SeverityBadge severity={pe.severity} size="sm" /></td>
                     <td className={cn(mono, 'font-bold! text-crit!')}>
                       {pe.action || pe.metadata?.prevention_action || 'BLOCK'}
+                    </td>
+                    <td>
+                      <button
+                        className={cn(controlBtn(), 'py-[3px] px-[8px] text-[0.75rem] text-fg-muted hover:text-crit hover:border-crit')}
+                        onClick={() => setEventToDelete(pe.event_id)}
+                        title="Delete this log entry"
+                      >
+                        <Trash2 size={12} />
+                        <span>Delete</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -286,6 +377,40 @@ export const PreventionPage: React.FC<PreventionPageProps> = ({ refreshTrigger =
         }
         confirmLabel="Unblock IP"
         isLoading={isUnblocking}
+      />
+
+      <ConfirmDialog
+        isOpen={showBulkConfirm}
+        onClose={() => setShowBulkConfirm(false)}
+        onConfirm={handleBulkDelete}
+        title="Bulk Delete Action Logs"
+        message={
+          <div>
+            <p>Are you sure you want to delete {selectedEvents.size} prevention log {selectedEvents.size === 1 ? 'entry' : 'entries'}?</p>
+            <p className="mt-2 text-[0.82rem] text-fg-muted">
+              This action is permanent and will remove the records from the local database.
+            </p>
+          </div>
+        }
+        confirmLabel="Delete Logs"
+        isLoading={isBulkDeleting}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(eventToDelete)}
+        onClose={() => setEventToDelete(null)}
+        onConfirm={handleConfirmDeleteEvent}
+        title="Delete Action Log Entry"
+        message={
+          <div>
+            <p>Are you sure you want to delete this prevention log entry?</p>
+            <p className="mt-2 text-[0.82rem] text-fg-muted">
+              This action is permanent and will remove the record from the local database.
+            </p>
+          </div>
+        }
+        confirmLabel="Delete Log"
+        isLoading={isDeleting}
       />
     </motion.div>
   );
