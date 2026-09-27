@@ -7,6 +7,10 @@ TTL expirations, and manual operator overrides.
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta, timezone
 from app.database.database import Database
+import subprocess
+import logging
+
+logger = logging.getLogger("cipher.blocklist")
 
 
 class IPBlocklistManager:
@@ -57,6 +61,20 @@ class IPBlocklistManager:
             source_event_id=source_event_id
         )
 
+        # ADD OS FIREWALL RULE (Works because backend is run as Admin via run.bat)
+        try:
+            rule_name = f"CIPHER_BLOCK_{ip}"
+            subprocess.run([
+                "netsh", "advfirewall", "firewall", "add", "rule",
+                f"name={rule_name}",
+                "dir=in",
+                "action=block",
+                f"remoteip={ip}"
+            ], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            logger.info(f"[FIREWALL] Added OS-level block rule for {ip}")
+        except Exception as e:
+            logger.error(f"[FIREWALL] Failed to add OS rule for {ip}: {e}")
+
         return {
             "ip": ip,
             "status": "ACTIVE",
@@ -70,7 +88,20 @@ class IPBlocklistManager:
 
     def unblock_ip(self, ip: str) -> bool:
         """Manually unblocks a previously contained IP."""
-        return self.db.remove_blocked_ip(ip)
+        success = self.db.remove_blocked_ip(ip)
+
+        # REMOVE OS FIREWALL RULE
+        try:
+            rule_name = f"CIPHER_BLOCK_{ip}"
+            subprocess.run([
+                "netsh", "advfirewall", "firewall", "delete", "rule",
+                f"name={rule_name}"
+            ], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            logger.info(f"[FIREWALL] Removed OS-level block rule for {ip}")
+        except Exception as e:
+            logger.error(f"[FIREWALL] Failed to remove OS rule for {ip}: {e}")
+
+        return success
 
     def list_blocked(self, status: str = "ACTIVE") -> List[Dict[str, Any]]:
         """Lists currently blocked IPs."""

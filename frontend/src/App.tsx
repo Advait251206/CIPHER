@@ -5,7 +5,6 @@ import { Header } from './components/layout/Header';
 import { OverviewPage } from './pages/OverviewPage';
 import { SecurityEventsPage } from './pages/SecurityEventsPage';
 import { IncidentChainsPage } from './pages/IncidentChainsPage';
-import { NetworkIDPSPage } from './pages/NetworkIDPSPage';
 
 import { PhishingPage } from './pages/PhishingPage';
 import { EmailPage } from './pages/EmailPage';
@@ -127,11 +126,6 @@ export const App: React.FC = () => {
           title: 'Incident Chains',
           subtitle: 'Correlated threats with Risk Score and action resolution',
         };
-      case 'network_idps':
-        return {
-          title: 'Network IDPS Analytics',
-          subtitle: 'Dedicated view for network anomaly analysis and active bidirectional flows',
-        };
       case 'phishing':
         return {
           title: 'Phishing Threat Detector',
@@ -246,8 +240,6 @@ export const App: React.FC = () => {
               {currentTab === 'incidents' && (
                 <IncidentChainsPage initialIncidentId={selectedIncidentId} refreshTrigger={refreshKey} />
               )}
-
-              {currentTab === 'network_idps' && <NetworkIDPSPage />}
 
               {currentTab === 'phishing' && <PhishingPage />}
 

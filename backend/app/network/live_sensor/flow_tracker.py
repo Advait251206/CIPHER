@@ -85,6 +85,10 @@ class FlowTracker:
                         "ECE": "E" in flags_str,
                     }
                 
+                # Filter background noise
+                if src_port not in [5174, 8000, 8080] and dst_port not in [5174, 8000, 8080]:
+                    return None
+                    
                 # Canonical Flow Key
                 key = FlowKey.from_endpoints(src_ip, src_port, dst_ip, dst_port, protocol)
                 
@@ -176,7 +180,7 @@ class FlowTracker:
                     
                     # RESTRICT WAF to INCOMING requests to the Vulnerable App (5174) or Backend (8000).
                     # Do not inspect responses (src_port) to avoid false positives on CSS/JS files.
-                    if payload_len > 0 and dst_port in [5174, 8000]:
+                    if payload_len > 0 and dst_port in [5174, 8000, 8080]:
                         try:
                             # Basic string extraction for WAF payload inspection
                             payload_str = raw_payload.decode("utf-8", errors="ignore")
@@ -277,6 +281,10 @@ class FlowTracker:
             # Packet wire length and timestamp
             packet_len = len(packet)
             pkt_time = float(getattr(packet, "time", time.time()))
+
+            # Filter background noise: Only track flows to/from our monitored applications
+            if src_port not in [5174, 8000, 8080] and dst_port not in [5174, 8000, 8080]:
+                return None
 
             # 3. Canonical Flow Key
             key = FlowKey.from_endpoints(src_ip, src_port, dst_ip, dst_port, protocol)

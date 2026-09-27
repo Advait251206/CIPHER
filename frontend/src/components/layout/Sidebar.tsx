@@ -23,7 +23,6 @@ export type NavigationTab =
   | 'overview'
   | 'events'
   | 'incidents'
-  | 'network_idps'
   | 'phishing'
   | 'email'
   | 'threat-intel'
@@ -58,7 +57,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={16} /> },
     { id: 'events', label: 'Security Events', icon: <Activity size={16} /> },
     { id: 'incidents', label: 'Incident Chains', icon: <Flame size={16} />, badge: openIncidentsCount > 0 ? <span className={navBadge('danger')}>{openIncidentsCount}</span> : undefined },
-    { id: 'network_idps', label: 'Network IDPS', icon: <Network size={16} /> },
     { id: 'phishing', label: 'Phishing Detection', icon: <Globe size={16} /> },
     { id: 'email', label: 'Email Analyzer', icon: <Mail size={16} /> },
     { id: 'threat-intel', label: 'Threat Intel', icon: <Database size={16} /> },

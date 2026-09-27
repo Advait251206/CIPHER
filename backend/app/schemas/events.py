@@ -12,7 +12,7 @@ class SecurityEventItem(BaseModel):
     timestamp: str
     classification: str
     risk_score: int
-    confidence: float
+    confidence: float | str
     severity: str
     ml_score: float
     heuristic_score: int

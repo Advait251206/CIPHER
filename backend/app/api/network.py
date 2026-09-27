@@ -42,6 +42,14 @@ def set_prevention_mode(req: PreventionModeUpdateRequest):
             detail=f"Invalid mode. Must be one of {valid_modes}"
         )
     network_service.prevention_engine.mode = req.mode
+
+    # Sync WAF engine with the global prevention mode
+    from app.network.live_sensor.waf_engine import waf_engine
+    waf_mode = "enforce" if req.mode == "enforce" else "detect"
+    waf_engine.update_config("sql_protection", waf_mode)
+    waf_engine.update_config("xss_protection", waf_mode)
+    waf_engine.update_config("brute_force_protection", waf_mode)
+
     return {"status": "success", "mode": req.mode}
 
 

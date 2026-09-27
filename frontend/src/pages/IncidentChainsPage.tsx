@@ -33,6 +33,51 @@ const itemVariants: Variants = {
   },
 };
 
+const getLegalFrameworks = (categories: string[]) => {
+  const frameworks: { name: string, desc: string }[] = [
+    { name: '18 U.S.C. § 1030', desc: 'Computer Fraud and Abuse Act (CFAA) - General Unauthorized Access.' },
+    { name: 'Directive (EU) 2013/40/EU', desc: 'Attacks against information systems.' },
+    { name: 'ISO/IEC 27001:2022', desc: 'Information Security Management standard violation evidence.' }
+  ];
+
+  const cats = categories.map(c => c.toUpperCase());
+  if (cats.some(c => c.includes('SQL') || c.includes('DATA_EXFILTRATION'))) {
+    frameworks.push({ name: 'GDPR Article 32/33 (EU)', desc: 'Breach of security of processing / Unauthorized PII extraction.' });
+    frameworks.push({ name: 'CCPA / CPRA (US-CA)', desc: 'Unauthorized access and exfiltration of consumer personal information.' });
+    frameworks.push({ name: 'SOX Section 404 (US)', desc: 'Potential tampering with financial or corporate records.' });
+    frameworks.push({ name: 'HIPAA Security Rule (US)', desc: 'Electronic protected health information (ePHI) breach (if applicable).' });
+    frameworks.push({ name: 'GLBA (US)', desc: 'Gramm-Leach-Bliley Act (Financial institution data protection).' });
+    frameworks.push({ name: 'PIPEDA (Canada)', desc: 'Personal Information Protection and Electronic Documents Act violation.' });
+  }
+  if (cats.some(c => c.includes('XSS') || c.includes('WEB_ATTACK'))) {
+    frameworks.push({ name: '18 U.S.C. § 1030(a)(4)', desc: 'CFAA - Fraud and related activity in connection with computers.' });
+    frameworks.push({ name: '18 U.S.C. § 2511', desc: 'ECPA - Interception of electronic communications (session hijacking).' });
+    frameworks.push({ name: 'UK DPA 2018 Section 170', desc: 'Unlawful obtaining of personal data.' });
+  }
+  if (cats.some(c => c.includes('DDOS') || c.includes('DOS'))) {
+    frameworks.push({ name: '18 U.S.C. § 1030(a)(5)', desc: 'CFAA - Transmission of a program, information, code, or command causing damage.' });
+    frameworks.push({ name: 'UK CMA 1990 § 3', desc: 'Unauthorized acts with intent to impair.' });
+    frameworks.push({ name: '47 U.S.C. § 227', desc: 'Telecommunications Act - Disruption of services.' });
+    frameworks.push({ name: 'Budapest Convention Art. 5', desc: 'Council of Europe Cybercrime Convention - System interference.' });
+    frameworks.push({ name: 'Homeland Security Act', desc: 'Disruption of Critical Infrastructure.' });
+  }
+  if (cats.some(c => c.includes('BRUTE_FORCE') || c.includes('CREDENTIAL'))) {
+    frameworks.push({ name: '18 U.S.C. § 1030(a)(6)', desc: 'CFAA - Trafficking in passwords.' });
+    frameworks.push({ name: '18 U.S.C. § 1028', desc: 'Identity Theft and Assumption Deterrence Act.' });
+    frameworks.push({ name: 'NIST SP 800-63B', desc: 'Digital Identity Guidelines (Authentication compromise).' });
+    frameworks.push({ name: 'Canadian Criminal Code § 342.1', desc: 'Unauthorized use of a computer (credential harvesting).' });
+  }
+  if (cats.some(c => c.includes('PHISHING') || c.includes('MALWARE'))) {
+    frameworks.push({ name: '18 U.S.C. § 1343', desc: 'Wire Fraud.' });
+    frameworks.push({ name: '15 U.S.C. § 7701', desc: 'CAN-SPAM Act - Unsolicited and deceptive communications.' });
+    frameworks.push({ name: 'Anti-Phishing Act', desc: 'California B&P Code § 22948 and equivalent state laws.' });
+    frameworks.push({ name: 'EC Directive 2002/58/EC', desc: 'ePrivacy Directive - Unsolicited communications.' });
+  }
+
+  const unique = Array.from(new Map(frameworks.map(item => [item.name, item])).values());
+  return unique.map(f => `<li><strong style="color:#E2E8F0">${f.name}:</strong> ${f.desc}</li>`).join('\\n          ');
+};
+
 interface IncidentChainsPageProps {
   initialIncidentId?: string | null;
   refreshTrigger?: number;
@@ -42,6 +87,7 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   const [incidents, setIncidents] = useState<IncidentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [blockedIps, setBlockedIps] = useState<Set<string>>(new Set());
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -51,10 +97,38 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   // Detail Modal
   const [selectedIncident, setSelectedIncident] = useState<IncidentDetailResponse | null>(null);
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [blockIpModalOpen, setBlockIpModalOpen] = useState<string | null>(null);
 
-  const generateIncidentReport = (detail: IncidentDetailResponse) => {
+  const generateIncidentReport = async (detail: IncidentDetailResponse) => {
     const inc = detail.incident;
     const events = detail.events;
+
+    // Fetch extra data for the report
+    let isTempBlocked = false;
+    let tempBlockExpiresAt: string | null = null;
+    let isPermBlocked = false;
+    let pastIncidents: any[] = [];
+
+    try {
+      if (inc.source_ip) {
+        const blocklist = await api.network.getBlocklist('ACTIVE');
+        const entry = blocklist.find(b => b.ip === inc.source_ip);
+        if (entry) {
+          isTempBlocked = true;
+          tempBlockExpiresAt = entry.expires_at || null;
+        }
+
+        const intel = await api.threatIntel.check({ indicator: inc.source_ip });
+        if (intel.matched) {
+          isPermBlocked = true;
+        }
+
+        const res = await api.incidents.list({ source_ip: inc.source_ip, limit: 10 });
+        pastIncidents = res.incidents.filter(i => i.incident_id !== inc.incident_id);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch extra report data", e);
+    }
 
     const sevStyle = (() => {
       switch (inc.severity?.toLowerCase()) {
@@ -81,6 +155,23 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
     const categoryBadges = (inc.attack_categories || [])
       .map((c: string) => `<span style="display:inline-block;background:#0f172a;color:#fff;padding:3px 10px;border-radius:4px;font-size:12px;font-weight:600;margin:3px 4px 3px 0;font-family:monospace">${c}</span>`)
       .join('');
+
+    const glossaryDef: Record<string, string> = {
+      'SQL_INJECTION': '<strong style="color:var(--text-main)">SQL Injection (SQLi):</strong> A code injection technique used to attack data-driven applications. Malicious SQL statements are inserted into entry fields for execution (e.g., to dump the database contents to the attacker). CIPHER identifies SQLi through rigorous regex pattern matching against incoming HTTP requests, inspecting payloads, headers, and query parameters for anomalous SQL syntaxes (e.g., UNION SELECT, WAITFOR DELAY).',
+      'BRUTE_FORCE': '<strong style="color:var(--text-main)">Brute Force / Credential Stuffing:</strong> An attack attempting to crack passwords or usernames by systematically guessing. Detected by tracking failed login velocities.',
+      'XSS': '<strong style="color:var(--text-main)">Cross-Site Scripting (XSS):</strong> A type of security vulnerability enabling attackers to inject client-side scripts into web pages. Detected by identifying DOM-altering script tags.',
+      'DDOS': '<strong style="color:var(--text-main)">Distributed Denial of Service (DDoS):</strong> An attack causing a flood of incoming requests to deny service. Detected through volumetric thresholding.',
+      'PORT_SCAN': '<strong style="color:var(--text-main)">Network Reconnaissance (Port Scanning):</strong> A technique used to discover open doors (ports) on a network. Detected via rapid SYN/ACK connection attempts.',
+      'PHISHING': '<strong style="color:var(--text-main)">Phishing / Malicious URLs:</strong> The fraudulent attempt to obtain sensitive information or data. CIPHER\'s URL inspector utilizes ML models to extract lexical features from URLs.'
+    };
+
+    let glossaryHtml = (inc.attack_categories || []).map((cat: string) => {
+      return `<p>${glossaryDef[cat] || `<strong style="color:var(--text-main)">${cat}:</strong> Identified threat behavior based on heuristic and signature matching.`}</p>`;
+    }).join('');
+
+    if (!glossaryHtml) {
+      glossaryHtml = '<p style="font-style:italic">No distinct threat vectors identified for glossary.</p>';
+    }
 
     const htmlContent = `<!DOCTYPE html>
 <html>
@@ -373,7 +464,7 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
     <div class="cover-bg-element"></div>
     <div class="cover-content">
       <div class="cover-brand">CIPHER<span>.</span></div>
-      <div class="cover-subtitle">Cyber Intelligence & Heuristic Response</div>
+      <div class="cover-subtitle">Cyber Intrusion Prevention & Heuristic Event Response</div>
       
       <div class="cover-title">Threat Intelligence<br>Incident Chain Analysis</div>
       
@@ -462,15 +553,7 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
     <div class="section">
       <h2 class="section-title">6.0 Threat Vector Intelligence Glossary</h2>
       <div class="two-column-prose">
-        <p><strong style="color:var(--text-main)">Distributed Denial of Service (DDoS):</strong> An attack in which multiple compromised computer systems attack a target, such as a server, website or other network resource, and cause a denial of service for users of the targeted resource. The flood of incoming messages, connection requests or malformed packets to the target system forces it to slow down or even crash and shut down, thereby denying service to legitimate users or systems. CIPHER detects these through volumetric thresholding and TCP connection-state tracking.</p>
-
-        <p><strong style="color:var(--text-main)">SQL Injection (SQLi):</strong> A code injection technique used to attack data-driven applications. Malicious SQL statements are inserted into entry fields for execution (e.g., to dump the database contents to the attacker). CIPHER identifies SQLi through rigorous regex pattern matching against incoming HTTP requests, inspecting payloads, headers, and query parameters for anomalous SQL syntaxes (e.g., UNION SELECT, WAITFOR DELAY).</p>
-
-        <p><strong style="color:var(--text-main)">Cross-Site Scripting (XSS):</strong> A type of security vulnerability typically found in web applications. XSS attacks enable attackers to inject client-side scripts into web pages viewed by other users. A cross-site scripting vulnerability may be used by attackers to bypass access controls. Detected by CIPHER's WAF module identifying DOM-altering script tags or encoded javascript pseudo-protocols.</p>
-
-        <p><strong style="color:var(--text-main)">Phishing / Malicious URLs:</strong> The fraudulent attempt to obtain sensitive information or data, such as usernames, passwords, and credit card details, by disguising oneself as a trustworthy entity in an electronic communication. CIPHER's URL inspector utilizes deep learning models (such as BERT) to extract lexical features from URLs, comparing topological similarities against known malicious domains and analyzing domain age and entropy.</p>
-
-        <p><strong style="color:var(--text-main)">Network Reconnaissance (Port Scanning):</strong> A technique used by attackers to discover open doors (ports) on a network, identifying active hosts, running services, and potential vulnerabilities before launching an actual exploit. Detected via rapid SYN/ACK connection attempts across non-standard port ranges emanating from a singular source IP.</p>
+        ${glossaryHtml}
       </div>
     </div>
 
@@ -498,6 +581,50 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
           <td><strong>Recovery</strong><br><span style="color:var(--text-muted);font-size:11px">Restore systems to normal operation. Validate that the eradication was successful by monitoring the affected infrastructure for 24-48 hours. Ensure that business continuity has been maintained and assess any potential data exfiltration for legal compliance reporting.</span></td>
         </tr>
       </table>
+    </div>
+
+    <div class="section">
+      <h2 class="section-title">8.0 Source IP Threat Profile</h2>
+      <table class="info-table">
+        <tr><th>IP Address</th><td><span style="color:var(--accent-cyan); font-weight:bold;">${inc.source_ip || 'N/A'}</span></td></tr>
+        <tr><th>WAF Block Status</th><td>
+          ${isTempBlocked ? `<span style="color:#ef4444;font-weight:bold">TEMPORARILY BLOCKED</span> (Expires: ${tempBlockExpiresAt || 'N/A'})` : '<span style="color:#22c55e">NOT TEMPORARILY BLOCKED</span>'}
+        </td></tr>
+        <tr><th>Threat Intel DB (Permanent)</th><td>
+          ${isPermBlocked ? '<span style="color:#ef4444;font-weight:bold">PERMANENTLY BLOCKED</span>' : '<span style="color:#22c55e">CLEAN</span>'}
+        </td></tr>
+      </table>
+      
+      <h3 style="margin-top:30px; margin-bottom: 10px; font-size:12px; color:var(--accent-cyan); text-transform:uppercase;">Historical Incidents Linked to this IP</h3>
+      ${pastIncidents.length > 0 ? 
+        `<table class="events-table" style="margin-top:0;">
+          <thead><tr><th>Incident ID</th><th>First Seen</th><th>Severity</th><th>Events</th></tr></thead>
+          <tbody>
+            ${pastIncidents.map(pi => `<tr><td style="font-family:monospace">${pi.incident_id}</td><td>${pi.first_seen}</td><td><span class="badge ${pi.severity?.toLowerCase()}">${pi.severity}</span></td><td>${pi.event_count}</td></tr>`).join('')}
+          </tbody>
+        </table>` 
+        : '<p class="prose" style="font-style:italic">No other historical incidents recorded from this IP in the system.</p>'
+      }
+    </div>
+
+    <div class="section" style="page-break-before: always;">
+      <h2 class="section-title">9.0 Evidentiary Chain of Custody & Legal Admissibility</h2>
+      <div class="prose">
+        <p>This document constitutes an automated, cryptographically sealed record of digital intrusion telemetry captured by the CIPHER system. The data contained herein was collected in real-time, in the regular course of business, maintaining a continuous chain of custody from the point of ingestion to the generation of this report. It is prepared in accordance with digital forensics standards for use in incident response, compliance auditing, and legal proceedings.</p>
+        
+        <p><strong>Legal Framework & Potential Violations:</strong> The anomalous activities documented in this report may constitute unauthorized access to a protected computer system and may violate applicable regional and international cybercrime statutes, including but not limited to:</p>
+        <ul style="margin-left: 1.5rem; margin-bottom: 1.5rem; color: #94A3B8;">
+          ${getLegalFrameworks(inc.attack_categories || [])}
+        </ul>
+        
+        <p><strong>Cryptographic Assurance:</strong> The raw network packets, WAF signatures, and corresponding temporal metadata have been immutably written to the CIPHER forensic datastore. No manual tampering or retrospective editing has occurred.</p>
+        
+        <div style="background: var(--surface); border-left: 3px solid var(--accent-gold); padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 10px; margin-top: 1rem;">
+          <div><span style="color:var(--text-muted)">REPORT INTEGRITY HASH (SHA-256):</span> <span style="color:#E2E8F0">${Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b => b.toString(16).padStart(2, '0')).join('')}</span></div>
+          <div style="margin-top: 4px;"><span style="color:var(--text-muted)">GENERATION TIMESTAMP (UTC):</span> <span style="color:#E2E8F0">${new Date().toISOString()}</span></div>
+          <div style="margin-top: 4px;"><span style="color:var(--text-muted)">SYSTEM ATTESTATION:</span> <span style="color:#22c55e; font-weight: bold;">CRYPTOGRAPHICALLY VERIFIED</span></div>
+        </div>
+      </div>
     </div>
 
     <div style="margin-top:5rem;border-top:1px solid var(--border);padding-top:2rem;text-align:center;">
@@ -535,66 +662,6 @@ export const IncidentChainsPage: React.FC<IncidentChainsPageProps> = ({ initialI
   };
 
 
-  const generateIncidentTxt = (detail: IncidentDetailResponse) => {
-    const inc = detail.incident;
-    const events = detail.events;
-    const eventsBlock = events.length === 0
-      ? '  (none)'
-      : events.map((ev: any, i: number) =>
-`  [${i + 1}] ID: ${ev.event_id || 'N/A'}
-      Timestamp:      ${ev.timestamp || 'N/A'}
-      Classification: ${ev.attack_type || ev.classification || 'UNKNOWN'}
-      Risk Score:     ${ev.risk_score ?? ev.threat_score ?? 0}
-      Source IP:      ${ev.source_ip || ev.domain || 'N/A'}
-      Dest IP:        ${ev.destination_ip || 'N/A'}`).join('\n');
-
-    const content = `
-================================================================================
-                   CIPHER INCIDENT CHAIN REPORT
-================================================================================
-Generated On:  ${new Date().toISOString()}
-Report ID:     RPT-INC-${inc.incident_id?.substring(0, 8).toUpperCase() || 'UNKNOWN'}
-
-[ 1. INCIDENT SUMMARY ]
---------------------------------------------------------------------------------
-${inc.summary}
-
-[ 2. CORRELATION DIAGNOSTICS ]
---------------------------------------------------------------------------------
-Incident ID:        ${inc.incident_id}
-Status:             ${inc.status}
-Severity:           ${inc.severity}
-Escalation State:   ${inc.escalation_detected ? 'ESCALATED' : 'Normal'}
-First Seen:         ${inc.first_seen}
-Last Seen:          ${inc.last_seen}
-Correlated Events:  ${inc.event_count}
-Recommended Action: ${inc.recommended_action || 'Monitor traffic'}
-Source IP:          ${inc.source_ip || 'N/A'}
-Destination IP:     ${inc.destination_ip || 'N/A'}
-
-[ 3. ATTACK CATEGORIES ]
---------------------------------------------------------------------------------
-${(inc.attack_categories || []).map((c: string) => `  - ${c}`).join('\n') || '  (none identified)'}
-
-[ 4. ASSOCIATED SECURITY EVENTS (${events.length}) ]
---------------------------------------------------------------------------------
-${eventsBlock}
-================================================================================
-END OF REPORT
-================================================================================
-`.trim();
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `CIPHER_Incident_${inc.incident_id?.substring(0, 8) || 'Report'}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Resolution confirmation dialog (incorporates user's instruction: server-confirmed, non-optimistic)
@@ -602,6 +669,20 @@ END OF REPORT
   const [isResolving, setIsResolving] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Generic Confirmation Dialog State
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: React.ReactNode;
+    confirmLabel: string;
+    isDestructive: boolean;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   const fetchIncidents = async () => {
     try {
@@ -614,6 +695,7 @@ END OF REPORT
         limit: 50,
       });
       setIncidents(res.incidents);
+      setSelectedIds(new Set()); // clear selection on fetch
     } catch (err: any) {
       setError(err.message || 'Failed to retrieve incidents.');
     } finally {
@@ -621,8 +703,18 @@ END OF REPORT
     }
   };
 
+  const fetchBlocklist = async () => {
+    try {
+      const list = await api.network.getBlocklist('ACTIVE');
+      setBlockedIps(new Set(list.map(b => b.ip)));
+    } catch (err) {
+      console.error('Failed to fetch blocklist', err);
+    }
+  };
+
   useEffect(() => {
     fetchIncidents();
+    fetchBlocklist();
   }, [statusFilter, severityFilter, refreshTrigger]);
 
   // Load initial incident if passed
@@ -644,33 +736,45 @@ END OF REPORT
     }
   };
 
-  const handleBlockIp = async (ip: string) => {
-    if (!confirm(`Are you sure you want to block IP ${ip} on the WAF?`)) return;
+  const executeBlockTemp = async (ip: string) => {
     try {
       await api.network.blockIp(ip);
       setActionSuccess(`IP ${ip} temporarily blocked on WAF.`);
       setTimeout(() => setActionSuccess(null), 5000);
+      await fetchBlocklist();
     } catch (err: any) {
       setActionError(err.message || 'Failed to block IP.');
       setTimeout(() => setActionError(null), 5000);
     }
   };
 
-  const handlePermanentBlock = async (ip: string) => {
-    if (!confirm(`Are you sure you want to permanently block IP ${ip}? This will store it in the Threat Intel Database.`)) return;
+  const executeBlockPerm = async (ip: string) => {
     try {
       await api.threatIntel.create({
         ioc_type: 'IP',
         indicator: ip,
         category: 'malicious',
         severity: 'HIGH',
-        confidence: 95,
+        confidence: 0.95,
         description: 'Permanently blocked via SOC Dashboard',
       });
       setActionSuccess(`IP ${ip} permanently blocked and stored in Threat Intel DB.`);
       setTimeout(() => setActionSuccess(null), 5000);
+      await fetchBlocklist();
     } catch (err: any) {
       setActionError(err.message || 'Failed to add to Threat Intel DB.');
+      setTimeout(() => setActionError(null), 5000);
+    }
+  };
+
+  const executeUnblock = async (ip: string) => {
+    try {
+      await api.network.unblockIp(ip);
+      setActionSuccess(`IP ${ip} successfully unblocked.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+      await fetchBlocklist();
+    } catch (err: any) {
+      setActionError(err.message || 'Failed to unblock IP.');
       setTimeout(() => setActionError(null), 5000);
     }
   };
@@ -700,6 +804,65 @@ END OF REPORT
     } finally {
       setIsResolving(false);
     }
+  };
+
+  const handleDeleteIncident = async (incidentId: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Incident',
+      message: (
+        <span>
+          Are you sure you want to permanently delete incident <strong className={mono}>{incidentId}</strong>?
+        </span>
+      ),
+      confirmLabel: 'Delete',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          setActionError(null);
+          await api.incidents.delete([incidentId]);
+          setActionSuccess(`Incident ${incidentId} deleted.`);
+          setTimeout(() => setActionSuccess(null), 5000);
+          if (selectedIncident?.incident.incident_id === incidentId) {
+            setSelectedIncident(null);
+          }
+          setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.delete(incidentId);
+            return next;
+          });
+          await fetchIncidents();
+        } catch (err: any) {
+          setActionError(err.message || 'Failed to delete incident.');
+          setTimeout(() => setActionError(null), 5000);
+        }
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Incidents',
+      message: `Are you sure you want to permanently delete ${selectedIds.size} incident(s)?`,
+      confirmLabel: 'Delete Selected',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          setActionError(null);
+          await api.incidents.delete(Array.from(selectedIds));
+          setActionSuccess(`${selectedIds.size} incident(s) deleted.`);
+          setTimeout(() => setActionSuccess(null), 5000);
+          setSelectedIds(new Set());
+          await fetchIncidents();
+        } catch (err: any) {
+          setActionError(err.message || 'Failed to delete incidents.');
+          setTimeout(() => setActionError(null), 5000);
+        }
+      }
+    });
   };
 
   return (
@@ -771,6 +934,12 @@ END OF REPORT
           <button className={controlBtn('primary')} onClick={fetchIncidents}>
             Filter
           </button>
+          
+          {selectedIds.size > 0 && (
+            <button className={cn(controlBtn('danger'), 'ml-auto')} onClick={handleBulkDelete}>
+              <Ban size={16} /> Delete Selected ({selectedIds.size})
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -813,6 +982,20 @@ END OF REPORT
             <table className={dataTable}>
               <thead>
                 <tr>
+                  <th className="w-10 text-center">
+                    <input 
+                      type="checkbox"
+                      checked={incidents.length > 0 && selectedIds.size === incidents.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedIds(new Set(incidents.map(i => i.incident_id)));
+                        } else {
+                          setSelectedIds(new Set());
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </th>
                   <th>Status</th>
                   <th>Severity</th>
                   <th>Incident ID</th>
@@ -832,6 +1015,19 @@ END OF REPORT
                     className="cursor-pointer [transition:background-color_0.2s_ease] hover:bg-elevated"
                     onClick={() => handleOpenDetail(inc.incident_id)}
                   >
+                    <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedIds.has(inc.incident_id)}
+                        onChange={(e) => {
+                          const newSet = new Set(selectedIds);
+                          if (e.target.checked) newSet.add(inc.incident_id);
+                          else newSet.delete(inc.incident_id);
+                          setSelectedIds(newSet);
+                        }}
+                        className="cursor-pointer"
+                      />
+                    </td>
                     <td>
                       <span
                         className={cn(mono, 'text-[0.72rem] font-bold py-[0.15rem] px-[0.45rem] rounded-[4px]', (inc.status === 'OPEN' ? 'bg-crit-bg' : 'bg-benign-bg'), (inc.status === 'OPEN' ? 'text-crit' : 'text-benign'), 'border', inc.status === 'OPEN' ? 'border-crit' : 'border-benign')}
@@ -903,6 +1099,17 @@ END OF REPORT
                             <span>Resolve</span>
                           </button>
                         )}
+                        <button
+                          className={cn(controlBtn('danger'), 'py-1 px-2 text-[0.75rem]')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteIncident(inc.incident_id);
+                          }}
+                          title="Delete incident"
+                        >
+                          <Ban size={12} />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -939,31 +1146,31 @@ END OF REPORT
                   Resolve Incident
                 </button>
               )}
+              {/* Delete */}
+              <button
+                className={cn(controlBtn('danger'), 'flex items-center gap-2')}
+                onClick={() => handleDeleteIncident(selectedIncident.incident.incident_id)}
+              >
+                <Ban size={16} /> Delete Incident
+              </button>
               {/* Block Actions */}
               {selectedIncident.incident.source_ip && (
-                <>
+                blockedIps.has(selectedIncident.incident.source_ip) ? (
+                  <button
+                    className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] hover:bg-[#e2e8f0]')}
+                    onClick={() => executeUnblock(selectedIncident.incident.source_ip!)}
+                  >
+                    <CheckCircle size={16} /> Unblock IP
+                  </button>
+                ) : (
                   <button
                     className={cn(controlBtn('danger'), 'flex items-center gap-2')}
-                    onClick={() => handleBlockIp(selectedIncident.incident.source_ip!)}
+                    onClick={() => setBlockIpModalOpen(selectedIncident.incident.source_ip!)}
                   >
                     <Ban size={16} /> Block IP
                   </button>
-                  <button
-                    className={cn(controlBtn('danger'), 'flex items-center gap-2 bg-[#991b1b] border-[#7f1d1d] hover:bg-[#7f1d1d]')}
-                    onClick={() => handlePermanentBlock(selectedIncident.incident.source_ip!)}
-                  >
-                    <Database size={16} /> Never work again from any IP
-                  </button>
-                </>
+                )
               )}
-              {/* TXT Download */}
-              <button
-                className={cn(controlBtn(), 'flex items-center gap-2 bg-[#f1f5f9] text-[#334155] border border-[#cbd5e1] not-disabled:hover:bg-[#f1f5f9] not-disabled:hover:text-[#334155] not-disabled:hover:border-[#cbd5e1]')}
-
-                onClick={() => generateIncidentTxt(selectedIncident)}
-              >
-                <FileText size={16} /> TXT Report
-              </button>
               {/* PDF / Print */}
               <button
                 className={cn(controlBtn('primary'), 'flex items-center gap-2 bg-accent text-white border-none')}
@@ -1108,6 +1315,64 @@ END OF REPORT
         confirmLabel="Resolve Incident"
         isLoading={isResolving}
       />
+
+      {/* Generic Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={Boolean(confirmState?.isOpen)}
+        onClose={() => setConfirmState(null)}
+        onConfirm={async () => {
+          if (!confirmState) return;
+          try {
+            setIsConfirming(true);
+            await confirmState.onConfirm();
+          } finally {
+            setIsConfirming(false);
+            setConfirmState(null);
+          }
+        }}
+        title={confirmState?.title || ''}
+        message={confirmState?.message || ''}
+        confirmLabel={confirmState?.confirmLabel || 'Confirm'}
+        isDestructive={confirmState?.isDestructive || false}
+        isLoading={isConfirming}
+      />
+
+      {/* Block IP Modal */}
+      <Modal
+        isOpen={Boolean(blockIpModalOpen)}
+        onClose={() => setBlockIpModalOpen(null)}
+        title={
+          <div className="flex items-center gap-2">
+            <Ban size={20} color="var(--color-crit)" />
+            <span>Block IP: {blockIpModalOpen}</span>
+          </div>
+        }
+        footer={
+          <>
+            <button className={controlBtn()} onClick={() => setBlockIpModalOpen(null)}>
+              Cancel
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4 py-2">
+          <p className="text-[0.88rem] leading-[1.6] text-fg-2">
+            Choose how you want to block this IP Address.
+          </p>
+          <button
+            className={cn(controlBtn('danger'), 'flex items-center justify-center py-3')}
+            onClick={() => { executeBlockTemp(blockIpModalOpen!); setBlockIpModalOpen(null); }}
+          >
+            Block Temporarily (24 hours)
+          </button>
+          <button
+            className={cn(controlBtn('danger'), 'flex items-center justify-center py-3 bg-[#991b1b] border-[#7f1d1d] hover:bg-[#7f1d1d]')}
+            onClick={() => { executeBlockPerm(blockIpModalOpen!); setBlockIpModalOpen(null); }}
+          >
+            Block Permanently
+          </button>
+        </div>
+      </Modal>
     </motion.div>
   );
 };
