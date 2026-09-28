@@ -71,14 +71,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className="flex h-screen w-[260px] shrink-0 flex-col border-r border-r-line bg-sidebar">
-      <div className="flex items-center gap-3 border-b border-b-line px-5 py-6">
-        <div className="flex items-center justify-center text-fg">
-          <Shield size={24} />
-        </div>
-        <div>
-          <div className="text-[1rem] font-bold tracking-wider text-fg">CIPHER | SOC</div>
-          <div className="text-[0.65rem] text-fg-muted uppercase">Local IDPS Engine</div>
-        </div>
+      <div className="flex flex-col items-center justify-center gap-4 border-b border-b-line px-5 py-8">
+        <img src="/Premium CIPHER Logo.jpeg" alt="CIPHER Logo" className="w-36 h-36 rounded-2xl object-cover shadow-[0_0_15px_rgba(0,150,255,0.15)] border border-line/50" />
+        <div className="text-[0.65rem] text-fg-muted uppercase tracking-widest font-semibold">Local IDPS Engine</div>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-6">
@@ -105,9 +100,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      <div className="border-t border-t-line p-4 text-center text-[0.7rem] text-fg-muted">
-        v1.2.0022
-      </div>
     </aside>
   );
 };
