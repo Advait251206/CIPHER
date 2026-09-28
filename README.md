@@ -33,8 +33,9 @@ CIPHER fulfills eight core technical objectives:
 - **Threat Intelligence Correlation**: Local-first SQLite IOC store (`threat_intel_iocs`) with in-memory caching and dominant severity risk floors.
 - **Multi-Stage Event Correlation**: Sliding-window (300s) incident correlation linking related events using strict `(source_ip, destination_ip)` identity pairing with automated escalation tracking.
 - **Incident Management**: State transitions (`ACTIVE`, `INVESTIGATING`, `RESOLVED`), chronological timeline reconstruction, and official PDF/TXT incident reporting.
-- **Defensive Intrusion Prevention**: Multi-mode defense (`detect_only`, `simulate`, `enforce`) with TTL blocklists and flow rate limiting.
-- **SOC Visualization**: Comprehensive React 18 / TypeScript single-page dashboard with 10 operational views and structured evidence inspection.
+- **Web Application Firewall (WAF)**: Deep packet inspection (DPI) via Scapy to detect and block SQL Injection (SQLi), Cross-Site Scripting (XSS), and Path Traversal attacks in real-time.
+- **Defensive Intrusion Prevention**: Multi-mode defense (`detect_only`, `simulate`, `enforce`) with TTL blocklists, flow rate limiting, and forged TCP RST packet injection to kill malicious connections mid-flight.
+- **SOC Visualization**: Comprehensive React 18 / TypeScript single-page dashboard with 10 operational views, interactive user management, and structured evidence inspection.
 
 ---
 
@@ -48,17 +49,17 @@ Attack / Test Traffic               Suspicious URLs
          │                                 │
 67-Feature Flow Extraction        28-Feature URL Extractor
          │                                 │
-┌────────┴────────┐               ┌────────┴────────┐
-│  Network ML:    │               │  Phishing ML:   │
-│ Dual RF Models  │               │  Random Forest  │
-└────────┬────────┘               └────────┬────────┘
-         │                                 │
-┌────────┴────────┐               ┌────────┴────────┐
-│ Deterministic   │               │ Lexical / Brand │
-│ Rules (10+4)    │               │ Heuristics      │
-└────────┬────────┘               └────────┬────────┘
-         │                                 │
-         └────────────────┬────────────────┘
+┌────────┴────────┐               ┌────────┴────────┐               ┌────────┴────────┐
+│  Network ML:    │               │  Phishing ML:   │               │   WAF Engine:   │
+│ Dual RF Models  │               │  Random Forest  │               │ DPI (SQLi, XSS, │
+└────────┬────────┘               └────────┬────────┘               │ Path Traversal) │
+         │                                 │                        └────────┬────────┘
+┌────────┴────────┐               ┌────────┴────────┐                        │
+│ Deterministic   │               │ Lexical / Brand │                        │
+│ Rules (10+4)    │               │ Heuristics      │                        │
+└────────┬────────┘               └────────┬────────┘                        │
+         │                                 │                                 │
+         └────────────────┬──────────────────────────────────────────────────┘
                           │
           Local Threat Intelligence (SQLite IOC Store)
                           │
@@ -89,11 +90,13 @@ Attack / Test Traffic               Suspicious URLs
 | **Browser Guard** | Chrome/Edge Extension | 100% local, air-gapped browser extension that connects directly to `localhost:8000` to scan active tabs in real-time. |
 | **Network IDS** | Dual Random Forest Ensemble | Binary gate + 9-class multiclass classifier; 67 flow features; 99.90% accuracy on CIC-IDS2017. |
 | **Live Network Sensor** | Scapy + Npcap Async Sniffer | Captures raw packets; tracks 50,000 flows; 5s idle / 60s active eviction timers. |
+| **WAF Engine** | Regex DPI + TCP RST | Inspects raw HTTP payloads mid-flight for SQLi, XSS, and Path Traversal; injects TCP RST to kill connections. |
 | **Rule Engine** | Stateful Heuristics & Signatures | 10 heuristics (PortScan, BruteForce, DoS) + 4 signatures; 10,000-entry sliding-window trackers. |
 | **Threat Intelligence** | SQLite + Thread-Safe LRU Cache | In-process matching for IP, Domain, URL, Hash; 5,000-entry cache; dominant severity floor. |
 | **Event Correlator** | Sliding-Window Correlator | Identity pairing `(src_ip, dst_ip)`; 300s window; detects reconnaissance $\to$ exploitation escalation. |
-| **Prevention Engine** | State Engine + Rate Limiter | Multi-mode (`detect_only`, `simulate`, `enforce`); TTL blocklist with dynamic countdowns. |
-| **SOC Dashboard** | React 18 + TypeScript + Vite | 10 operational views; dark cybersecurity design system; same-origin API proxy. |
+| **Prevention Engine** | State Engine + Rate Limiter | Multi-mode (`detect_only`, `simulate`, `enforce`); TTL blocklist, active TCP connection termination. |
+| **SOC Dashboard** | React 18 + TypeScript + Vite | 10 operational views; dark cybersecurity design system; interactive IP unblocking from Threat Intel DB. |
+| **Vulnerable Web App** | FastAPI + SQLite (Port 5174) | Built-in testbed containing intentional SQLi, XSS, and brute-force vulnerabilities for live attack simulation. |
 
 ---
 
@@ -155,6 +158,15 @@ cd frontend
 npm run dev
 ```
 *SOC Dashboard will launch at `http://localhost:5173`.*
+
+### Terminal 3: Vulnerable Web Application
+```powershell
+cd vulnerable_app
+python -m uvicorn main:app --host 0.0.0.0 --port 5174
+```
+*Vulnerable application (for live attack simulation) will launch at `http://localhost:5174`.*
+
+> **Tip**: You can also just double-click the `run.bat` script in the root directory to automatically launch all three services, configure Windows firewall rules, and request administrator privileges for packet capture!
 
 ---
 
@@ -247,6 +259,7 @@ All detailed technical documentation is organized in the [`docs/`](file:///d:/Ad
 - [Technical Limitations](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/limitations.md)
 - [REST API Reference](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/api_reference.md)
 - [Demonstration Runbook (8–12 Minutes)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/demonstration.md)
+- [Kali / Termux Attack Guide (Live Simulation)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/kali_attack_guide.md)
 - [Evidence Index & Claim Mapping](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/evidence_index.md)
 - [Verified Project Statistics](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/project_statistics.md)
 - [Final Presentation Slide Deck Outline](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/presentation_outline.md)
