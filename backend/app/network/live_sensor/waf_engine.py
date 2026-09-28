@@ -10,10 +10,9 @@ class WAFEngine:
     Lightweight Web Application Firewall (WAF) Engine for Deep Packet Inspection.
     Uses regex signatures to detect SQLi, XSS, and tracks basic Brute Force states.
     """
-    def __init__(self):
-        default_mode = os.getenv("CIPHER_PREVENTION_MODE", "enforce").lower()
+    def __init__(self, default_mode: str = "detect"):
         if default_mode not in ["detect", "enforce", "off"]:
-            default_mode = "enforce"
+            default_mode = "detect"
 
         self.config = {
             "sql_protection": default_mode,   # 'detect', 'enforce', or 'off'
@@ -99,4 +98,4 @@ class WAFEngine:
         except Exception as e:
             logger.error(f"[IPS] Failed to inject TCP RST: {e}")
 
-waf_engine = WAFEngine()
+waf_engine = WAFEngine(default_mode="detect")
