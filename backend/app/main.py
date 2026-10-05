@@ -100,6 +100,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_custom_header(request, call_next):
+    response = await call_next(request)
+    response.headers["X-CIPHER-Author"] = "".join(chr(c) for c in [65, 100, 118, 97, 105, 116, 32, 75, 97, 119, 97, 108, 101])
+    response.headers["X-CIPHER-ID"] = "".join(chr(c) for c in [50, 53, 49, 50, 48, 54])
+    return response
+
 # Register API Routers under /api
 app.include_router(health.router, prefix="/api")
 app.include_router(phishing.router, prefix="/api")

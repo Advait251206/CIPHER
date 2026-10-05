@@ -29,6 +29,9 @@ if '%errorlevel%' NEQ '0' (
     
     echo [2/4] Launching Backend Terminal...
     start "CIPHER Backend" cmd /k "cd /d "%PROJECT_ROOT%backend" && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    
+    echo Waiting for backend to initialize (5 seconds)...
+    timeout /t 5 /nobreak >nul
 
     echo [3/4] Launching Frontend Terminal...
     start "CIPHER Frontend" cmd /c "cd /d "%PROJECT_ROOT%frontend" && npm run dev"
