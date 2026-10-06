@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/public/Logo.png" alt="CIPHER Logo" width="200" />
+</p>
+
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
 [![Backend Tests](https://img.shields.io/badge/backend%20tests-152%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
