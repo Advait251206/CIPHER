@@ -117,5 +117,23 @@
         "tp": 13646
       }
     }
+  },
+  "test_samples": 35306,
+  "test_performance": {
+    "accuracy": 0.9875,
+    "precision": 0.9879,
+    "recall": 0.9828,
+    "f1": 0.9853,
+    "roc_auc": 0.9976,
+    "false_positive_rate": 0.009,
+    "false_negative_rate": 0.0172,
+    "specificity": 0.991,
+    "confusion_matrix": {
+      "tn": 20046,
+      "fp": 182,
+      "fn": 259,
+      "tp": 14819
+    },
+    "inference_throughput_urls_per_sec": 353668.3
   }
 }

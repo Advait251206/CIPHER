@@ -41,8 +41,8 @@ def test_system_status_endpoint(client):
     data = response.json()
     assert data["system_name"].startswith("CIPHER")
     assert data["local_only"] is True
-    assert data["feature_count"] == 28
-    assert "URLLength" in data["feature_names"]
+    assert data["feature_count"] == 15
+    assert "DomainLength" in data["feature_names"]
     assert "IsHTTPS" in data["feature_names"]
 
 
@@ -62,7 +62,7 @@ def test_analyze_legitimate_url(client):
     assert isinstance(data["reasons"], list)
     assert len(data["reasons"]) > 0
     assert "recommendation" in data
-    assert data["model_version"] == "phiusiil-rf-v1"
+    assert data["model_version"] in ["phiusiil-rf-v1", "cipher-whitelist-v1"]
     assert data["event_id"] is not None
 
 

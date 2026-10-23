@@ -523,7 +523,7 @@ def test_pipeline_integration_attaches_rule_findings(tmp_path):
         "event_id": str(uuid.uuid4()),
         "source": "network",
         "attack_type": "BENIGN",
-        "source_ip": "192.168.1.15",
+        "source_ip": "203.0.113.15",
         "destination_ip": "10.250.250.1",
         "features": {
             "Flow Packets/s": 80000,

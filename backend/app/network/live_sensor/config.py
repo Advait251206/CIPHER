@@ -20,6 +20,7 @@ class SensorConfig:
     cleanup_interval_seconds: float = 1.0 # Interval for the background expiration worker
     analysis_mode: str = "detect_only"    # Default: detect_only (does not modify host firewall unless enforcement mode configured)
     enabled: bool = False                 # Default: sensor starts in STOPPED state
+    monitored_ports: Optional[list] = None # Filter background noise when specified
 
 
 def load_sensor_config_from_env() -> SensorConfig:
@@ -30,6 +31,8 @@ def load_sensor_config_from_env() -> SensorConfig:
     iface = os.getenv("CIPHER_SENSOR_INTERFACE", None)
     bpf = os.getenv("CIPHER_SENSOR_BPF", None)
     mode = os.getenv("CIPHER_PREVENTION_MODE", "detect_only").lower()
+    ports_env = os.getenv("CIPHER_MONITORED_PORTS", "5174,8000,8080")
+    monitored_ports = [int(p.strip()) for p in ports_env.split(",") if p.strip().isdigit()] if ports_env else None
 
     return SensorConfig(
         interface=iface,
@@ -38,5 +41,6 @@ def load_sensor_config_from_env() -> SensorConfig:
         flow_active_timeout=active_timeout,
         max_active_flows=max_flows,
         analysis_mode=mode,
-        enabled=False
+        enabled=False,
+        monitored_ports=monitored_ports
     )

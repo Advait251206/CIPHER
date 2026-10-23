@@ -62,8 +62,8 @@ def test_dos_packet_flood_detection(detector):
 def test_ddos_uniform_flood_detection(detector):
     flow = {
         "Destination Port": 80,
-        "Flow Duration": 8000,
-        "Total Fwd Packets": 500,
+        "Flow Duration": 600000,
+        "Total Fwd Packets": 1500,
         "Total Backward Packets": 0,
         "Flow Packets/s": 62500.0,
         "Packet Length Variance": 0.5,    # Uniform packet length

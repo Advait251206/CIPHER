@@ -4,7 +4,7 @@
 
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
-[![Backend Tests](https://img.shields.io/badge/backend%20tests-152%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
+[![Backend Tests](https://img.shields.io/badge/backend%20tests-170%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
 [![Frontend Tests](https://img.shields.io/badge/frontend%20tests-11%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/frontend/src/test)
 [![Validation](https://img.shields.io/badge/validation%20(A--H)-8%2F8%20passed-blue)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local--first-green)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)

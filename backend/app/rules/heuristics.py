@@ -245,7 +245,8 @@ class DosPacketRateRule(BaseRule):
         bwd_pkts = features.get("Total Backward Packets", 0)
         total_pkts = fwd_pkts + bwd_pkts
 
-        if max_rate > DOS_PACKET_RATE_THRESHOLD and total_pkts > 50:
+        has_pkt_counts = "Total Fwd Packets" in features or "Total Backward Packets" in features
+        if max_rate > DOS_PACKET_RATE_THRESHOLD and (not has_pkt_counts or total_pkts > 50):
             return RuleMatch(
                 rule_id=self.rule_id,
                 name=self.name,
@@ -287,7 +288,8 @@ class DosByteRateRule(BaseRule):
         bwd_pkts = features.get("Total Backward Packets", 0)
         total_pkts = fwd_pkts + bwd_pkts
 
-        if flow_bytes > DOS_BYTE_RATE_THRESHOLD and total_pkts > 50:
+        has_pkt_counts = "Total Fwd Packets" in features or "Total Backward Packets" in features
+        if flow_bytes > DOS_BYTE_RATE_THRESHOLD and (not has_pkt_counts or total_pkts > 50):
             return RuleMatch(
                 rule_id=self.rule_id,
                 name=self.name,

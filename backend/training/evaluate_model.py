@@ -111,20 +111,20 @@ def evaluate_model():
     print(f"\n      --- FALSE POSITIVE ANALYSIS ({len(fps)} samples) ---")
     print("      (Legitimate sites incorrectly flagged as phishing)")
     if len(fps) > 0:
-        sample_fps = fps[['URL', 'URLLength', 'IsHTTPS', 'URLEntropy', 'SuspiciousKeywordCount', 'phishing_prob']].head(5)
+        sample_fps = fps[['URL', 'DomainLength', 'IsHTTPS', 'URLEntropy', 'SuspiciousKeywordCount', 'phishing_prob']].head(5)
         for idx, row in sample_fps.iterrows():
             print(f"        * URL: {row['URL']}")
-            print(f"          Prob={row['phishing_prob']:.3f}, HTTPS={row['IsHTTPS']}, Len={row['URLLength']}, Entropy={row['URLEntropy']}, Keywords={row['SuspiciousKeywordCount']}")
+            print(f"          Prob={row['phishing_prob']:.3f}, HTTPS={row['IsHTTPS']}, DomainLen={row['DomainLength']}, Entropy={row['URLEntropy']}, Keywords={row['SuspiciousKeywordCount']}")
         print("      Root Cause Insight: False positives typically stem from legitimate URLs that omit HTTPS,")
         print("      use unusually long or complex query parameters, or contain words like 'account' or 'login'.")
 
     print(f"\n      --- FALSE NEGATIVE ANALYSIS ({len(fns)} samples) ---")
     print("      (Phishing sites missed by the ML model)")
     if len(fns) > 0:
-        sample_fns = fns[['URL', 'URLLength', 'IsHTTPS', 'URLEntropy', 'SuspiciousKeywordCount', 'phishing_prob']].head(5)
+        sample_fns = fns[['URL', 'DomainLength', 'IsHTTPS', 'URLEntropy', 'SuspiciousKeywordCount', 'phishing_prob']].head(5)
         for idx, row in sample_fns.iterrows():
             print(f"        * URL: {row['URL']}")
-            print(f"          Prob={row['phishing_prob']:.3f}, HTTPS={row['IsHTTPS']}, Len={row['URLLength']}, Entropy={row['URLEntropy']}, Keywords={row['SuspiciousKeywordCount']}")
+            print(f"          Prob={row['phishing_prob']:.3f}, HTTPS={row['IsHTTPS']}, DomainLen={row['DomainLength']}, Entropy={row['URLEntropy']}, Keywords={row['SuspiciousKeywordCount']}")
         print("      Root Cause Insight: False negatives are often short, HTTPS-enabled phishing landing pages")
         print("      that mimic clean corporate root domains. This is precisely why CIPHER combines ML with")
         print("      the heuristic engine to catch brand impersonation and homoglyph tricks.")

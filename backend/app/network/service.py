@@ -96,7 +96,7 @@ class NetworkService:
                 pass
 
         # 3. Determine Attack Type (Synergy between ML and Heuristics)
-        if (is_bcast_mcast or is_trusted_traffic) and (h_category in ["DOS", "DDOS", "PORT_SCAN"] or ml_predicted_category in ["DOS", "DDOS", "PORT_SCAN"]):
+        if (is_bcast_mcast or is_trusted_traffic) and (h_category in ["DOS", "DDOS"] or ml_predicted_category in ["DOS", "DDOS"]):
             attack_type = "BENIGN"
             detection_method = "HEURISTIC"
             h_score = 0

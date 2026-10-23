@@ -85,9 +85,10 @@ class FlowTracker:
                         "ECE": "E" in flags_str,
                     }
                 
-                # Filter background noise
-                if src_port not in [5174, 8000, 8080] and dst_port not in [5174, 8000, 8080]:
-                    return None
+                # Filter background noise if configured
+                if self.config and self.config.monitored_ports:
+                    if src_port not in self.config.monitored_ports and dst_port not in self.config.monitored_ports:
+                        return None
                     
                 # Canonical Flow Key
                 key = FlowKey.from_endpoints(src_ip, src_port, dst_ip, dst_port, protocol)
@@ -282,9 +283,10 @@ class FlowTracker:
             packet_len = len(packet)
             pkt_time = float(getattr(packet, "time", time.time()))
 
-            # Filter background noise: Only track flows to/from our monitored applications
-            if src_port not in [5174, 8000, 8080] and dst_port not in [5174, 8000, 8080]:
-                return None
+            # Filter background noise: Only track flows to/from our monitored applications if configured
+            if self.config and self.config.monitored_ports:
+                if src_port not in self.config.monitored_ports and dst_port not in self.config.monitored_ports:
+                    return None
 
             # 3. Canonical Flow Key
             key = FlowKey.from_endpoints(src_ip, src_port, dst_ip, dst_port, protocol)
