@@ -462,7 +462,7 @@ export const PhishingPage: React.FC = () => {
         <Info size={18} className="shrink-0" />
         <div>
           <strong>Local Privacy Architecture:</strong> Analysis is performed locally on this machine. CIPHER does not automatically transmit submitted indicators to external services.
-          28 structural and lexical features are extracted and evaluated locally using a PhiUSIIL-trained Random Forest model and heuristic rules.
+          15 structural and lexical features are extracted and evaluated locally using a PhiUSIIL-trained Random Forest model and heuristic rules.
           <em> Machine learning threat classification is probabilistic and does not guarantee 100% accuracy or zero false negatives.</em>
         </div>
       </motion.div>

@@ -49,8 +49,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger, onOp
     ? Object.entries(corrStats.incidents_by_severity).map(([name, value]) => ({ name, value }))
     : [];
 
-  const networkCategoryData = netStats?.attacks_by_category
-    ? Object.entries(netStats.attacks_by_category)
+  const networkCategoryData = (netStats?.attacks_by_type || netStats?.attacks_by_category)
+    ? Object.entries(netStats.attacks_by_type || netStats.attacks_by_category || {})
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 5) // Top 5
@@ -104,7 +104,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ refreshTrigger, onOp
         <MetricCard title="Active Threat Intel IOCs" value={iocCount} icon={<Crosshair size={20} />} />
         
         <MetricCard title="Total System Scans" value={sysStats?.total_scans || 0} icon={<Fingerprint size={20} />} />
-        <MetricCard title="Network Attack Flows" value={netStats?.attack_flows || 0} icon={<Network size={20} />} />
+        <MetricCard title="Network Attack Flows" value={netStats?.total_attacks_detected ?? netStats?.attack_flows ?? 0} icon={<Network size={20} />} />
         <MetricCard title="Phishing Attempts" value={sysStats?.phishing_detected || 0} icon={<AlertTriangle size={20} />} />
         <MetricCard title="Legitimate Verified" value={sysStats?.legitimate_verified || 0} icon={<Shield size={20} />} />
       </div>

@@ -81,7 +81,7 @@ app = FastAPI(
 
 Local-First, Privacy-Preserving Intrusion Detection and Threat Analysis Engine.
 - **Privacy Guarantee**: All ML inference runs locally on this device. Zero telemetry, zero external cloud inference.
-- **Subsystem 1 (Phishing)**: 28-feature Random Forest ML model trained on PhiUSIIL with independent URL Heuristic Threat Detection.
+- **Subsystem 1 (Phishing)**: 15-feature Random Forest ML model trained on PhiUSIIL with independent URL Heuristic Threat Detection.
 - **Subsystem 2 (Network IDPS)**: Dual Random Forest ML model (Binary Gate + 9-Class Multiclass) trained on CIC-IDS2017 with deterministic flow heuristics.
 - **Unified Defense**: Standardized threat scoring (0-100), severity classification, evidence-backed explanations, and multi-mode IPS architecture (detect_only, simulate, enforce).
     """,

@@ -5,7 +5,7 @@
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
 [![Backend Tests](https://img.shields.io/badge/backend%20tests-170%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
-[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-11%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/frontend/src/test)
+[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-13%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/frontend/src/test)
 [![Validation](https://img.shields.io/badge/validation%20(A--H)-8%2F8%20passed-blue)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
 [![Privacy](https://img.shields.io/badge/privacy-100%25%20local--first-green)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)
 
@@ -15,7 +15,7 @@
 
 **CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*) is an integrated, local-first cybersecurity platform that unites machine learning detection, deterministic heuristic/signature evaluation, local threat intelligence, multi-stage event correlation, calibrated threat scoring, and automated defensive prevention. Designed for host and edge environments, CIPHER operates **100% locally on `127.0.0.1`** with zero external cloud API dependencies, eliminating telemetry leakage and third-party exposure.
 
-The platform provides dual-domain threat visibility: inspecting suspicious web indicators via a static 28-feature Random Forest phishing detector trained on PhiUSIIL, while concurrently ingesting raw network packets through an Npcap live sensor and analyzing flow statistics via a Dual Random Forest network intrusion detection system trained on 2.49 million deduplicated flows from CIC-IDS2017. A modern dark-themed SOC operations dashboard developed in React 18, TypeScript, and Vite provides real-time telemetry, interactive sandboxes, incident lifecycle tracking, and evidence inspection.
+The platform provides dual-domain threat visibility: inspecting suspicious web indicators via a static 15-feature Random Forest phishing detector trained on PhiUSIIL, while concurrently ingesting raw network packets through an Npcap live sensor and analyzing flow statistics via a Dual Random Forest network intrusion detection system trained on 2.49 million deduplicated flows from CIC-IDS2017. A modern dark-themed SOC operations dashboard developed in React 18, TypeScript, and Vite provides real-time telemetry, interactive sandboxes, incident lifecycle tracking, and evidence inspection.
 
 ---
 

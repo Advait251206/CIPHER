@@ -126,13 +126,16 @@ export interface NetworkHealthResponse {
 }
 
 export interface NetworkStatsResponse {
-  total_flows: number;
-  attack_flows: number;
-  benign_flows: number;
-  attack_percentage: number;
-  attacks_by_category: Record<string, number>;
-  top_attacking_ips: Array<{ ip: string; count: number }>;
-  top_targeted_ports: Array<{ port: number; count: number }>;
+  total_flows?: number;
+  total_network_flows?: number;
+  attack_flows?: number;
+  total_attacks_detected?: number;
+  benign_flows?: number;
+  attack_percentage?: number;
+  attacks_by_category?: Record<string, number>;
+  attacks_by_type?: Record<string, number>;
+  top_attacking_ips?: Array<{ ip: string; count: number }>;
+  top_targeted_ports?: Array<{ port: number; count: number }>;
 }
 
 export interface NetworkModelInfoResponse {
