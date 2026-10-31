@@ -98,3 +98,4 @@ def test_train_inference_parity_inf_and_nan(metadata):
             assert np.isclose(val, expected_median, rtol=1e-4), (
                 f"Feature '{name}' missing feature mismatch: got {val}, expected median {expected_median}"
             )
+
