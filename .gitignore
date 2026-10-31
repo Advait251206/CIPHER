@@ -72,3 +72,6 @@ backend/cpp_sensor/*.ilk
 # Local API token (generated on first backend start)
 backend/.cipher_token
 .cipher_token
+
+# Uncommitted scratch/historical test report
+TEST_REPORT.old.md
