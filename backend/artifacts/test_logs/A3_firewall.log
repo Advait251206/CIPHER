@@ -1,0 +1,39 @@
+Loaded CIPHER API token from D:\Advait251206\College\5th Sem\IDPS\Project\backend\.cipher_token
+Target Backend: http://127.0.0.1:8000
+
+=== [PHASE 4.3] LIVE FIREWALL & PREVENTION ENGINE CHECKS ===
+
+[STEP 1] Direct Windows Firewall Elevation Check:
+  Status: Non-elevated (Medium Mandatory Level).
+  netsh return code: 1
+  netsh output: The requested operation requires elevation (Run as administrator).
+  Host firewall rule creation requires elevated UAC token.
+
+[STEP 2] Prevention Mode: detect_only
+  Set mode detect_only -> HTTP 200: {'status': 'success', 'mode': 'detect_only'}
+  POST /api/network/blocklist/203.0.113.51 -> HTTP 200: {'status': 'blocked', 'ip': '203.0.113.51', 'os_rule_applied': False}
+  Firewall rule CIPHER_BLOCK_203.0.113.51 exists: False (expected: False)
+
+[STEP 3] Prevention Mode: simulate
+  Set mode simulate -> HTTP 200: {'status': 'success', 'mode': 'simulate'}
+  POST /api/network/blocklist/203.0.113.52 -> HTTP 200: {'status': 'blocked', 'ip': '203.0.113.52', 'os_rule_applied': False}
+  Blocklist active IPs: ['203.0.113.52', '10.0.0.1', '198.51.100.123'] (contains 203.0.113.52: True)
+  Firewall rule CIPHER_BLOCK_203.0.113.52 exists: False (expected: False in simulate mode)
+
+[STEP 4] Prevention Mode: enforce
+  Set mode enforce -> HTTP 200: {'status': 'success', 'mode': 'enforce'}
+  POST /api/network/blocklist/203.0.113.53 -> HTTP 200: {'status': 'blocked', 'ip': '203.0.113.53', 'os_rule_applied': False}
+  Firewall rule CIPHER_BLOCK_203.0.113.53 exists in netsh: False
+  [NOT RUN] Enforce OS firewall rule creation requires elevated backend (UAC approval).
+  Backend reported os_rule_applied=False (failed safely due to non-elevated token).
+
+[STEP 5] Protected Address Safety Checks (enforce mode):
+  [PASS] Attempt to block Loopback address (127.0.0.1) -> HTTP 400: 127.0.0.1 is a loopback/link-local/multicast/unspecified address and cannot be blocked.
+  [PASS] Attempt to block Invalid string address (any) -> HTTP 400: 'any' is not a valid IP address.
+  [PASS] Attempt to block Host LAN IP (10.73.245.32) (10.73.245.32) -> HTTP 400: 10.73.245.32 belongs to this host and cannot be blocked.
+  [PASS] Attempt to block CIPHER_PROTECTED_IPS entry (10.0.0.0/8) (10.0.0.1) -> HTTP 400: 10.0.0.1 is inside protected range 10.0.0.0/8 (CIPHER_PROTECTED_IPS).
+
+[STEP 6] Windows Firewall Lingering CIPHER_BLOCK_* Rule Check:
+  [PASS] No lingering CIPHER_BLOCK_* rules exist in Windows Firewall.
+
+Reset prevention mode back to default 'detect_only'.
