@@ -51,7 +51,7 @@ More detail: [docs/architecture.md](docs/architecture.md).
 <!-- METRICS:SUMMARY:START -->
 | Model | Dataset (held-out test set) | Features | Accuracy | Precision | Recall | F1 | FPR |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 97.13% | 98.01% | 95.20% | 0.9659 | 1.440% |
+| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 98.09% | 97.96% | 97.55% | 0.9775 | 1.520% |
 | Network IDS, binary gate (Random Forest) | CIC-IDS2017, random stratified split (404,433 flows) | 67 | 99.903% | 99.445% | 99.944% | 0.9969 | 0.104% |
 | Network IDS, 9-class (Random Forest) | CIC-IDS2017, same split | 67 | 99.900% | — | — | macro 0.9192 / weighted 0.9990 | — |
 | Email phishing (Random Forest) | 6-corpus Kaggle aggregate, random stratified split (12,359 emails) | 32 | 91.53% | 94.24% | 89.14% | 0.9162 | 5.89% |

@@ -12,4 +12,6 @@ tests/test_api.py::test_feature_extraction_failure_safe_handling
     return function(**arguments)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-255 passed, 1 skipped, 2 warnings in 28.81s
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_feature_parity.py:81: Sample CIC PCAP not found at 'data/raw/cic_ids2017/sample.pcap'; stopped per Rule 5.
+255 passed, 1 skipped, 2 warnings in 21.98s

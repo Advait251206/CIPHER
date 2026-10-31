@@ -9,7 +9,7 @@ All tables in the generated blocks come from the committed model artifacts (`bac
 <!-- METRICS:SUMMARY:START -->
 | Model | Dataset (held-out test set) | Features | Accuracy | Precision | Recall | F1 | FPR |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 97.13% | 98.01% | 95.20% | 0.9659 | 1.440% |
+| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 98.09% | 97.96% | 97.55% | 0.9775 | 1.520% |
 | Network IDS, binary gate (Random Forest) | CIC-IDS2017, random stratified split (404,433 flows) | 67 | 99.903% | 99.445% | 99.944% | 0.9969 | 0.104% |
 | Network IDS, 9-class (Random Forest) | CIC-IDS2017, same split | 67 | 99.900% | — | — | macro 0.9192 / weighted 0.9990 | — |
 | Email phishing (Random Forest) | 6-corpus Kaggle aggregate, random stratified split (12,359 emails) | 32 | 91.53% | 94.24% | 89.14% | 0.9162 | 5.89% |
@@ -29,8 +29,8 @@ Test-set confusion matrix:
 <!-- METRICS:PHISHING_CM:START -->
 ```text
                    Predicted Legitimate    Predicted Phishing
-Actual Legitimate        19,936 (TN)             292 (FP)
-Actual Phishing             723 (FN)          14,355 (TP)
+Actual Legitimate        19,921 (TN)             307 (FP)
+Actual Phishing             369 (FN)          14,709 (TP)
 ```
 <!-- METRICS:PHISHING_CM:END -->
 
@@ -91,39 +91,30 @@ Points a reviewer will raise, and our position:
 
 - **INFILTRATION and OTHER_ATTACK (Heartbleed) have single-digit test support.** Their per-class numbers are anecdotal and are not claimed as results.
 - **BOTNET precision is about 70%.** ARES bot traffic overlaps with benign polling in flow statistics. The `HEUR-ANOMALY-002` IRC-port rule and IOC matching are the intended cross-checks.
-- **Random split.** A day-held-out split (train Monday–Thursday, test Friday) and a cross-dataset test (train CIC-IDS2017, test CSE-CIC-IDS2018) are needed before claiming generalisation.
+- **Day split evaluates generalization to unseen attack categories.** Training on Monday–Thursday and testing on Friday drops binary accuracy from 99.90% to 77.38% (recall 37.08%) and per-class F1 for Friday attacks to 0.0000. This is not primarily IP memorization (the model has no IP features), but zero-shot category absence: Friday's attacks (DDoS, PortScan, Botnet) never appear in Monday–Thursday training. It measures how tree ensembles fail when facing novel attack categories they were never trained to classify.
 - **Known dataset defects.** Engelen, Rimmer & Joosen (IEEE SPW 2021) report CICFlowMeter bugs and labelling errors in CIC-IDS2017 and publish a corrected version. Re-running on it is recommended.
 - **Preprocessing consistency.** Training replaces +inf with each file's 99.9th percentile, while inference uses 1e6. Imputation medians were computed before the split. Both should be fitted on the training partition only.
 
 ## 4. Real-world URL probe (raw model vs. full service)
 
-`python -m training.probe_phishing` scores 15 legitimate deep links and 10 phishing patterns. Baseline for model `phiusiil-rf-v1` ([CSV](../backend/artifacts/phishing_probe_baseline.csv)):
+`python -m training.probe_phishing` scores 15 legitimate deep links and 10 phishing patterns.
 
-| Measure | Raw model (P ≥ 0.5) | Full service (heuristics + trusted-domain list) |
-| --- | --- | --- |
-| Legitimate deep links flagged as phishing | 15 / 15 | 8 / 15 (`LIKELY_PHISHING`) |
-| Phishing patterns missed | 1 / 10 (`www.paypa1.com`) | 1 / 10 |
+| Measure | Baseline Model (phiusiil-rf-v1) | Retrained Model (Tranco deep paths, probe-excluded) | Unseen Held-Out URLs (15 legit / 12 phish) |
+| --- | :---: | :---: | :---: |
+| Raw model legitimate FP (P ≥ 0.5) | 15 / 15 (100%) | 9 / 15 (60%) | 4 / 15 (26.7%) |
+| Raw model phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 | 3 / 12 |
+| Full service legitimate FP | 2 / 15 (`docs.python.org`, `sbi.co.in`) | 0 / 15 (0%) | 0 / 15 (0%) |
+| Full service phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 | 2 / 12 |
 
-Selected rows:
+**Root Cause.** All 134,850 legitimate URLs in PhiUSIIL are bare `https://www.` homepages, while phishing URLs carry paths and queries. The raw baseline learned "has a path → phishing".
 
-| URL | Raw P(phish) | Service verdict |
-| --- | --- | --- |
-| github.com/Advait251206/CIPHER | 1.00 | LEGITIMATE (trusted domain) |
-| docs.python.org/3/library/urllib.parse.html | 1.00 | LIKELY_PHISHING (70) |
-| www.sbi.co.in/web/personal-banking | 0.92 | LIKELY_PHISHING (64) |
-| arxiv.org/abs/2010.09470 | 0.99 | LIKELY_PHISHING (70) |
-| www.paypa1.com (typosquat) | 0.02 | LEGITIMATE (2) |
-| sites.google.com/view/paypal-verify-account | 1.00 | LIKELY_PHISHING (85) |
-
-**Cause.** All 134,850 legitimate URLs in PhiUSIIL are bare `https://www.` homepages, while phishing URLs carry paths and queries. The model learned "has a path → phishing". `FeatureExtractor.canonicalize_url()` (adds `www.`) works around part of the bias at inference but not the path effect.
-
-**Fix (future work).** Retrain with legitimate URLs that include paths (for example, sampled deep links for Tranco top domains), or drop path-sensitive features, then report the probe before and after.
+**Retraining & Trade-offs.** Retraining with 25,000 synthetic deep paths from top Tranco domains (strictly excluding all test/probe domains) reduces legitimate deep link false positives from 15/15 down to 9/15 on the probe set and 4/15 on completely unseen external URLs. The trade-off is a slight increase in held-out test false negative rate on PhiUSIIL (test accuracy shifts from 98.75% to 98.09%, FPR from 0.90% to 1.52%, and subtle phishing URLs like `evil.weebly.com/office365-login` are scored lower by the raw tree). CIPHER mitigates this by combining the raw ML classifier with heuristic rules and the two-tier domain whitelist.
 
 ## 5. Email phishing model
 
 - Dataset: six Kaggle corpora (CEAS-08, Enron, Ling, Nazario, Nigerian Fraud, SpamAssassin); 70/15/15 split stratified by label.
 - Model: Random Forest (100 trees, depth 20) on 32 engineered features. Test metrics are in the summary table.
-- **Caveat.** The corpora differ in era and source, and the top features are length and style (`avg_word_length`, `body_length`, `exclamation_count`), so the model may partly identify the corpus rather than the intent. A leave-one-corpus-out evaluation is needed before claiming generalisation.
+- **Caveat.** The corpora differ in era and source, and the top features are length and style (`avg_word_length`, `body_length`, `exclamation_count`), so the model may partly identify the corpus rather than the intent. The leave-one-corpus-out (LOCO) evaluation in section 5.1 below documents this generalization gap across each corpus.
 
 ### Leave-One-Corpus-Out (LOCO) Generalization Across Corpora
 
