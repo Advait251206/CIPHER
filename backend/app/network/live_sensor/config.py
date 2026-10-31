@@ -14,7 +14,7 @@ class SensorConfig:
     interface: Optional[str] = None
     bpf_filter: Optional[str] = None
     flow_idle_timeout: float = 5.0        # Seconds of inactivity before flow is finalized
-    flow_active_timeout: float = 60.0     # Maximum seconds a flow can remain active before expiration
+    flow_active_timeout: float = 120.0    # Maximum seconds a flow can remain active before expiration (CICFlowMeter v3 parity)
     min_packets_to_analyze: int = 1       # Minimum packet count required to send flow to IDS
     max_active_flows: int = 50000         # Bounded memory capacity for concurrent active flows
     cleanup_interval_seconds: float = 1.0 # Interval for the background expiration worker
@@ -27,7 +27,7 @@ class SensorConfig:
 def load_sensor_config_from_env() -> SensorConfig:
     """Initializes sensor configuration from environment variables with safe defaults."""
     idle_timeout = float(os.getenv("CIPHER_FLOW_IDLE_TIMEOUT", "5.0"))
-    active_timeout = float(os.getenv("CIPHER_FLOW_ACTIVE_TIMEOUT", "60.0"))
+    active_timeout = float(os.getenv("CIPHER_FLOW_ACTIVE_TIMEOUT", "120.0"))
     max_flows = int(os.getenv("CIPHER_MAX_ACTIVE_FLOWS", "50000"))
     iface = os.getenv("CIPHER_SENSOR_INTERFACE", None)
     bpf = os.getenv("CIPHER_SENSOR_BPF", None)

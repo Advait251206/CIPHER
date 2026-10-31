@@ -105,7 +105,7 @@ class BidirectionalFlow:
 
         # TCP Data Segments
         self.act_data_pkt_fwd = 0
-        self.min_seg_size_fwd = 20  # Default IPv4/TCP standard header size
+        self.min_seg_size_fwd = 32  # CICFlowMeter v3 default forward segment header baseline
 
         # Active / Idle Period Tracking (Threshold = 1.0s gap between packets)
         self.active_durations: List[float] = []
@@ -131,7 +131,8 @@ class BidirectionalFlow:
         timestamp: float,
         tcp_flags: Optional[Dict[str, bool]] = None,
         window_size: Optional[int] = None,
-        payload_len: int = 0
+        payload_len: int = 0,
+        tcp_header_len: Optional[int] = None
     ):
         """
         Updates flow state with an incoming packet in O(1) time.
@@ -163,7 +164,10 @@ class BidirectionalFlow:
 
             if payload_len > 0:
                 self.act_data_pkt_fwd += 1
-            if header_len > 0:
+            if tcp_header_len is not None and tcp_header_len > 0:
+                # CICFlowMeter v3 tracks TCP header length only (20-60 bytes), not L2/L3+L4
+                self.min_seg_size_fwd = min(self.min_seg_size_fwd, tcp_header_len)
+            elif header_len > 0 and self.min_seg_size_fwd == 32:
                 self.min_seg_size_fwd = min(self.min_seg_size_fwd, header_len)
             if window_size is not None and self.init_win_bytes_fwd == -1:
                 self.init_win_bytes_fwd = int(window_size)

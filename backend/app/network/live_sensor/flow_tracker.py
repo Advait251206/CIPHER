@@ -67,6 +67,7 @@ class FlowTracker:
                 
                 packet_len = packet.get("pkt_len", 0)
                 header_len = packet.get("hdr_len", 0)
+                tcp_header_len = packet.get("tcp_hdr_len", 20 if protocol == "TCP" else None)
                 payload_len = packet.get("payload_len", 0)
                 window_size = packet.get("win", 0)
                 pkt_time = packet.get("ts", time.time())
@@ -124,7 +125,8 @@ class FlowTracker:
                         timestamp=pkt_time,
                         tcp_flags=tcp_flags,
                         window_size=window_size,
-                        payload_len=payload_len
+                        payload_len=payload_len,
+                        tcp_header_len=tcp_header_len
                     )
                     return flow
 
@@ -328,7 +330,8 @@ class FlowTracker:
                     timestamp=pkt_time,
                     tcp_flags=tcp_flags,
                     window_size=window_size,
-                    payload_len=payload_len
+                    payload_len=payload_len,
+                    tcp_header_len=tcp_header_len if protocol == "TCP" else None
                 )
 
                 return flow
