@@ -99,16 +99,20 @@ Points a reviewer will raise, and our position:
 
 `python -m training.probe_phishing` scores 15 legitimate deep links and 10 phishing patterns.
 
-| Measure | Baseline Model (phiusiil-rf-v1) | Retrained Model (Tranco deep paths, probe-excluded) | Unseen Held-Out URLs (15 legit / 12 phish) |
-| --- | :---: | :---: | :---: |
-| Raw model legitimate FP (P ≥ 0.5) | 15 / 15 (100%) | 9 / 15 (60%) | 4 / 15 (26.7%) |
-| Raw model phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 | 3 / 12 |
-| Full service legitimate FP | 2 / 15 (`docs.python.org`, `sbi.co.in`) | 0 / 15 (0%) | 0 / 15 (0%) |
-| Full service phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 | 2 / 12 |
+| Measure | Baseline Model (phiusiil-rf-v1) | Retrained Model (Tranco deep paths, probe-excluded) |
+| --- | :---: | :---: |
+| Raw model legitimate FP (P ≥ 0.5) | 15 / 15 (100%) | 9 / 15 (60.0%) |
+| Raw model phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 |
+| Full service legitimate FP | 2 / 15 (`docs.python.org`, `sbi.co.in`) | 0 / 15 (0.0%) |
+| Full service phishing misses | 1 / 10 (`www.paypa1.com`) | 2 / 10 |
 
-**Root Cause.** All 134,850 legitimate URLs in PhiUSIIL are bare `https://www.` homepages, while phishing URLs carry paths and queries. The raw baseline learned "has a path → phishing".
+**Whitelisting vs. Raw ML.** The full service achieves 0/15 false positives primarily through the two-tier domain whitelist (`TRUSTED_DOMAINS` and the Tranco top-50k list), because most legitimate domains in the probe reside in Tranco. The true statistical capability of the machine learning classifier alone is reflected in the raw model row (which dropped from 15/15 to 9/15), not the whitelist-assisted service verdict.
 
-**Retraining & Trade-offs.** Retraining with 25,000 synthetic deep paths from top Tranco domains (strictly excluding all test/probe domains) reduces legitimate deep link false positives from 15/15 down to 9/15 on the probe set and 4/15 on completely unseen external URLs. The trade-off is a slight increase in held-out test false negative rate on PhiUSIIL (test accuracy shifts from 98.75% to 98.09%, FPR from 0.90% to 1.52%, and subtle phishing URLs like `evil.weebly.com/office365-login` are scored lower by the raw tree). CIPHER mitigates this by combining the raw ML classifier with heuristic rules and the two-tier domain whitelist.
+**Root Cause & Architectural Trade-offs.**
+- *Bare-homepage bias in PhiUSIIL*: All 134,850 legitimate URLs in raw PhiUSIIL are bare homepages (`https://www.example.com`), whereas phishing URLs carry paths, subdomains, and query strings. The baseline model learned a naive decision boundary: any deep path indicates phishing.
+- *The consequence of path augmentation*: Retraining with 25,000 synthetic deep paths from diverse Tranco domains (excluding probe domains) successfully forced the tree ensemble to evaluate lexical structure rather than merely penalizing the presence of a path, dropping raw false alarms from 15/15 to 9/15.
+- *The new vulnerability: phishing on legitimate / user-publishing platforms*: Training the model on thousands of diverse hosts with generic paths taught the decision trees that ordinary-looking paths (e.g., `/view/...`, `/login`, `/account`) are typical of legitimate websites. As a direct consequence, the retrained model exhibits reduced sensitivity to phishing hosted on legitimate cloud platforms and user-content services. For instance, `sites.google.com/view/paypal-verify-account` dropped from a threat score of 85 (`LIKELY_PHISHING`) to 21 (`LEGITIMATE`), and `evil.weebly.com/office365-login` received a raw model probability of only 0.09.
+- *Independent evaluation on unseen external domains*: In external testing on held-out URLs from domains not seen in training, the raw model flagged 7 out of 15 legitimate URLs (including deep paths on `mit.edu`, `nist.gov`, `bbc.co.uk`, `rust-lang.org`, `cloudflare.com`, `flipkart.com`, and `sbi.co.in`) and missed 1 out of 12 phishing URLs. This demonstrates that pure lexical URL classification has intrinsic limitations: distinguishing an authentic corporate login page from a cloud-hosted credential harvest cannot be solved reliably by URL string features alone without external context (e.g. host domain reputation, TLS certificates, or DOM content).
 
 ## 5. Email phishing model
 

@@ -3,10 +3,10 @@ CIPHER - MODEL EVALUATION ON HELD-OUT TEST SET
 =================================================================
 
 [1/4] Loading model and held-out test data...
-      Loaded model (RandomForestClassifier) and 35,306 test samples in 0.67s
+      Loaded model (RandomForestClassifier) and 35,306 test samples in 0.68s
 
 [2/4] Running inference on held-out test set...
-      Inference completed in 0.19s (188,533 predictions/sec, 0.005 ms/URL)
+      Inference completed in 0.20s (180,369 predictions/sec, 0.006 ms/URL)
 
 [3/4] Computing performance metrics...
       Test Accuracy:             98.09%

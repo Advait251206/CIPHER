@@ -5,7 +5,7 @@ MACHINE LEARNING EVALUATION REPORT - PHISHING URL DETECTOR
 
 Model Name:                 CIPHER Random Forest Phishing Detector
 Model Version:              phiusiil-rf-v1
-Evaluation Date:            2026-10-31 05:43:07 UTC
+Evaluation Date:            2026-10-31 06:04:49 UTC
 Dataset:                    PhiUSIIL Phishing URL Dataset
 Dataset Total Clean Rows:   235,370 unique URLs (zero duplicate URLs)
 Split Strategy:             Stratified Split: 70% Train, 15% Validation, 15% Held-Out Test
@@ -24,7 +24,7 @@ Specificity (TNR):          98.48%
 False Positive Rate (FPR):  1.518% (307 out of 20,228 legitimate sites)
 False Negative Rate (FNR):  2.447% (369 out of 15,078 phishing sites)
 
-Inference Throughput:       188,533 URLs/sec (0.005 ms/URL)
+Inference Throughput:       180,369 URLs/sec (0.006 ms/URL)
 Local Privacy:              100% Offline, Zero Network Calls, Zero Browsing History Leaks
 
 --------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ Actual Phishing (1):                369 (FN)                  14,709 (TP)
 A. FALSE POSITIVES (307 occurrences, FPR = 1.518%):
    - Impact: A legitimate website is flagged as phishing, potentially causing user
      friction or alert fatigue.
-   - Analysis: With an FPR under 0.1%, fewer than 1 in 1,000 legitimate URLs trigger
+   - Analysis: At an FPR of 1.518%, approximately 307 out of 20,228 legitimate URLs trigger
      an ML alarm. Those that do typically lack HTTPS or feature unusually complex
      tracking parameters resembling obfuscated payloads.
    - Mitigation: CIPHER's Threat Scorer requires corroboration from the Heuristic

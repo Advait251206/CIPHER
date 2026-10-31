@@ -134,6 +134,6 @@
       "fn": 369,
       "tp": 14709
     },
-    "inference_throughput_urls_per_sec": 188532.9
+    "inference_throughput_urls_per_sec": 180368.9
   }
 }

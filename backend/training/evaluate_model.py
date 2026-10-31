@@ -172,7 +172,7 @@ Actual Phishing (1):            {fn:7,d} (FN)                 {tp:7,d} (TP)
 A. FALSE POSITIVES ({fp:,} occurrences, FPR = {fpr*100:.3f}%):
    - Impact: A legitimate website is flagged as phishing, potentially causing user
      friction or alert fatigue.
-   - Analysis: With an FPR under 0.1%, fewer than 1 in 1,000 legitimate URLs trigger
+   - Analysis: At an FPR of {fpr*100:.3f}%, approximately {fp:,} out of {tn+fp:,} legitimate URLs trigger
      an ML alarm. Those that do typically lack HTTPS or feature unusually complex
      tracking parameters resembling obfuscated payloads.
    - Mitigation: CIPHER's Threat Scorer requires corroboration from the Heuristic
