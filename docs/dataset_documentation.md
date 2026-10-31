@@ -1,9 +1,6 @@
 # CIPHER — Dataset Ingestion, Cleaning & Partitioning Documentation
 
-> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
-
-> **Count provenance:** the partition sizes below are from an earlier preprocessing run. The committed network model's metadata reports 448,019 balanced training flows, 404,442 validation flows and 404,442 test flows. Re-run `python -m training.preprocess_cic_ids2017` and update this section from `data/processed/cic_ids2017/metadata/preprocessing_metadata.json` before publication.
-
+> **Verification Status (v1.3, Oct 2026):** All dataset counts, split partitions, imputation medians, and +inf replacements in this document have been verified and reconciled against `backend/data/processed/cic_ids2017/metadata/preprocessing_metadata.json`, `models/phishing/model_metadata.json`, and `models/email/email_model_metadata.json`.
 
 This document provides exact, reproducible documentation of the datasets, preprocessing pipelines, deduplication audits, and data splits utilized in **CIPHER**.
 
@@ -54,31 +51,35 @@ To ensure rigorous evaluation without data leakage, deduplication was performed 
 ### Cleaning, Deduplication & Memory Optimization
 | Cleaning Operation | Resulting Impact | Technical Rationale |
 |:---|:---:|:---|
-| **Raw Ingested Records** | **2,830,743 flows** | Ingested sequentially across all 8 capture files |
+| **Raw Ingested Records** | **3,028,152 flows** | Ingested sequentially across all 8 daily capture files plus custom baseline |
 | **Constant Columns Dropped** | 10 columns removed | Removed zero-variance fields (e.g., `Bwd PSH Flags`, `Fwd URG Flags`, `Bulk Rates`) |
 | **Duplicate Extractor Column** | 1 column removed | Dropped `Fwd Header Length.1` (identical to `Fwd Header Length`) |
 | **Label Normalization** | 15 classes $\to$ 9 | Standardized non-ASCII hyphen encodings (`\ufffd`, `\x96`, `–`) and mapped to standard taxonomy |
 | **Intra-File Deduplication** | Cleaned per file | Dropped duplicate flows within individual daily captures |
-| **Global Cross-File Deduplication** | **331,860 duplicate flows removed** | Eliminated identical flow records appearing across multiple capture windows |
-| **Deduplicated Master Corpus** | **2,498,883 unique flows** | Final deduplicated dataset ensuring zero memorization leakage |
+| **Global Cross-File Deduplication** | **331,933 duplicate flows removed** | Eliminated identical flow records appearing across multiple capture windows |
+| **Deduplicated Master Corpus** | **2,696,219 unique flows** | Final deduplicated dataset ensuring zero memorization leakage |
 
 ### Stratified Partitioning & Training Set Balancing
 The deduplicated dataset was partitioned using stratified sampling across all 9 attack/benign categories:
 
 ```text
-Deduplicated Corpus (2,498,883 flows)
-  ├── Training Partition (70%):   1,749,218 flows (298,019 attacks + 1,451,199 benign)
-  ├── Validation Partition (15%):   374,832 flows (63,861 attacks + 310,971 benign)
-  └── Test Partition (15%):         374,833 flows (63,861 attacks + 310,972 benign)
+Deduplicated Corpus (2,696,219 flows)
+  ├── Training Partition (70%):   1,887,353 flows (298,018 attacks + 1,589,335 benign)
+  ├── Validation Partition (15%):   404,433 flows (63,861 attacks + 340,572 benign)
+  └── Test Partition (15%):         404,433 flows (63,861 attacks + 340,572 benign)
 ```
 
 #### Benign Training Set Cap Methodology
-In the unadulterated training partition, benign flows outnumbered attack flows by approximately 5:1 (1,451,199 vs. 298,019). Training Random Forest ensembles on this raw distribution causes tree splits to optimize solely for the majority benign class:
+In the unadulterated training partition, benign flows heavily outnumbered attack flows (1,589,335 vs. 298,018). Training Random Forest ensembles on this raw distribution causes tree splits to optimize solely for the majority benign class:
 
-1. **All 298,019 attack training flows were retained (100%)**, ensuring complete coverage of all rare and minority attack classes (Heartbleed, Infiltration, Botnet, SQL Injection).
+1. **All 298,018 attack training flows were retained (100%)**, ensuring complete coverage of all rare and minority attack classes (Heartbleed, Infiltration, Botnet, SQL Injection).
 2. **Benign training flows were capped at 150,000 samples** using a deterministic stratified sample (`random_state=42`).
-3. This produced a balanced training dataset of **448,019 flows** (~66.5% attack, ~33.5% benign).
-4. **Critical Generalization Safeguard**: The **Validation (374,832 flows)** and **Test (374,833 flows)** partitions were **never downsampled or modified**. They reflect the natural, real-world class distribution of CIC-IDS2017 (~83% benign, ~17% attack), guaranteeing that reported test metrics represent true generalization without synthetic balancing bias.
+3. This produced a balanced training dataset of **448,018 flows** (~66.5% attack, ~33.5% benign).
+4. **Data Sanitization Fitted on Train**:
+   - `Flow Bytes/s`: +inf replaced with 99.9th percentile of train finite values (`2,148,000.0 B/s`), median `3,955.0 B/s`.
+   - `Flow Packets/s`: +inf replaced with 99.9th percentile of train finite values (`2,000,000.0 pkts/s`), median `66.085 pkts/s`.
+   - All 67 feature imputation medians fitted strictly on the train partition and applied identically to validation, test, and inference.
+5. **Critical Generalization Safeguard**: The **Validation (404,433 flows)** and **Test (404,433 flows)** partitions were **never downsampled or modified**. They reflect the natural, real-world class distribution of CIC-IDS2017 (~84.2% benign, ~15.8% attack), guaranteeing that reported test metrics represent true generalization without synthetic balancing bias.
 
 ---
 

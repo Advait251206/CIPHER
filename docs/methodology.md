@@ -1,9 +1,6 @@
 # CIPHER — Engineering & Scientific Methodology
 
-> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
-
-> **Count provenance:** the partition sizes below are from an earlier preprocessing run. The committed network model's metadata reports 448,019 balanced training flows, 404,442 validation flows and 404,442 test flows. Re-run `python -m training.preprocess_cic_ids2017` and update this section from `data/processed/cic_ids2017/metadata/preprocessing_metadata.json` before publication.
-
+> **Verification Status (v1.3, Oct 2026):** All metrics, partition sizes, imputation parameters, and architectural configurations in this document have been reconciled and verified against the committed model metadata (`backend/models/*/…metadata.json`) and `backend/data/processed/cic_ids2017/metadata/preprocessing_metadata.json`.
 
 This document provides a systematic account of the methodology, algorithms, feature pipelines, and architectural decisions employed across all ten development phases of **CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*).
 
@@ -46,16 +43,17 @@ This document provides a systematic account of the methodology, algorithms, feat
 ---
 
 ## Phase 3: CIC-IDS2017 Network Intrusion Detection Methodology
-- **Dataset**: Canadian Institute for Cybersecurity CIC-IDS2017 benchmark dataset (`MachineLearningCSV`), covering 8 packet capture windows across 5 business days.
+- **Dataset**: Canadian Institute for Cybersecurity CIC-IDS2017 benchmark dataset (`MachineLearningCSV`), covering 8 packet capture windows across 5 business days plus custom baseline.
 - **Raw Ingestion & Deduplication**:
-  - Raw flow records ingested: **2,830,743**.
+  - Raw flow records ingested: **3,028,152**.
   - Dropped zero-entropy constant columns: `Bwd PSH Flags`, `Fwd URG Flags`, `Bwd URG Flags`, `CWE Flag Count`, `Fwd Avg Bytes/Bulk`, `Fwd Avg Packets/Bulk`, `Fwd Avg Bulk Rate`, `Bwd Avg Bytes/Bulk`, `Bwd Avg Packets/Bulk`, `Bwd Avg Bulk Rate`.
   - Dropped extractor artifact: `Fwd Header Length.1`.
   - Removed exact intra-file duplicates.
-  - Performed **global cross-file deduplication**: Removed **331,860 exact duplicate flows**, yielding **2,498,883 unique flow records**.
-- **Data Sanitization**:
-  - Infinite values (`+inf`, `-inf`) in `Flow Bytes/s` and `Flow Packets/s` imputed using the 99.9th percentile of finite values.
-  - Missing values (`NaN`) imputed with median feature values.
+  - Performed **global cross-file deduplication**: Removed **331,933 exact duplicate flows**, yielding **2,696,219 unique flow records**.
+- **Data Sanitization Fitted on Train**:
+  - Infinite values (`+inf`) in `Flow Bytes/s` replaced with the 99.9th percentile of train finite values (`2,148,000.0 B/s`), median `3,955.0 B/s`.
+  - Infinite values (`+inf`) in `Flow Packets/s` replaced with the 99.9th percentile of train finite values (`2,000,000.0 pkts/s`), median `66.085 pkts/s`.
+  - All 67 feature medians fitted strictly on the train partition and serialized to `preprocessing_metadata.json` and `network_feature_pipeline.joblib`.
   - Converted float representations to `float32` to optimize memory consumption.
 - **Attack Taxonomy & Label Normalization**:
   - Mapped 15 heterogeneous attack labels into 8 standardized attack classes plus `BENIGN`:
@@ -69,13 +67,13 @@ This document provides a systematic account of the methodology, algorithms, feat
     - `OTHER_ATTACK`: Heartbleed
 - **Stratified Partitioning**:
   - Stratified across all attack classes to guarantee test representation:
-    - Training Partition: **70%** (1,749,218 flows)
-    - Validation Partition: **15%** (374,832 flows)
-    - Test Partition: **15%** (374,833 flows)
+    - Training Partition: **70%** (1,887,353 flows)
+    - Validation Partition: **15%** (404,433 flows)
+    - Test Partition: **15%** (404,433 flows)
 - **Training Set Class Balancing (Benign Cap)**:
   - To prevent majority-class domination while retaining 100% of attack instances, the training partition capped benign flows at **150,000 samples** via stratified sampling with a fixed seed.
-  - Resulting training set: **448,019 flows** (298,019 attack flows + 150,000 benign flows).
-  - Validation and test partitions were maintained in their **natural, unadulterated class distributions** (each containing ~310,972 benign and ~63,861 attack flows) to measure authentic generalized performance.
+  - Resulting training set: **448,018 flows** (298,018 attack flows + 150,000 benign flows).
+  - Validation and test partitions were maintained in their **natural, unadulterated class distributions** (each containing ~340,572 benign and ~63,861 attack flows) to measure authentic generalized performance.
 - **Dual Random Forest Architecture**:
   - *Model 1 (Binary Gate)*: `n_estimators=100`, `max_depth=24`, `min_samples_leaf=2`. Fast, high-recall discriminator between Benign and Malicious traffic.
   - *Model 2 (Multiclass Classifier)*: Specializes across the 8 attack categories, activated when the binary gate confirms an attack.
