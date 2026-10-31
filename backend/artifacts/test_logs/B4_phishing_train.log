@@ -1,13 +1,13 @@
-D:\Advait251206\College\5th Sem\IDPS\Project\backend\training\train_phishing_model.py:223: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+D:\Advait251206\College\5th Sem\IDPS\Project\backend\training\train_phishing_model.py:244: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   "training_date": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
 =================================================================
 CIPHER - PHISHING DETECTION MODEL TRAINING
 =================================================================
 
 [1/5] Loading processed datasets from: D:\Advait251206\College\5th Sem\IDPS\Project\backend\data\processed\phiusiil
-      Train samples: 164,759 | Val samples: 35,305 (loaded in 0.13s)
+      Train samples: 164,759 | Val samples: 35,305 (loaded in 0.11s)
 
-[1.5/5] Augmenting training distribution with Tranco deep-path legitimate URLs...
+[1.5/5] Augmenting training distribution with Tranco deep-path legitimate URLs (held-out probe domains excluded)...
       Augmented training set: 145,364 samples (75,000 Benign, 70,364 Phishing)
       Feature count: 15
       Train class balance: Legit(0)=75,000 | Phish(1)=70,364
@@ -15,38 +15,38 @@ CIPHER - PHISHING DETECTION MODEL TRAINING
 
 [2/5] Benchmarking candidate classifiers on Validation set...
       Fitting Random Forest (100 trees)...
-        -> Fit Time: 1.75s | Acc: 0.9703 | Prec: 0.9822 | Rec: 0.9475 | F1: 0.9646 | AUC: 0.9954 | FPR: 0.0128
+        -> Fit Time: 1.69s | Acc: 0.9806 | Prec: 0.9813 | Rec: 0.9731 | F1: 0.9772 | AUC: 0.9960 | FPR: 0.0138
       Fitting HistGradientBoosting...
-        -> Fit Time: 2.26s | Acc: 0.9628 | Prec: 0.9703 | Rec: 0.9417 | F1: 0.9558 | AUC: 0.9943 | FPR: 0.0215
+        -> Fit Time: 1.81s | Acc: 0.9774 | Prec: 0.9757 | Rec: 0.9712 | F1: 0.9734 | AUC: 0.9958 | FPR: 0.0180
       Fitting Logistic Regression (Scaled)...
-        -> Fit Time: 0.31s | Acc: 0.9156 | Prec: 0.9728 | Rec: 0.8255 | F1: 0.8931 | AUC: 0.9632 | FPR: 0.0172
+        -> Fit Time: 0.30s | Acc: 0.9223 | Prec: 0.9683 | Rec: 0.8457 | F1: 0.9029 | AUC: 0.9693 | FPR: 0.0207
 
 [3/5] Selecting champion model...
       Champion Model: Random Forest (100 trees)
-      Validation F1 Score: 0.9646
-      Validation ROC-AUC:  0.9954
-      Validation FPR:      0.0128
-      Validation FNR:      0.0525
+      Validation F1 Score: 0.9772
+      Validation ROC-AUC:  0.996
+      Validation FPR:      0.0138
+      Validation FNR:      0.0269
 
 [4/5] Generalization check (Train vs Validation)...
-      Training Performance:   Accuracy=0.9806, F1=0.9796
-      Validation Performance: Accuracy=0.9703, F1=0.9646
-      Generalization Gap:     0.0103 (solid generalization, controlled depth)
+      Training Performance:   Accuracy=0.9891, F1=0.9887
+      Validation Performance: Accuracy=0.9806, F1=0.9772
+      Generalization Gap:     0.0085 (solid generalization, controlled depth)
 
       Top 10 Most Influential Features:
-         1. IsHTTPS                   : 39.61%
-         2. DomainLength              : 11.54%
-         3. DomainEntropy             : 10.47%
-         4. CharContinuationRate      :  7.49%
-         5. SpacialCharRatioInURL     :  7.23%
-         6. LetterRatioInURL          :  6.89%
-         7. DegitRatioInURL           :  6.03%
-         8. URLEntropy                :  4.56%
-         9. IsSuspiciousTLD           :  2.04%
-        10. TLDLength                 :  1.25%
+         1. IsHTTPS                   : 37.04%
+         2. DomainLength              : 10.98%
+         3. DegitRatioInURL           :  9.33%
+         4. LetterRatioInURL          :  9.18%
+         5. DomainEntropy             :  8.53%
+         6. CharContinuationRate      :  7.71%
+         7. SpacialCharRatioInURL     :  6.77%
+         8. URLEntropy                :  4.74%
+         9. IsSuspiciousTLD           :  1.68%
+        10. TLDLength                 :  1.29%
 
 [5/5] Saving production model artifacts...
-      Saved model to: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\phishing_model.joblib (10,003,236 bytes)
+      Saved model to: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\phishing_model.joblib (8,400,522 bytes)
       Saved feature pipeline to: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\feature_pipeline.joblib
       Saved metadata to: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\model_metadata.json
 =================================================================

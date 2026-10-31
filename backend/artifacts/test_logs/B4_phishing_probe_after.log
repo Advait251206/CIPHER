@@ -1,4 +1,4 @@
 Model version: phiusiil-rf-v1
-Raw model : 0/15 legitimate URLs flagged, 3/10 phishing URLs missed
-Service   : 0/15 legitimate URLs LIKELY_PHISHING, 1/10 phishing URLs LEGITIMATE
+Raw model : 9/15 legitimate URLs flagged, 2/10 phishing URLs missed
+Service   : 0/15 legitimate URLs LIKELY_PHISHING, 2/10 phishing URLs LEGITIMATE
 Wrote artifacts/phishing_probe_after.csv

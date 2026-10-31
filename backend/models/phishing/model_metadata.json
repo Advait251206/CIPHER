@@ -2,7 +2,7 @@
   "model_name": "RandomForestClassifier",
   "model_display_name": "CIPHER Random Forest Phishing Detector",
   "model_version": "phiusiil-rf-v1",
-  "training_date": "2026-10-31T05:25:09Z",
+  "training_date": "2026-10-31T05:42:53Z",
   "dataset_name": "PhiUSIIL Phishing URL Dataset",
   "preprocessing_version": "1.0.0",
   "feature_count": 15,
@@ -24,41 +24,41 @@
     "IsSuspiciousTLD"
   ],
   "feature_importances": {
-    "IsHTTPS": 0.39609,
-    "DomainLength": 0.11536,
-    "DomainEntropy": 0.10468,
-    "CharContinuationRate": 0.07493,
-    "SpacialCharRatioInURL": 0.0723,
-    "LetterRatioInURL": 0.06893,
-    "DegitRatioInURL": 0.06027,
-    "URLEntropy": 0.04565,
-    "IsSuspiciousTLD": 0.02036,
-    "TLDLength": 0.01247,
-    "NoOfSubDomain": 0.01167,
-    "HasObfuscation": 0.00649,
-    "SuspiciousKeywordCount": 0.00594,
-    "ObfuscationRatio": 0.00472,
-    "IsDomainIP": 0.00014
+    "IsHTTPS": 0.37044,
+    "DomainLength": 0.10985,
+    "DegitRatioInURL": 0.09328,
+    "LetterRatioInURL": 0.09178,
+    "DomainEntropy": 0.08528,
+    "CharContinuationRate": 0.07711,
+    "SpacialCharRatioInURL": 0.06766,
+    "URLEntropy": 0.04741,
+    "IsSuspiciousTLD": 0.01682,
+    "TLDLength": 0.01291,
+    "NoOfSubDomain": 0.01273,
+    "SuspiciousKeywordCount": 0.00531,
+    "HasObfuscation": 0.00519,
+    "ObfuscationRatio": 0.0042,
+    "IsDomainIP": 1e-05
   },
   "train_samples": 145364,
   "validation_samples": 35305,
   "training_performance": {
-    "accuracy": 0.9806,
-    "f1": 0.9796
+    "accuracy": 0.9891,
+    "f1": 0.9887
   },
   "validation_performance": {
-    "accuracy": 0.9703,
-    "precision": 0.9822,
-    "recall": 0.9475,
-    "f1": 0.9646,
-    "roc_auc": 0.9954,
-    "false_positive_rate": 0.0128,
-    "false_negative_rate": 0.0525,
+    "accuracy": 0.9806,
+    "precision": 0.9813,
+    "recall": 0.9731,
+    "f1": 0.9772,
+    "roc_auc": 0.996,
+    "false_positive_rate": 0.0138,
+    "false_negative_rate": 0.0269,
     "confusion_matrix": {
-      "tn": 19968,
-      "fp": 259,
-      "fn": 791,
-      "tp": 14287
+      "tn": 19947,
+      "fp": 280,
+      "fn": 406,
+      "tp": 14672
     }
   },
   "hyperparameters": {
@@ -70,70 +70,70 @@
   },
   "benchmark_comparison": {
     "Random Forest (100 trees)": {
-      "fit_time_s": 1.75,
-      "val_accuracy": 0.9703,
-      "val_precision": 0.9822,
-      "val_recall": 0.9475,
-      "val_f1": 0.9646,
-      "val_roc_auc": 0.9954,
-      "val_fpr": 0.0128,
-      "val_fnr": 0.0525,
+      "fit_time_s": 1.69,
+      "val_accuracy": 0.9806,
+      "val_precision": 0.9813,
+      "val_recall": 0.9731,
+      "val_f1": 0.9772,
+      "val_roc_auc": 0.996,
+      "val_fpr": 0.0138,
+      "val_fnr": 0.0269,
       "val_cm": {
-        "tn": 19968,
-        "fp": 259,
-        "fn": 791,
-        "tp": 14287
+        "tn": 19947,
+        "fp": 280,
+        "fn": 406,
+        "tp": 14672
       }
     },
     "HistGradientBoosting": {
-      "fit_time_s": 2.26,
-      "val_accuracy": 0.9628,
-      "val_precision": 0.9703,
-      "val_recall": 0.9417,
-      "val_f1": 0.9558,
-      "val_roc_auc": 0.9943,
-      "val_fpr": 0.0215,
-      "val_fnr": 0.0583,
+      "fit_time_s": 1.81,
+      "val_accuracy": 0.9774,
+      "val_precision": 0.9757,
+      "val_recall": 0.9712,
+      "val_f1": 0.9734,
+      "val_roc_auc": 0.9958,
+      "val_fpr": 0.018,
+      "val_fnr": 0.0288,
       "val_cm": {
-        "tn": 19792,
-        "fp": 435,
-        "fn": 879,
-        "tp": 14199
+        "tn": 19862,
+        "fp": 365,
+        "fn": 434,
+        "tp": 14644
       }
     },
     "Logistic Regression (Scaled)": {
-      "fit_time_s": 0.31,
-      "val_accuracy": 0.9156,
-      "val_precision": 0.9728,
-      "val_recall": 0.8255,
-      "val_f1": 0.8931,
-      "val_roc_auc": 0.9632,
-      "val_fpr": 0.0172,
-      "val_fnr": 0.1745,
+      "fit_time_s": 0.3,
+      "val_accuracy": 0.9223,
+      "val_precision": 0.9683,
+      "val_recall": 0.8457,
+      "val_f1": 0.9029,
+      "val_roc_auc": 0.9693,
+      "val_fpr": 0.0207,
+      "val_fnr": 0.1543,
       "val_cm": {
-        "tn": 19879,
-        "fp": 348,
-        "fn": 2631,
-        "tp": 12447
+        "tn": 19809,
+        "fp": 418,
+        "fn": 2326,
+        "tp": 12752
       }
     }
   },
   "test_samples": 35306,
   "test_performance": {
-    "accuracy": 0.9713,
-    "precision": 0.9801,
-    "recall": 0.952,
-    "f1": 0.9659,
-    "roc_auc": 0.9957,
-    "false_positive_rate": 0.0144,
-    "false_negative_rate": 0.048,
-    "specificity": 0.9856,
+    "accuracy": 0.9809,
+    "precision": 0.9796,
+    "recall": 0.9755,
+    "f1": 0.9775,
+    "roc_auc": 0.9965,
+    "false_positive_rate": 0.0152,
+    "false_negative_rate": 0.0245,
+    "specificity": 0.9848,
     "confusion_matrix": {
-      "tn": 19936,
-      "fp": 292,
-      "fn": 723,
-      "tp": 14355
+      "tn": 19921,
+      "fp": 307,
+      "fn": 369,
+      "tp": 14709
     },
-    "inference_throughput_urls_per_sec": 175905.1
+    "inference_throughput_urls_per_sec": 188532.9
   }
 }

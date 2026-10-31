@@ -60,30 +60,51 @@ def train_phishing_model():
     feature_cols = extractor.feature_names
 
     # 1.5 Augment with Tranco deep-path legitimate URLs to mitigate bare-homepage bias
+    # Explicitly exclude all test/probe domains and use non-overlapping generic path templates
     trusted_domains_path = os.path.join(backend_root, "data", "trusted_domains.json")
     if os.path.exists(trusted_domains_path):
-        print("\n[1.5/5] Augmenting training distribution with Tranco deep-path legitimate URLs...")
+        print("\n[1.5/5] Augmenting training distribution with Tranco deep-path legitimate URLs (held-out probe domains excluded)...")
         with open(trusted_domains_path, "r", encoding="utf-8") as f:
-            tranco_domains = json.load(f)[:15000]
+            all_tranco = json.load(f)
 
-        path_stems = [
-            "/issues/12345", "/dp/B0CHX1W1XY?ref=ppx_yo2ov_dt_b_product_details&th=1", "/watch?v=dQw4w9WgXcQ",
-            "/questions/231767/what-does-the-yield-keyword-do", "/3/library/urllib.parse.html",
-            "/conference/usenixsecurity22/presentation/arp", "/package/react",
-            "/project/scikit-learn/", "/wiki/Random_forest", "/nget/train-search",
-            "/web/personal-banking", "/page/notices", "/mail/u/0/#inbox",
-            "/abs/2010.09470", "/Advait251206/CIPHER", "/scikit-learn/scikit-learn/issues/12345",
-            "/about-us", "/help/faq", "/docs/v2/api", "/blog/2026/01/release-notes",
-            "/search?q=machine+learning", "/download/v1.0.4/setup.tar.gz",
-            "/products/category/electronics?page=2", "/profile/account-settings"
+        # Strict probe exclusion list to prevent test data leakage
+        PROBE_DOMAINS = {
+            "github.com", "python.org", "wikipedia.org", "amazon.in",
+            "sbi.co.in", "ugc.gov.in", "google.com", "stackoverflow.com",
+            "irctc.co.in", "youtube.com", "arxiv.org", "usenix.org",
+            "pypi.org", "npmjs.com", "netflix.com", "paypal.com", "microsoft.com"
+        }
+        candidate_domains = [
+            d for d in all_tranco[:20000]
+            if not any(d == pd or d.endswith("." + pd) for pd in PROBE_DOMAINS)
         ]
-        subdomains = ["", "www.", "docs.", "mail.", "api.", "en.", "blog.", "support."]
+
+        # Generic, realistic web paths with ZERO probe-specific stems
+        path_stems = [
+            "/category/products/view?id=49201",
+            "/search/results?q=open+source&sort=relevance",
+            "/user/profile/settings/notifications",
+            "/download/release/v2.1.0/installer.pkg",
+            "/articles/2025/technology/deep-learning-advances",
+            "/forum/community/thread/view?post=8910",
+            "/help/knowledgebase/article/402",
+            "/legal/privacy-policy-updates",
+            "/company/leadership/team-bios",
+            "/services/enterprise/consulting-solutions",
+            "/catalog/books/fiction/bestsellers?page=3",
+            "/resources/whitepapers/cloud-architecture.pdf",
+            "/events/annual-summit-registration",
+            "/support/tickets/create-new-case",
+            "/api/v2/endpoints/health-check",
+            "/portal/dashboard/analytics/overview"
+        ]
+        subdomains = ["", "www.", "blog.", "cdn.", "app.", "portal.", "news."]
 
         import random
         random.seed(42)
         augmented_urls = []
         for _ in range(25000):
-            dom = random.choice(tranco_domains)
+            dom = random.choice(candidate_domains)
             sub = random.choice(subdomains)
             path = random.choice(path_stems)
             augmented_urls.append(f"https://{sub}{dom}{path}")
