@@ -1,0 +1,49 @@
+=== [PHASE 4.5] CIPHER BROWSER EXTENSION VERIFICATION ===
+Extension directory: D:\Advait251206\College\5th Sem\IDPS\Project\cipher-browser-extension
+Manifest path:       D:\Advait251206\College\5th Sem\IDPS\Project\cipher-browser-extension\manifest.json
+
+[STEP 1] Validating Extension Manifest (MV3):
+  Manifest Version: 3 (expected: 3)
+  Extension Name:   CIPHER Browser Guard
+  Version:          1.0.0
+  Service Worker:   background.js
+  Permissions:      ['activeTab', 'storage']
+  Host Permissions: ['http://127.0.0.1:8000/*', 'http://localhost:8000/*']
+  [PASS] Manifest V3 compliance verified.
+
+[STEP 2] Launching Chrome with Unpacked Extension:
+  Found Chrome: C:\Program Files\Google\Chrome\Application\chrome.exe
+  Launching Chrome with debug port 9333...
+  [PASS] Chrome CDP active. Discovered 6 targets:
+    - [background_page] Google Hangouts: chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/background.html
+    - [page] Sign in to Chrome: chrome://intro/
+    - [service_worker] Service Worker chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js: chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js
+    - [worker] : 
+    - [worker] : 
+    - [worker] : 
+  Cleaned up temporary Chrome profile and terminated browser.
+
+[STEP 3] Extension Detection & Threat Badge Verification:
+
+  Checking: Phishing URL (Known Phishing Pattern)
+    Target URL: http://testsafebrowsing.appspot.com/s/phishing.html
+    Backend Risk Score: 69 | Classification: LIKELY_PHISHING
+    Extension Badge:    [RISK] Color: #ef4444 (Red)
+    Reasons:            ['Unencrypted connection (HTTP): Modern legitimate login services mandate HTTPS', 'Irregular character transitions characteristic of obscured phishing URLs']
+    Recommendation:     DANGER: High probability of phishing attack. Do not enter credentials, credit cards, or personal data on this website.
+
+  Checking: Benign Popular URL (Tranco Whitelist)
+    Target URL: https://google.com/search?q=cybersecurity
+    Backend Risk Score: 0 | Classification: LEGITIMATE
+    Extension Badge:    [SAFE] Color: #10b981 (Green)
+    Reasons:            ['Domain matches known trusted root domain whitelist']
+    Recommendation:     SAFE: Website is a known trusted entity. Proceed normally.
+
+  Checking: Internal Lab URL (RFC 1918 Private IP)
+    Target URL: http://192.168.1.100/login.php
+    Backend Risk Score: 94 | Classification: LIKELY_PHISHING
+    Extension Badge:    [RISK] Color: #ef4444 (Red)
+    Reasons:            ['Raw IPv4 address used in hostname instead of registered domain name', 'Sensitive authentication/credential tokens detected in URL: login']
+    Recommendation:     DANGER: High probability of phishing attack. Do not enter credentials, credit cards, or personal data on this website.
+
+=== Extension Verification Complete ===

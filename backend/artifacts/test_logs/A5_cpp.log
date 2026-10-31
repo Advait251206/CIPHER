@@ -1,0 +1,41 @@
+=== CIPHER C++ PACKET SENSOR COMPILATION & RUN LOG ===
+Timestamp: 2026-10-31 10:12:39
+
+--- 1. COMPILATION ---
+Command: g++ -I npcap-sdk/Include backend/cpp_sensor/main.cpp -L npcap-sdk/Lib/x64 -lwpcap -lPacket -lws2_32 -o backend/cpp_sensor/sensor.exe
+Compilation succeeded with exit code 0 (no warnings/errors).
+
+--- 2. EXECUTION (30-second capture on active Wi-Fi interface) ---
+Command: backend\cpp_sensor\sensor.exe Wi-Fi
+Interface Status:
+[CPP_SENSOR] Listening on Network adapter 'Intel(R) Wi-Fi 7 BE200 320MHz' on local host
+
+Captured 100 packets in 30s. Sample JSON flow stream (first 25 packets):
+{"type":"ipv4","src_ip":"20.207.73.85","dst_ip":"10.73.245.32","src_port":443,"dst_port":49946,"proto":6,"pkt_len":1017,"hdr_len":54,"payload_len":963,"win":75,"flags":"PA","ts":1793421760.752509}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"20.207.73.85","src_port":49946,"dst_port":443,"proto":6,"pkt_len":54,"hdr_len":54,"payload_len":0,"win":251,"flags":"A","ts":1793421760.794699}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"119.86.9.156","src_port":49670,"dst_port":443,"proto":6,"pkt_len":126,"hdr_len":54,"payload_len":72,"win":254,"flags":"PA","ts":1793421761.014978}
+{"type":"ipv4","src_ip":"34.100.218.43","dst_ip":"10.73.245.32","src_port":443,"dst_port":53149,"proto":6,"pkt_len":56,"hdr_len":54,"payload_len":0,"win":314,"flags":"A","ts":1793421761.029924}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"34.100.218.43","src_port":53149,"dst_port":443,"proto":6,"pkt_len":54,"hdr_len":54,"payload_len":0,"win":252,"flags":"A","ts":1793421761.030007}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"199.232.215.52","src_port":50960,"dst_port":443,"proto":6,"pkt_len":55,"hdr_len":54,"payload_len":1,"win":254,"flags":"A","ts":1793421761.433099}
+{"type":"ipv4","src_ip":"119.86.9.156","dst_ip":"10.73.245.32","src_port":443,"dst_port":49670,"proto":6,"pkt_len":56,"hdr_len":54,"payload_len":0,"win":83,"flags":"A","ts":1793421761.482775}
+{"type":"ipv4","src_ip":"199.232.215.52","dst_ip":"10.73.245.32","src_port":443,"dst_port":50960,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":283,"flags":"A","ts":1793421761.591802}
+{"type":"ipv4","src_ip":"119.86.9.156","dst_ip":"10.73.245.32","src_port":443,"dst_port":49670,"proto":6,"pkt_len":439,"hdr_len":54,"payload_len":385,"win":83,"flags":"PA","ts":1793421761.983415}
+{"type":"ipv4","src_ip":"119.86.9.156","dst_ip":"10.73.245.32","src_port":443,"dst_port":49670,"proto":6,"pkt_len":85,"hdr_len":54,"payload_len":31,"win":83,"flags":"PA","ts":1793421761.983416}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"119.86.9.156","src_port":49670,"dst_port":443,"proto":6,"pkt_len":54,"hdr_len":54,"payload_len":0,"win":252,"flags":"A","ts":1793421761.983516}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"54.179.98.10","src_port":62194,"dst_port":443,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":65535,"flags":"S","ts":1793421762.122512}
+{"type":"ipv4","src_ip":"54.179.98.10","dst_ip":"10.73.245.32","src_port":443,"dst_port":62194,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":26883,"flags":"SA","ts":1793421762.196616}
+{"type":"ipv4","src_ip":"54.179.98.10","dst_ip":"10.73.245.32","src_port":443,"dst_port":62194,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":26883,"flags":"SA","ts":1793421763.218261}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"199.232.215.52","src_port":50965,"dst_port":443,"proto":6,"pkt_len":55,"hdr_len":54,"payload_len":1,"win":254,"flags":"A","ts":1793421764.371424}
+{"type":"ipv4","src_ip":"199.232.215.52","dst_ip":"10.73.245.32","src_port":443,"dst_port":50965,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":283,"flags":"A","ts":1793421764.640925}
+{"type":"ipv4","src_ip":"54.179.98.10","dst_ip":"10.73.245.32","src_port":443,"dst_port":62194,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":26883,"flags":"SA","ts":1793421765.234366}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"74.125.250.129","src_port":52885,"dst_port":19302,"proto":17,"pkt_len":62,"hdr_len":42,"payload_len":20,"win":0,"flags":"","ts":1793421767.392721}
+{"type":"ipv4","src_ip":"74.125.250.129","dst_ip":"10.73.245.32","src_port":19302,"dst_port":52885,"proto":17,"pkt_len":74,"hdr_len":42,"payload_len":32,"win":0,"flags":"","ts":1793421767.496281}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"199.232.215.52","src_port":50962,"dst_port":443,"proto":6,"pkt_len":55,"hdr_len":54,"payload_len":1,"win":4091,"flags":"A","ts":1793421769.226009}
+{"type":"ipv4","src_ip":"199.232.215.52","dst_ip":"10.73.245.32","src_port":443,"dst_port":50962,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":282,"flags":"A","ts":1793421769.381924}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"199.232.215.52","src_port":61135,"dst_port":443,"proto":6,"pkt_len":55,"hdr_len":54,"payload_len":1,"win":255,"flags":"A","ts":1793421771.671743}
+{"type":"ipv4","src_ip":"199.232.215.52","dst_ip":"10.73.245.32","src_port":443,"dst_port":61135,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":285,"flags":"A","ts":1793421771.821105}
+{"type":"ipv4","src_ip":"10.73.245.32","dst_ip":"23.222.248.111","src_port":50956,"dst_port":443,"proto":6,"pkt_len":55,"hdr_len":54,"payload_len":1,"win":255,"flags":"A","ts":1793421771.966281}
+{"type":"ipv4","src_ip":"23.222.248.111","dst_ip":"10.73.245.32","src_port":443,"dst_port":50956,"proto":6,"pkt_len":66,"hdr_len":66,"payload_len":0,"win":638,"flags":"A","ts":1793421772.004459}
+
+--- 3. ARCHITECTURAL INTEGRATION NOTE ---
+Note: Python backend (app/network/live_sensor/) utilizes its native Scapy AsyncSniffer packet capture pipeline for continuous flow extraction and WAF payload inspection. The C++ sensor (sensor.exe) is a high-throughput standalone prototype that outputs raw flow records to stdout for independent consumption.

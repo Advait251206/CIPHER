@@ -173,7 +173,7 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
                   << ",\"src_mac\":\"" << smac << "\",\"dst_mac\":\"" << dmac 
                   << "\",\"src_ip\":\"" << src_ip << "\",\"dst_ip\":\"" << dst_ip 
                   << "\",\"ts\":" << std::fixed << std::setprecision(6) << timestamp 
-                  << "}\n";
+                  << "}\n" << std::flush;
         return;
     } 
     else if (ether_type == 0x0800) {
@@ -246,6 +246,6 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
                   << "\"win\":" << win << ","
                   << "\"flags\":\"" << flags << "\","
                   << "\"ts\":" << std::fixed << std::setprecision(6) << timestamp
-                  << "}\n";
+                  << "}\n" << std::flush;
     }
 }
