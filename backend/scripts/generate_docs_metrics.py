@@ -88,9 +88,43 @@ def build_blocks() -> dict:
         "```",
     ])
 
+    # Split comparison table (Random vs Day vs Cross)
+    split_rows = [
+        "| Class / Metric | Random Stratified Split F1 | Day Split (Mon–Thu train, Fri test) F1 | Cross-Dataset (CSE-CIC-IDS2018) | Operational Evaluation & Root Cause |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    try:
+        r_split = _load("network/eval_random.json")
+        d_split = _load("network/eval_day.json")
+        for cls in nw["classes"]:
+            r_f1 = r_split["multiclass_metrics"]["per_class"].get(cls, {}).get("f1-score", 0.0)
+            d_f1 = d_split["multiclass_metrics"]["per_class"].get(cls, {}).get("f1-score", 0.0)
+            d_supp = int(d_split["multiclass_metrics"]["per_class"].get(cls, {}).get("support", 0))
+            if d_supp == 0:
+                note = "Attack executed only Mon–Thu; 0 Friday test support"
+            elif cls in ("PORT_SCAN", "DDOS", "BOTNET"):
+                note = "Executed only Friday; 0 Mon–Thu training samples (unseen category)"
+            elif cls == "BENIGN":
+                note = f"Benign traffic across all days (F1 {d_f1:.4f})"
+            else:
+                note = f"Temporal shift / IP address memorization"
+            split_rows.append(f"| **{cls}** | {r_f1:.4f} | {d_f1:.4f} | NOT RUN (dataset missing) | {note} |")
+        
+        r_bin_acc = r_split["binary_metrics"]["accuracy"]
+        d_bin_acc = d_split["binary_metrics"]["accuracy"]
+        r_bin_f1 = r_split["binary_metrics"]["f1_score"]
+        d_bin_f1 = d_split["binary_metrics"]["f1_score"]
+        split_rows.append(f"| **Binary Gate Accuracy** | {pct(r_bin_acc)} | {pct(d_bin_acc)} | NOT RUN | Binary accuracy drops from 99.90% to 77.38% under temporal shift |")
+        split_rows.append(f"| **Binary Gate F1** | {r_bin_f1:.4f} | {d_bin_f1:.4f} | NOT RUN | F1 drops from 0.9969 to 0.5403 (binary recall drops to 37.08%) |")
+        split_rows.append("")
+        split_rows.append("_Generated from `models/network/eval_random.json` and `models/network/eval_day.json`._")
+    except Exception as e:
+        split_rows.append(f"| Split comparison error: {e} | | | | |")
+
     return {
         "SUMMARY": summary,
         "NETWORK_PER_CLASS": "\n".join(per_class_rows),
+        "NETWORK_SPLIT_COMPARISON": "\n".join(split_rows),
         "PHISHING_CM": phishing_cm,
         "NETWORK_CM": network_cm,
     }

@@ -9,6 +9,7 @@ import os
 import sys
 import json
 import time
+import argparse
 import joblib
 import numpy as np
 import pandas as pd
@@ -31,12 +32,76 @@ if backend_root not in sys.path:
 from app.network.feature_extractor import NetworkFeaturePipeline
 
 
-def train_network_ids():
+def load_day_split(raw_dir: str, feature_names: list, benign_cap: int = 150_000, random_state: int = 42):
+    """Loads Monday-Thursday files for training and Friday files for testing."""
+    from training.preprocess_cic_ids2017 import (
+        CONSTANT_COLUMNS_TO_DROP, DUPLICATE_COLUMNS_TO_DROP,
+        sanitize_label, resolve_attack_category
+    )
+    mon_thu_prefixes = ("Monday", "Tuesday", "Wednesday", "Thursday", "custom_baseline")
+    fri_prefixes = ("Friday",)
+
+    csv_files = sorted([f for f in os.listdir(raw_dir) if f.endswith(".csv")])
+    train_chunks = []
+    test_chunks = []
+
+    print("      Loading raw CSV files for Day Split...")
+    for fname in csv_files:
+        fpath = os.path.join(raw_dir, fname)
+        is_train = any(fname.startswith(p) for p in mon_thu_prefixes)
+        is_test = any(fname.startswith(p) for p in fri_prefixes)
+        if not (is_train or is_test):
+            continue
+
+        df = pd.read_csv(fpath, encoding="cp1252", low_memory=False)
+        df.columns = [c.strip() for c in df.columns]
+        cols_to_drop = [c for c in (CONSTANT_COLUMNS_TO_DROP + DUPLICATE_COLUMNS_TO_DROP) if c in df.columns]
+        if cols_to_drop:
+            df = df.drop(columns=cols_to_drop)
+
+        df["original_label"] = df["Label"].apply(sanitize_label)
+        df["attack_category"] = df["original_label"].map(resolve_attack_category)
+        df["is_attack"] = (df["attack_category"] != "BENIGN").astype(np.int32)
+        df = df.drop(columns=["Label"])
+
+        feature_cols_for_dedup = [c for c in df.columns if c not in ["original_label", "attack_category", "is_attack"]]
+        df = df.drop_duplicates(subset=feature_cols_for_dedup, keep="first").reset_index(drop=True)
+
+        if is_train:
+            print(f"        Train chunk (Mon-Thu): {fname} ({len(df):,} flows)")
+            train_chunks.append(df)
+        else:
+            print(f"        Test chunk (Friday):  {fname} ({len(df):,} flows)")
+            test_chunks.append(df)
+
+    train_df = pd.concat(train_chunks, ignore_index=True)
+    test_df = pd.concat(test_chunks, ignore_index=True)
+    del train_chunks, test_chunks
+
+    train_df = train_df.drop_duplicates(subset=feature_names, keep="first").reset_index(drop=True)
+    test_df = test_df.drop_duplicates(subset=feature_names, keep="first").reset_index(drop=True)
+
+    train_attacks = train_df[train_df["is_attack"] == 1]
+    train_benign = train_df[train_df["is_attack"] == 0]
+    if len(train_benign) > benign_cap:
+        sampled_benign = train_benign.sample(n=benign_cap, random_state=random_state)
+    else:
+        sampled_benign = train_benign
+    train_balanced = pd.concat([train_attacks, sampled_benign], ignore_index=True).sample(frac=1.0, random_state=random_state).reset_index(drop=True)
+
+    from sklearn.model_selection import train_test_split
+    train_final, val_final = train_test_split(train_balanced, test_size=0.1, random_state=random_state, stratify=train_balanced["attack_category"])
+
+    return train_final.reset_index(drop=True), val_final.reset_index(drop=True), test_df.reset_index(drop=True)
+
+
+def train_network_ids(split: str = "random", cross_data_dir: str = None):
     print("=" * 75)
-    print("CIPHER - NETWORK IDS MODEL TRAINING & EVALUATION (CIC-IDS2017)")
+    print(f"CIPHER - NETWORK IDS MODEL TRAINING & EVALUATION [{split.upper()} SPLIT]")
     print("=" * 75)
 
     data_dir = os.path.join(backend_root, "data", "processed", "cic_ids2017")
+    raw_dir = os.path.join(backend_root, "data", "raw", "cic_ids2017")
     models_dir = os.path.join(backend_root, "models", "network")
     os.makedirs(models_dir, exist_ok=True)
 
@@ -52,12 +117,26 @@ def train_network_ids():
     print(f"\nFeatures ({len(feature_names)}): {feature_names[:5]} ... {feature_names[-3:]}")
     print(f"Classes ({len(multiclass_classes)}): {multiclass_classes}")
 
-    # 1. Load Parquet Data
-    print("\n[1/6] Loading Train, Validation, and Held-Out Test Parquet partitions...")
+    # 1. Load Data depending on split strategy
     t0 = time.time()
-    train_df = pd.read_parquet(os.path.join(data_dir, "train", "train.parquet"))
-    val_df = pd.read_parquet(os.path.join(data_dir, "validation", "val.parquet"))
-    test_df = pd.read_parquet(os.path.join(data_dir, "test", "test.parquet"))
+    if split == "random":
+        print("\n[1/6] Loading Train, Validation, and Held-Out Test Parquet partitions (random stratified split)...")
+        train_df = pd.read_parquet(os.path.join(data_dir, "train", "train.parquet"))
+        val_df = pd.read_parquet(os.path.join(data_dir, "validation", "val.parquet"))
+        test_df = pd.read_parquet(os.path.join(data_dir, "test", "test.parquet"))
+    elif split == "day":
+        print("\n[1/6] Loading Mon-Thu files for train and Friday files for test (day split)...")
+        train_df, val_df, test_df = load_day_split(raw_dir, feature_names)
+    elif split == "cross":
+        target_dir = cross_data_dir or os.path.join(backend_root, "data", "raw", "cse_cic_ids2018")
+        if not os.path.exists(target_dir) or not any(f.endswith(".csv") for f in os.listdir(target_dir)):
+            print(f"\n[STOP] CSE-CIC-IDS2018 dataset is missing at '{target_dir}'.")
+            print("Per Rule 5, stopping and requesting the path to CSE-CIC-IDS2018 dataset.")
+            sys.exit(2)
+        raise NotImplementedError("Cross split requires user-provided CSE-CIC-IDS2018 path.")
+    else:
+        raise ValueError(f"Unknown split strategy: {split}")
+
     print(f"      Train: {len(train_df):,} | Val: {len(val_df):,} | Test: {len(test_df):,} ({time.time()-t0:.2f}s)")
 
     # 2. Fit Feature Pipeline
@@ -156,6 +235,7 @@ def train_network_ids():
     report_dict = classification_report(
         y_test_multi,
         y_test_multi_pred,
+        labels=list(range(len(multiclass_classes))),
         target_names=multiclass_classes,
         output_dict=True,
         zero_division=0
@@ -163,6 +243,7 @@ def train_network_ids():
     report_text = classification_report(
         y_test_multi,
         y_test_multi_pred,
+        labels=list(range(len(multiclass_classes))),
         target_names=multiclass_classes,
         digits=4,
         zero_division=0
@@ -197,23 +278,24 @@ def train_network_ids():
     # 6. Save Artifacts
     print("\n[6/6] Exporting Model Artifacts...")
 
-    # A. Models
-    models_dict = {
-        "binary_model": rf_binary,
-        "multiclass_model": rf_multiclass,
-        "feature_names": feature_names,
-        "classes": multiclass_classes,
-        "class_to_idx": class_to_idx,
-        "idx_to_class": idx_to_class
-    }
-    model_save_path = os.path.join(models_dir, "network_ids_model.joblib")
-    joblib.dump(models_dict, model_save_path, compress=3)
-    print(f"      Saved Models: {model_save_path} ({os.path.getsize(model_save_path):,} bytes)")
+    if split == "random":
+        # A. Models
+        models_dict = {
+            "binary_model": rf_binary,
+            "multiclass_model": rf_multiclass,
+            "feature_names": feature_names,
+            "classes": multiclass_classes,
+            "class_to_idx": class_to_idx,
+            "idx_to_class": idx_to_class
+        }
+        model_save_path = os.path.join(models_dir, "network_ids_model.joblib")
+        joblib.dump(models_dict, model_save_path, compress=3)
+        print(f"      Saved Models: {model_save_path} ({os.path.getsize(model_save_path):,} bytes)")
 
-    # B. Feature Pipeline
-    pipeline_save_path = os.path.join(models_dir, "network_feature_pipeline.joblib")
-    joblib.dump(pipeline, pipeline_save_path)
-    print(f"      Saved Pipeline: {pipeline_save_path}")
+        # B. Feature Pipeline
+        pipeline_save_path = os.path.join(models_dir, "network_feature_pipeline.joblib")
+        joblib.dump(pipeline, pipeline_save_path)
+        print(f"      Saved Pipeline: {pipeline_save_path}")
 
     # C. Metadata
     metadata = {
@@ -276,100 +358,143 @@ def train_network_ids():
         "realtime_feature_compatibility": realtime_compatibility
     }
 
-    meta_save_path = os.path.join(models_dir, "network_model_metadata.json")
-    with open(meta_save_path, "w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2)
-    print(f"      Saved Metadata: {meta_save_path}")
+    # Save Split Evaluation Artifact (eval_<split>.json)
+    eval_payload = {
+        "split": split,
+        "split_description": (
+            "Chronological day split: Trained on Monday-Thursday capture files, evaluated on unseen Friday files"
+            if split == "day" else
+            "Random stratified split: 70% train, 15% validation, 15% held-out test across all attack categories"
+        ),
+        "train_samples": int(len(train_df)),
+        "test_samples": int(len(test_df)),
+        "binary_metrics": {
+            "accuracy": round(bin_acc, 6),
+            "precision": round(bin_prec, 6),
+            "recall": round(bin_rec, 6),
+            "f1_score": round(bin_f1, 6),
+            "roc_auc": round(bin_roc_auc, 6),
+            "pr_auc": round(bin_pr_auc, 6),
+            "false_positive_rate": round(fpr, 6),
+            "false_negative_rate": round(fnr, 6),
+            "true_positives": int(tp),
+            "true_negatives": int(tn),
+            "false_positives": int(fp),
+            "false_negatives": int(fn)
+        },
+        "multiclass_metrics": {
+            "overall_accuracy": round(multi_acc, 6),
+            "macro_f1": round(multi_f1_macro, 6),
+            "weighted_f1": round(multi_f1_weighted, 6),
+            "per_class": report_dict
+        }
+    }
+    eval_save_path = os.path.join(models_dir, f"eval_{split}.json")
+    with open(eval_save_path, "w", encoding="utf-8") as f:
+        json.dump(eval_payload, f, indent=2)
+    print(f"      Saved Split Evaluation JSON: {eval_save_path}")
 
-    # D. Evaluation Report Text
-    report_file_path = os.path.join(models_dir, "network_evaluation_report.txt")
-    with open(report_file_path, "w", encoding="utf-8") as f:
-        f.write("=" * 80 + "\n")
-        f.write("CIPHER NETWORK INTRUSION DETECTION SYSTEM - EVALUATION REPORT\n")
-        f.write("=" * 80 + "\n\n")
-        f.write(f"Model Architecture: Dual Random Forest (Binary + Multiclass)\n")
-        f.write(f"Dataset:            CIC-IDS2017 (MachineLearningCSV)\n")
-        f.write(f"Evaluated Samples:  {len(test_df):,} held-out test flows (15% unskewed)\n")
-        f.write(f"Split Strategy:     {prep_metadata['split_strategy']}\n")
-        f.write(f"Features:           {len(feature_names)} numerical flow features\n\n")
-        f.write("-" * 80 + "\n")
-        f.write("1. BINARY CLASSIFICATION METRICS (BENIGN vs ATTACK)\n")
-        f.write("-" * 80 + "\n")
-        f.write(f"Accuracy:                  {bin_acc*100:.4f}%\n")
-        f.write(f"Precision:                 {bin_prec*100:.4f}%\n")
-        f.write(f"Recall:                    {bin_rec*100:.4f}%\n")
-        f.write(f"F1-Score:                  {bin_f1*100:.4f}%\n")
-        f.write(f"ROC-AUC:                   {bin_roc_auc:.5f}\n")
-        f.write(f"PR-AUC:                    {bin_pr_auc:.5f}\n")
-        f.write(f"Confusion Matrix:          TN={tn:,}, FP={fp:,}, FN={fn:,}, TP={tp:,}\n")
-        f.write(f"False Positive Rate (FPR): {fpr*100:.4f}% ({fp:,} benign flows misclassified as attack)\n")
-        f.write(f"False Negative Rate (FNR): {fnr*100:.4f}% ({fn:,} attack flows misclassified as benign)\n\n")
-        f.write("-" * 80 + "\n")
-        f.write("2. MULTICLASS CLASSIFICATION REPORT (9 TAXONOMY CATEGORIES)\n")
-        f.write("-" * 80 + "\n")
-        f.write(report_text + "\n\n")
-        f.write("-" * 80 + "\n")
-        f.write("3. TOP 20 FEATURE IMPORTANCES\n")
-        f.write("-" * 80 + "\n")
-        for i, (feat, val) in enumerate(feat_importances.head(20).items(), 1):
-            f.write(f"{i:2d}. {feat:<35}: {val:.5f}\n")
-        f.write("\n" + "=" * 80 + "\n")
-    print(f"      Saved Report: {report_file_path}")
+    # Canonical artifacts (updated on random split)
+    if split == "random":
+        meta_save_path = os.path.join(models_dir, "network_model_metadata.json")
+        with open(meta_save_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2)
+        print(f"      Saved Metadata: {meta_save_path}")
 
-    # E. Confusion Matrix Visualizations (Binary and Multiclass)
-    cm_img_path = os.path.join(models_dir, "confusion_matrix.png")
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7))
+        # D. Evaluation Report Text
+        report_file_path = os.path.join(models_dir, "network_evaluation_report.txt")
+        with open(report_file_path, "w", encoding="utf-8") as f:
+            f.write("=" * 80 + "\n")
+            f.write("CIPHER NETWORK INTRUSION DETECTION SYSTEM - EVALUATION REPORT\n")
+            f.write("=" * 80 + "\n\n")
+            f.write(f"Model Architecture: Dual Random Forest (Binary + Multiclass)\n")
+            f.write(f"Dataset:            CIC-IDS2017 (MachineLearningCSV)\n")
+            f.write(f"Evaluated Samples:  {len(test_df):,} held-out test flows (15% unskewed)\n")
+            f.write(f"Split Strategy:     {prep_metadata['split_strategy']}\n")
+            f.write(f"Features:           {len(feature_names)} numerical flow features\n\n")
+            f.write("-" * 80 + "\n")
+            f.write("1. BINARY CLASSIFICATION METRICS (BENIGN vs ATTACK)\n")
+            f.write("-" * 80 + "\n")
+            f.write(f"Accuracy:                  {bin_acc*100:.4f}%\n")
+            f.write(f"Precision:                 {bin_prec*100:.4f}%\n")
+            f.write(f"Recall:                    {bin_rec*100:.4f}%\n")
+            f.write(f"F1-Score:                  {bin_f1*100:.4f}%\n")
+            f.write(f"ROC-AUC:                   {bin_roc_auc:.5f}\n")
+            f.write(f"PR-AUC:                    {bin_pr_auc:.5f}\n")
+            f.write(f"Confusion Matrix:          TN={tn:,}, FP={fp:,}, FN={fn:,}, TP={tp:,}\n")
+            f.write(f"False Positive Rate (FPR): {fpr*100:.4f}% ({fp:,} benign flows misclassified as attack)\n")
+            f.write(f"False Negative Rate (FNR): {fnr*100:.4f}% ({fn:,} attack flows misclassified as benign)\n\n")
+            f.write("-" * 80 + "\n")
+            f.write("2. MULTICLASS CLASSIFICATION REPORT (9 TAXONOMY CATEGORIES)\n")
+            f.write("-" * 80 + "\n")
+            f.write(report_text + "\n\n")
+            f.write("-" * 80 + "\n")
+            f.write("3. TOP 20 FEATURE IMPORTANCES\n")
+            f.write("-" * 80 + "\n")
+            for i, (feat, val) in enumerate(feat_importances.head(20).items(), 1):
+                f.write(f"{i:2d}. {feat:<35}: {val:.5f}\n")
+            f.write("\n" + "=" * 80 + "\n")
+        print(f"      Saved Report: {report_file_path}")
 
-    # Binary CM
-    bin_cm = np.array([[tn, fp], [fn, tp]])
-    im1 = ax1.imshow(bin_cm, interpolation='nearest', cmap=plt.cm.Blues)
-    ax1.set_title("CIPHER Binary IDS Confusion Matrix\n(BENIGN vs ATTACK)", fontsize=13, fontweight="bold")
-    plt.colorbar(im1, ax=ax1, fraction=0.046, pad=0.04)
-    tick_marks_bin = np.arange(2)
-    ax1.set_xticks(tick_marks_bin)
-    ax1.set_xticklabels(["BENIGN", "ATTACK"])
-    ax1.set_yticks(tick_marks_bin)
-    ax1.set_yticklabels(["BENIGN", "ATTACK"])
-    ax1.set_ylabel("True Label", fontweight="bold")
-    ax1.set_xlabel("Predicted Label", fontweight="bold")
-    thresh_bin = bin_cm.max() / 2.
-    for i in range(2):
-        for j in range(2):
-            ax1.text(j, i, f"{bin_cm[i, j]:,}",
-                     horizontalalignment="center",
-                     color="white" if bin_cm[i, j] > thresh_bin else "black",
-                     fontweight="bold")
+        # E. Confusion Matrix Visualizations (Binary and Multiclass)
+        cm_img_path = os.path.join(models_dir, "confusion_matrix.png")
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7))
 
-    # Multiclass CM
-    im2 = ax2.imshow(cm_multi, interpolation='nearest', cmap=plt.cm.Greens)
-    ax2.set_title("CIPHER Multiclass IDS Confusion Matrix\n(9 Attack Categories)", fontsize=13, fontweight="bold")
-    plt.colorbar(im2, ax=ax2, fraction=0.046, pad=0.04)
-    tick_marks_multi = np.arange(len(multiclass_classes))
-    ax2.set_xticks(tick_marks_multi)
-    ax2.set_xticklabels(multiclass_classes, rotation=45, ha="right", fontsize=9)
-    ax2.set_yticks(tick_marks_multi)
-    ax2.set_yticklabels(multiclass_classes, fontsize=9)
-    ax2.set_ylabel("True Label", fontweight="bold")
-    ax2.set_xlabel("Predicted Label", fontweight="bold")
-    thresh_multi = cm_multi.max() / 2.
-    for i in range(len(multiclass_classes)):
-        for j in range(len(multiclass_classes)):
-            val = cm_multi[i, j]
-            if val > 0:
-                ax2.text(j, i, f"{val:,}" if val > 1000 else f"{val}",
+        # Binary CM
+        bin_cm = np.array([[tn, fp], [fn, tp]])
+        im1 = ax1.imshow(bin_cm, interpolation='nearest', cmap=plt.cm.Blues)
+        ax1.set_title("CIPHER Binary IDS Confusion Matrix\n(BENIGN vs ATTACK)", fontsize=13, fontweight="bold")
+        plt.colorbar(im1, ax=ax1, fraction=0.046, pad=0.04)
+        tick_marks_bin = np.arange(2)
+        ax1.set_xticks(tick_marks_bin)
+        ax1.set_xticklabels(["BENIGN", "ATTACK"])
+        ax1.set_yticks(tick_marks_bin)
+        ax1.set_yticklabels(["BENIGN", "ATTACK"])
+        ax1.set_ylabel("True Label", fontweight="bold")
+        ax1.set_xlabel("Predicted Label", fontweight="bold")
+        thresh_bin = bin_cm.max() / 2.
+        for i in range(2):
+            for j in range(2):
+                ax1.text(j, i, f"{bin_cm[i, j]:,}",
                          horizontalalignment="center",
-                         fontsize=8,
-                         color="white" if val > thresh_multi else "black")
+                         color="white" if bin_cm[i, j] > thresh_bin else "black",
+                         fontweight="bold")
 
-    plt.tight_layout()
-    plt.savefig(cm_img_path, dpi=200, bbox_inches="tight")
-    plt.close()
-    print(f"      Saved Confusion Matrix Plot: {cm_img_path}")
+        # Multiclass CM
+        im2 = ax2.imshow(cm_multi, interpolation='nearest', cmap=plt.cm.Greens)
+        ax2.set_title("CIPHER Multiclass IDS Confusion Matrix\n(9 Attack Categories)", fontsize=13, fontweight="bold")
+        plt.colorbar(im2, ax=ax2, fraction=0.046, pad=0.04)
+        tick_marks_multi = np.arange(len(multiclass_classes))
+        ax2.set_xticks(tick_marks_multi)
+        ax2.set_xticklabels(multiclass_classes, rotation=45, ha="right", fontsize=9)
+        ax2.set_yticks(tick_marks_multi)
+        ax2.set_yticklabels(multiclass_classes, fontsize=9)
+        ax2.set_ylabel("True Label", fontweight="bold")
+        ax2.set_xlabel("Predicted Label", fontweight="bold")
+        thresh_multi = cm_multi.max() / 2.
+        for i in range(len(multiclass_classes)):
+            for j in range(len(multiclass_classes)):
+                val = cm_multi[i, j]
+                if val > 0:
+                    ax2.text(j, i, f"{val:,}" if val > 1000 else f"{val}",
+                             horizontalalignment="center",
+                             fontsize=8,
+                             color="white" if val > thresh_multi else "black")
+
+        plt.tight_layout()
+        plt.savefig(cm_img_path, dpi=200, bbox_inches="tight")
+        plt.close()
+        print(f"      Saved Confusion Matrix Plot: {cm_img_path}")
 
     print("=" * 75)
-    print("NETWORK IDS TRAINING & EVALUATION COMPLETE!")
+    print(f"NETWORK IDS [{split.upper()} SPLIT] TRAINING & EVALUATION COMPLETE!")
     print("=" * 75)
 
 
 if __name__ == "__main__":
-    train_network_ids()
+    parser = argparse.ArgumentParser(description="Train and evaluate CIPHER Network IDS model.")
+    parser.add_argument("--split", choices=["random", "day", "cross"], default="random", help="Dataset splitting strategy")
+    parser.add_argument("--cross-data-dir", default=None, help="Path to CSE-CIC-IDS2018 dataset for cross evaluation")
+    args = parser.parse_args()
+
+    train_network_ids(split=args.split, cross_data_dir=args.cross_data_dir)

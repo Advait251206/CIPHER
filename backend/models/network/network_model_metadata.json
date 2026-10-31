@@ -13,11 +13,11 @@
     "Tuesday-WorkingHours.pcap_ISCX.csv",
     "Wednesday-workingHours.pcap_ISCX.csv"
   ],
-  "training_timestamp": "2026-09-20T13:01:28Z",
+  "training_timestamp": "2026-10-31T05:07:53Z",
   "split_strategy": "Stratified split by attack category (70% train, 15% validation, 15% test) with cross-file flow deduplication to ensure zero flow memorization and full class representation",
-  "training_samples": 448019,
-  "validation_samples": 404442,
-  "test_samples": 404442,
+  "training_samples": 448018,
+  "validation_samples": 404433,
+  "test_samples": 404433,
   "feature_count": 67,
   "feature_names": [
     "Destination Port",
@@ -118,114 +118,114 @@
     "random_state": 42
   },
   "training_duration_seconds": {
-    "binary_model": 9.3,
-    "multiclass_model": 11.6,
-    "total": 20.9
+    "binary_model": 26.23,
+    "multiclass_model": 36.57,
+    "total": 62.8
   },
   "binary_metrics": {
-    "accuracy": 0.999033,
-    "precision": 0.9945,
-    "recall": 0.999405,
-    "f1_score": 0.996946,
-    "roc_auc": 0.999971,
-    "pr_auc": 0.999882,
-    "true_negatives": 340228,
-    "false_positives": 353,
-    "false_negatives": 38,
-    "true_positives": 63823,
-    "false_positive_rate": 0.001036,
-    "false_negative_rate": 0.000595
+    "accuracy": 0.999031,
+    "precision": 0.994453,
+    "recall": 0.999436,
+    "f1_score": 0.996939,
+    "roc_auc": 0.999982,
+    "pr_auc": 0.999899,
+    "true_negatives": 340216,
+    "false_positives": 356,
+    "false_negatives": 36,
+    "true_positives": 63825,
+    "false_positive_rate": 0.001045,
+    "false_negative_rate": 0.000564
   },
   "multiclass_metrics": {
-    "accuracy": 0.998966,
-    "macro_f1": 0.900364,
-    "weighted_f1": 0.998991,
+    "accuracy": 0.998999,
+    "macro_f1": 0.919221,
+    "weighted_f1": 0.99902,
     "per_class": {
       "BENIGN": {
-        "precision": 0.9998648132365474,
-        "recall": 0.9989517912038546,
-        "f1-score": 0.9994080936945088,
-        "support": 340581.0
+        "precision": 0.9998560000940407,
+        "recall": 0.9989928708173308,
+        "f1-score": 0.9994242491003892,
+        "support": 340572.0
       },
       "BOTNET": {
-        "precision": 0.6977329974811083,
-        "recall": 0.9453924914675768,
-        "f1-score": 0.8028985507246377,
+        "precision": 0.7010309278350515,
+        "recall": 0.9283276450511946,
+        "f1-score": 0.7988252569750367,
         "support": 293.0
       },
       "BRUTE_FORCE": {
-        "precision": 0.9985433357611071,
-        "recall": 0.999271137026239,
-        "f1-score": 0.9989071038251366,
+        "precision": 0.9992716678805535,
+        "recall": 1.0,
+        "f1-score": 0.9996357012750455,
         "support": 1372.0
       },
       "DDOS": {
-        "precision": 0.9997395833333333,
-        "recall": 0.9996354546401417,
-        "f1-score": 0.999687516275194,
+        "precision": 0.9997395697692588,
+        "recall": 0.9995833767315905,
+        "f1-score": 0.9996614671492929,
         "support": 19202.0
       },
       "DOS": {
-        "precision": 0.9939732219292539,
-        "recall": 0.9994835066455479,
-        "f1-score": 0.9967207485621083,
+        "precision": 0.994484412470024,
+        "recall": 0.9995523724261415,
+        "f1-score": 0.9970119521912351,
         "support": 29042.0
       },
       "INFILTRATION": {
         "precision": 1.0,
-        "recall": 0.5,
-        "f1-score": 0.6666666666666666,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.5,
         "support": 6.0
       },
       "OTHER_ATTACK": {
         "precision": 1.0,
-        "recall": 0.5,
-        "f1-score": 0.6666666666666666,
+        "recall": 1.0,
+        "f1-score": 1.0,
         "support": 2.0
       },
       "PORT_SCAN": {
-        "precision": 0.9953940634595702,
-        "recall": 0.9994127578360126,
-        "f1-score": 0.9973993626607084,
+        "precision": 0.9950299663791843,
+        "recall": 0.9993393525655142,
+        "f1-score": 0.997180003662333,
         "support": 13623.0
       },
       "WEB_ATTACK": {
-        "precision": 0.9810725552050473,
-        "recall": 0.9688473520249221,
-        "f1-score": 0.9749216300940439,
+        "precision": 0.9843260188087775,
+        "recall": 0.9781931464174455,
+        "f1-score": 0.98125,
         "support": 321.0
       },
-      "accuracy": 0.9989664772699176,
+      "accuracy": 0.9989985980372521,
       "macro avg": {
-        "precision": 0.9629245078228852,
-        "recall": 0.8789993878715883,
-        "f1-score": 0.900364037685519,
-        "support": 404442.0
+        "precision": 0.9637487292485434,
+        "recall": 0.915258010815839,
+        "f1-score": 0.919220958928148,
+        "support": 404433.0
       },
       "weighted avg": {
-        "precision": 0.9990469402015849,
-        "recall": 0.9989664772699176,
-        "f1-score": 0.9989906491950816,
-        "support": 404442.0
+        "precision": 0.9990713860241385,
+        "recall": 0.9989985980372521,
+        "f1-score": 0.9990202490763399,
+        "support": 404433.0
       }
     }
   },
   "top_15_feature_importances": {
-    "Bwd Packet Length Std": 0.049141195386564994,
-    "Fwd Packet Length Mean": 0.045404852119212614,
-    "Avg Fwd Segment Size": 0.04421156839175114,
-    "Subflow Fwd Bytes": 0.04303474514967493,
-    "Fwd Packet Length Max": 0.04195241513426791,
-    "Total Length of Fwd Packets": 0.04042661398333241,
-    "Packet Length Std": 0.0334181229349733,
-    "Packet Length Variance": 0.032690961591347344,
-    "Average Packet Size": 0.03138351117487633,
-    "Fwd Packet Length Std": 0.029392572129832876,
-    "Bwd Packet Length Mean": 0.029153023297749502,
-    "Idle Min": 0.02872440496676147,
-    "Idle Mean": 0.028697828235950417,
-    "Idle Max": 0.0273347521284905,
-    "Fwd IAT Max": 0.02612540733695815
+    "Fwd Packet Length Mean": 0.04917690637530203,
+    "Avg Fwd Segment Size": 0.047576475410891786,
+    "Bwd Packet Length Std": 0.04686714804557862,
+    "Total Length of Fwd Packets": 0.04461574593056086,
+    "Subflow Fwd Bytes": 0.04224330620337139,
+    "Fwd Packet Length Max": 0.041571143764193845,
+    "Packet Length Std": 0.03237036881788533,
+    "Packet Length Variance": 0.031139327273264853,
+    "Average Packet Size": 0.031120998439976316,
+    "Idle Mean": 0.029700024075943986,
+    "Init_Win_bytes_backward": 0.02923224231425531,
+    "Subflow Bwd Bytes": 0.0288889381289229,
+    "Idle Min": 0.025932942420086754,
+    "Max Packet Length": 0.02582931919029198,
+    "Idle Max": 0.025579577131586265
   },
   "realtime_feature_compatibility": {
     "Destination Port": {

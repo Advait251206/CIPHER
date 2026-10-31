@@ -1,0 +1,9 @@
+===========================================================================
+CIPHER - NETWORK IDS MODEL TRAINING & EVALUATION [CROSS SPLIT]
+===========================================================================
+
+Features (67): ['Destination Port', 'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets', 'Total Length of Fwd Packets'] ... ['Idle Std', 'Idle Max', 'Idle Min']
+Classes (9): ['BENIGN', 'BOTNET', 'BRUTE_FORCE', 'DDOS', 'DOS', 'INFILTRATION', 'OTHER_ATTACK', 'PORT_SCAN', 'WEB_ATTACK']
+
+[STOP] CSE-CIC-IDS2018 dataset is missing at 'D:\Advait251206\College\5th Sem\IDPS\Project\backend\data\raw\cse_cic_ids2018'.
+Per Rule 5, stopping and requesting the path to CSE-CIC-IDS2018 dataset.

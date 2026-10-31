@@ -1,0 +1,80 @@
+===========================================================================
+CIPHER - NETWORK IDS MODEL TRAINING & EVALUATION [RANDOM SPLIT]
+===========================================================================
+
+Features (67): ['Destination Port', 'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets', 'Total Length of Fwd Packets'] ... ['Idle Std', 'Idle Max', 'Idle Min']
+Classes (9): ['BENIGN', 'BOTNET', 'BRUTE_FORCE', 'DDOS', 'DOS', 'INFILTRATION', 'OTHER_ATTACK', 'PORT_SCAN', 'WEB_ATTACK']
+
+[1/6] Loading Train, Validation, and Held-Out Test Parquet partitions (random stratified split)...
+      Train: 448,018 | Val: 404,433 | Test: 404,433 (0.41s)
+
+[2/6] Fitting Network Feature Pipeline...
+
+[3/6] Training Binary Random Forest Classifier (BENIGN vs ATTACK)...
+      Binary RF trained in 26.23s
+
+[4/6] Training Multiclass Random Forest Classifier (9 Attack Categories)...
+      Multiclass RF trained in 36.57s
+
+[5/6] Comprehensive Evaluation on Held-Out Test Set (374,833 unskewed flows)...
+
+--- BINARY METRICS ---
+  Accuracy:          99.903%
+  Precision:         99.445%
+  Recall:            99.944%
+  F1-Score:          99.694%
+  ROC-AUC:           1.0000
+  PR-AUC:            0.9999
+  Confusion Matrix:  TN=340,216, FP=356, FN=36, TP=63,825
+  False Positive Rate (FPR): 0.1045% (356 benign flagged as attack)
+  False Negative Rate (FNR): 0.0564% (36 attacks missed)
+
+--- MULTICLASS METRICS ---
+  Overall Accuracy:    99.900%
+  Macro F1:            91.922%
+  Weighted F1:         99.902%
+
+              precision    recall  f1-score   support
+
+      BENIGN     0.9999    0.9990    0.9994    340572
+      BOTNET     0.7010    0.9283    0.7988       293
+ BRUTE_FORCE     0.9993    1.0000    0.9996      1372
+        DDOS     0.9997    0.9996    0.9997     19202
+         DOS     0.9945    0.9996    0.9970     29042
+INFILTRATION     1.0000    0.3333    0.5000         6
+OTHER_ATTACK     1.0000    1.0000    1.0000         2
+   PORT_SCAN     0.9950    0.9993    0.9972     13623
+  WEB_ATTACK     0.9843    0.9782    0.9812       321
+
+    accuracy                         0.9990    404433
+   macro avg     0.9637    0.9153    0.9192    404433
+weighted avg     0.9991    0.9990    0.9990    404433
+
+
+--- TOP 15 IMPORTANT FEATURES ---
+  Fwd Packet Length Mean          : 0.0492
+  Avg Fwd Segment Size            : 0.0476
+  Bwd Packet Length Std           : 0.0469
+  Total Length of Fwd Packets     : 0.0446
+  Subflow Fwd Bytes               : 0.0422
+  Fwd Packet Length Max           : 0.0416
+  Packet Length Std               : 0.0324
+  Packet Length Variance          : 0.0311
+  Average Packet Size             : 0.0311
+  Idle Mean                       : 0.0297
+  Init_Win_bytes_backward         : 0.0292
+  Subflow Bwd Bytes               : 0.0289
+  Idle Min                        : 0.0259
+  Max Packet Length               : 0.0258
+  Idle Max                        : 0.0256
+
+[6/6] Exporting Model Artifacts...
+      Saved Models: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\network_ids_model.joblib (7,654,692 bytes)
+      Saved Pipeline: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\network_feature_pipeline.joblib
+      Saved Split Evaluation JSON: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\eval_random.json
+      Saved Metadata: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\network_model_metadata.json
+      Saved Report: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\network_evaluation_report.txt
+      Saved Confusion Matrix Plot: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\confusion_matrix.png
+===========================================================================
+NETWORK IDS [RANDOM SPLIT] TRAINING & EVALUATION COMPLETE!
+===========================================================================

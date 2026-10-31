@@ -1,0 +1,85 @@
+===========================================================================
+CIPHER - NETWORK IDS MODEL TRAINING & EVALUATION [DAY SPLIT]
+===========================================================================
+
+Features (67): ['Destination Port', 'Flow Duration', 'Total Fwd Packets', 'Total Backward Packets', 'Total Length of Fwd Packets'] ... ['Idle Std', 'Idle Max', 'Idle Min']
+Classes (9): ['BENIGN', 'BOTNET', 'BRUTE_FORCE', 'DDOS', 'DOS', 'INFILTRATION', 'OTHER_ATTACK', 'PORT_SCAN', 'WEB_ATTACK']
+
+[1/6] Loading Mon-Thu files for train and Friday files for test (day split)...
+      Loading raw CSV files for Day Split...
+        Test chunk (Friday):  Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv (223,112 flows)
+        Test chunk (Friday):  Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv (214,114 flows)
+        Test chunk (Friday):  Friday-WorkingHours-Morning.pcap_ISCX.csv (184,145 flows)
+        Train chunk (Mon-Thu): Monday-WorkingHours.pcap_ISCX.csv (502,983 flows)
+        Train chunk (Mon-Thu): Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv (252,972 flows)
+        Train chunk (Mon-Thu): Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv (164,300 flows)
+        Train chunk (Mon-Thu): Tuesday-WorkingHours.pcap_ISCX.csv (421,844 flows)
+        Train chunk (Mon-Thu): Wednesday-workingHours.pcap_ISCX.csv (610,746 flows)
+        Train chunk (Mon-Thu): custom_baseline_master.csv (197,409 flows)
+      Train: 319,505 | Val: 35,501 | Test: 615,893 (74.46s)
+
+[2/6] Fitting Network Feature Pipeline...
+
+[3/6] Training Binary Random Forest Classifier (BENIGN vs ATTACK)...
+      Binary RF trained in 12.97s
+
+[4/6] Training Multiclass Random Forest Classifier (9 Attack Categories)...
+      Multiclass RF trained in 15.32s
+
+[5/6] Comprehensive Evaluation on Held-Out Test Set (374,833 unskewed flows)...
+
+--- BINARY METRICS ---
+  Accuracy:          77.376%
+  Precision:         99.481%
+  Recall:            37.083%
+  F1-Score:          54.027%
+  ROC-AUC:           0.8623
+  PR-AUC:            0.8195
+  Confusion Matrix:  TN=394,678, FP=427, FN=138,913, TP=81,875
+  False Positive Rate (FPR): 0.1081% (427 benign flagged as attack)
+  False Negative Rate (FNR): 62.9169% (138,913 attacks missed)
+
+--- MULTICLASS METRICS ---
+  Overall Accuracy:    64.091%
+  Macro F1:            14.163%
+  Weighted F1:         54.514%
+
+              precision    recall  f1-score   support
+
+      BENIGN     0.7393    0.9991    0.8498    395105
+      BOTNET     0.0000    0.0000    0.0000      1953
+ BRUTE_FORCE     0.0000    0.0000    0.0000         0
+        DDOS     0.0000    0.0000    0.0000    128016
+         DOS     0.0000    0.0000    0.0000         0
+INFILTRATION     0.0000    0.0000    0.0000         0
+OTHER_ATTACK     0.0000    0.0000    0.0000         0
+   PORT_SCAN     0.0000    0.0000    0.0000     90819
+  WEB_ATTACK     0.0000    0.0000    0.0000         0
+
+    accuracy                         0.6409    615893
+   macro avg     0.0821    0.1110    0.0944    615893
+weighted avg     0.4743    0.6409    0.5451    615893
+
+
+--- TOP 15 IMPORTANT FEATURES ---
+  Bwd Packet Length Std           : 0.0998
+  Packet Length Variance          : 0.0689
+  Bwd Packet Length Max           : 0.0674
+  Max Packet Length               : 0.0652
+  Avg Bwd Segment Size            : 0.0609
+  Bwd Packet Length Mean          : 0.0606
+  Destination Port                : 0.0586
+  Subflow Bwd Bytes               : 0.0468
+  Packet Length Std               : 0.0464
+  Average Packet Size             : 0.0316
+  Packet Length Mean              : 0.0250
+  Flow IAT Max                    : 0.0198
+  Fwd IAT Mean                    : 0.0197
+  Total Length of Bwd Packets     : 0.0194
+  Flow IAT Mean                   : 0.0182
+
+[6/6] Exporting Model Artifacts...
+      Saved Split Evaluation JSON: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\network\eval_day.json
+===========================================================================
+NETWORK IDS [DAY SPLIT] TRAINING & EVALUATION COMPLETE!
+===========================================================================

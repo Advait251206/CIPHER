@@ -1,0 +1,94 @@
+{
+  "split": "day",
+  "split_description": "Chronological day split: Trained on Monday-Thursday capture files, evaluated on unseen Friday files",
+  "train_samples": 319505,
+  "test_samples": 615893,
+  "binary_metrics": {
+    "accuracy": 0.773759,
+    "precision": 0.994812,
+    "recall": 0.370831,
+    "f1_score": 0.540269,
+    "roc_auc": 0.862261,
+    "pr_auc": 0.819494,
+    "false_positive_rate": 0.001081,
+    "false_negative_rate": 0.629169,
+    "true_positives": 81875,
+    "true_negatives": 394678,
+    "false_positives": 427,
+    "false_negatives": 138913
+  },
+  "multiclass_metrics": {
+    "overall_accuracy": 0.640915,
+    "macro_f1": 0.141629,
+    "weighted_f1": 0.545143,
+    "per_class": {
+      "BENIGN": {
+        "precision": 0.739301031970483,
+        "recall": 0.9990635400716266,
+        "f1-score": 0.8497742280968963,
+        "support": 395105.0
+      },
+      "BOTNET": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1953.0
+      },
+      "BRUTE_FORCE": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "DDOS": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 128016.0
+      },
+      "DOS": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "INFILTRATION": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "OTHER_ATTACK": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "PORT_SCAN": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 90819.0
+      },
+      "WEB_ATTACK": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 0.0
+      },
+      "accuracy": 0.6409148991789159,
+      "macro avg": {
+        "precision": 0.08214455910783144,
+        "recall": 0.11100706000795851,
+        "f1-score": 0.09441935867743292,
+        "support": 615893.0
+      },
+      "weighted avg": {
+        "precision": 0.47427318420033626,
+        "recall": 0.6409148991789159,
+        "f1-score": 0.5451434687392521,
+        "support": 615893.0
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "split": "random",
+  "split_description": "Random stratified split: 70% train, 15% validation, 15% held-out test across all attack categories",
+  "train_samples": 448018,
+  "test_samples": 404433,
+  "binary_metrics": {
+    "accuracy": 0.999031,
+    "precision": 0.994453,
+    "recall": 0.999436,
+    "f1_score": 0.996939,
+    "roc_auc": 0.999982,
+    "pr_auc": 0.999899,
+    "false_positive_rate": 0.001045,
+    "false_negative_rate": 0.000564,
+    "true_positives": 63825,
+    "true_negatives": 340216,
+    "false_positives": 356,
+    "false_negatives": 36
+  },
+  "multiclass_metrics": {
+    "overall_accuracy": 0.998999,
+    "macro_f1": 0.919221,
+    "weighted_f1": 0.99902,
+    "per_class": {
+      "BENIGN": {
+        "precision": 0.9998560000940407,
+        "recall": 0.9989928708173308,
+        "f1-score": 0.9994242491003892,
+        "support": 340572.0
+      },
+      "BOTNET": {
+        "precision": 0.7010309278350515,
+        "recall": 0.9283276450511946,
+        "f1-score": 0.7988252569750367,
+        "support": 293.0
+      },
+      "BRUTE_FORCE": {
+        "precision": 0.9992716678805535,
+        "recall": 1.0,
+        "f1-score": 0.9996357012750455,
+        "support": 1372.0
+      },
+      "DDOS": {
+        "precision": 0.9997395697692588,
+        "recall": 0.9995833767315905,
+        "f1-score": 0.9996614671492929,
+        "support": 19202.0
+      },
+      "DOS": {
+        "precision": 0.994484412470024,
+        "recall": 0.9995523724261415,
+        "f1-score": 0.9970119521912351,
+        "support": 29042.0
+      },
+      "INFILTRATION": {
+        "precision": 1.0,
+        "recall": 0.3333333333333333,
+        "f1-score": 0.5,
+        "support": 6.0
+      },
+      "OTHER_ATTACK": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      },
+      "PORT_SCAN": {
+        "precision": 0.9950299663791843,
+        "recall": 0.9993393525655142,
+        "f1-score": 0.997180003662333,
+        "support": 13623.0
+      },
+      "WEB_ATTACK": {
+        "precision": 0.9843260188087775,
+        "recall": 0.9781931464174455,
+        "f1-score": 0.98125,
+        "support": 321.0
+      },
+      "accuracy": 0.9989985980372521,
+      "macro avg": {
+        "precision": 0.9637487292485434,
+        "recall": 0.915258010815839,
+        "f1-score": 0.919220958928148,
+        "support": 404433.0
+      },
+      "weighted avg": {
+        "precision": 0.9990713860241385,
+        "recall": 0.9989985980372521,
+        "f1-score": 0.9990202490763399,
+        "support": 404433.0
+      }
+    }
+  }
+}
