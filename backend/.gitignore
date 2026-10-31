@@ -34,3 +34,9 @@ cipher.db
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local API token
+.cipher_token
+
+# Small evaluation artifacts are part of the evidence trail
+!artifacts/*.csv

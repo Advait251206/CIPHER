@@ -11,8 +11,14 @@ from typing import Dict, Any, Tuple, Optional, List
 class ThreatScorer:
     """Configurable cybersecurity risk synthesis engine."""
 
-    def __init__(self, ml_weight: float = 0.70, heuristic_weight: float = 0.30):
-        assert abs((ml_weight + heuristic_weight) - 1.0) < 1e-4, "Weights must sum to 1.0"
+    def __init__(self, ml_weight: Optional[float] = None, heuristic_weight: Optional[float] = None):
+        import os
+        if ml_weight is None:
+            ml_weight = float(os.getenv("ML_WEIGHT", "0.70"))
+        if heuristic_weight is None:
+            heuristic_weight = float(os.getenv("HEURISTIC_WEIGHT", str(round(1.0 - ml_weight, 6))))
+        if abs((ml_weight + heuristic_weight) - 1.0) >= 1e-4:
+            raise ValueError("ML_WEIGHT and HEURISTIC_WEIGHT must sum to 1.0")
         self.ml_weight = ml_weight
         self.heuristic_weight = heuristic_weight
 

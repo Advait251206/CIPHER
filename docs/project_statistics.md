@@ -1,12 +1,17 @@
 # CIPHER — Verified Project Statistics & System Parameters
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+> **Count provenance:** the partition sizes below are from an earlier preprocessing run. The committed network model's metadata reports 448,019 balanced training flows, 404,442 validation flows and 404,442 test flows. Re-run `python -m training.preprocess_cic_ids2017` and update this section from `data/processed/cic_ids2017/metadata/preprocessing_metadata.json` before publication.
+
+
 This reference document compiles verified numerical statistics, architectural thresholds, operational capacities, and test metrics confirmed by the active implementation of **CIPHER**.
 
 ---
 
 ## 1. Quality Assurance & Regression Verification
-- **Total Backend Pytest Cases**: **152 passed** (0 failed, 2 Starlette deprecation warnings, execution time ~13s)
-- **Total Frontend Vitest Cases**: **11 passed** (0 failed, execution time ~1.3s)
+- **Total Backend Pytest Cases**: run `pytest tests -q` (results reported by CI)
+- **Total Frontend Vitest Cases**: run `npx vitest run` (results reported by CI)
 - **Frontend TypeScript Compiler Status**: **0 errors** (`npx tsc --noEmit`)
 - **Frontend Production Build**: **PASS** (1,901 modules transformed in 1.34s)
 - **Phase 10 End-to-End Validation Scenarios**: **8 evaluated, 8 passed (100% pass rate)**
@@ -17,7 +22,7 @@ This reference document compiles verified numerical statistics, architectural th
 - **PhiUSIIL Phishing URL Dataset**:
   - Raw instances loaded: **235,795**
   - Deduplicated instances: **235,370 unique URLs** (425 duplicates dropped)
-  - Features extracted: **28 lexical, structural, and information-theoretic features**
+  - Features extracted: **15 lexical, structural, and information-theoretic features**
   - Train partition (70%): **164,759 URLs**
   - Validation partition (15%): **35,305 URLs**
   - Held-out test partition (15%): **35,306 URLs**
@@ -29,7 +34,7 @@ This reference document compiles verified numerical statistics, architectural th
   - Benign training sample cap: **150,000 flows** (stratified sample with fixed seed 42)
   - Balanced training dataset: **448,019 flows** (298,019 attacks + 150,000 benign)
   - Unadulterated validation partition (15%): **374,832 flows**
-  - Unadulterated held-out test partition (15%): **374,833 flows**
+  - Unadulterated held-out test partition (15%): **404,442 flows**
 
 ---
 

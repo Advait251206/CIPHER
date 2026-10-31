@@ -60,6 +60,13 @@ export class ApiError extends Error {
 }
 
 const DEFAULT_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '/api';
+// Normally the Vite dev proxy adds the API token server-side. Set VITE_CIPHER_API_TOKEN only
+// when calling the backend directly (VITE_API_BASE_URL pointing at http://127.0.0.1:8000/api).
+const API_TOKEN: string = (import.meta as any).env?.VITE_CIPHER_API_TOKEN || '';
+
+function authHeaders(): Record<string, string> {
+  return API_TOKEN ? { 'X-CIPHER-Token': API_TOKEN } : {};
+}
 
 interface RequestOptions extends RequestInit {
   timeoutMs?: number;
@@ -89,6 +96,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   try {
     const reqHeaders: Record<string, string> = {
       Accept: 'application/json',
+      ...authHeaders(),
     };
     if (customConfig.body && typeof customConfig.body === 'string') {
       reqHeaders['Content-Type'] = 'application/json';
@@ -322,6 +330,7 @@ export const api = {
         headers: {
           'Content-Type': 'text/csv',
           Accept: 'application/json',
+          ...authHeaders(),
         },
         body: csvContent,
       });

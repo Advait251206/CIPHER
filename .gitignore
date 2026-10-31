@@ -68,3 +68,7 @@ backend/cpp_sensor/*.exe
 backend/cpp_sensor/*.obj
 backend/cpp_sensor/*.pdb
 backend/cpp_sensor/*.ilk
+
+# Local API token (generated on first backend start)
+backend/.cipher_token
+.cipher_token

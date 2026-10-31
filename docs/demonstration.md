@@ -1,5 +1,8 @@
 # CIPHER — Demonstration Runbook (8–12 Minutes)
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+
 This step-by-step runbook provides a complete, polished demonstration flow for presenting **CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*) to evaluators, technical reviewers, or project examiners.
 
 > [!IMPORTANT]
@@ -102,6 +105,6 @@ python -m scripts.phase10_validation.runner
 
 ### 8. Final Technical Summary
 - Point to documentation in `docs/`:
-  - `docs/model_results.md`: Empirical metrics on held-out test partitions (99.66% Phishing, 99.90% Network IDS).
+  - `docs/model_results.md`: Empirical metrics on held-out test partitions (98.75% Phishing, 99.90% Network IDS).
   - `docs/limitations.md`: Honest appraisal of historical datasets, low-support categories, encrypted traffic, and domain shift.
 - Conclude: CIPHER delivers a complete, cohesive, defensible, and fully validated intrusion prevention platform.

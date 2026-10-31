@@ -1,5 +1,8 @@
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
+> **Note (v1.3):** All model metrics in this file were reconciled with the committed artifacts. The authoritative, generated tables are in [docs/model_results.md](../docs/model_results.md); security and prevention-mode behaviour is described in [SECURITY.md](../SECURITY.md).
+
+
 CIPHER is a **local-first, privacy-preserving, dual-subsystem cybersecurity platform** combining:
 1. **Phishing Website & URL Detection** (trained on PhiUSIIL)
 2. **Network Intrusion Detection & Prevention System (Network IDPS)** (trained on CIC-IDS2017)
@@ -24,7 +27,7 @@ CIPHER executes **100% locally on the host machine (`127.0.0.1`)** with zero ext
                  │                                               │
      PhiUSIIL URL Dataset (235k)                     CIC-IDS2017 Flows (2.83M)
                  │                                               │
-        28 Lexical Features                             67 Flow Statistics
+        15 Lexical Features                             67 Flow Statistics
                  │                                               │
        Random Forest Predictor                         Dual Random Forest
                  │                                   (Binary Gate + Multiclass)
@@ -61,7 +64,7 @@ CIPHER executes **100% locally on the host machine (`127.0.0.1`)** with zero ext
 
 | Component | Status | Description |
 | :--- | :--- | :--- |
-| **Phishing URL Detection** | **COMPLETE** | 28 lexical features, Random Forest, URL heuristics, risk scoring, SQLite logging. |
+| **Phishing URL Detection** | **COMPLETE** | 15 lexical features, Random Forest, URL heuristics, risk scoring, SQLite logging. |
 | **Network IDS ML Models** | **COMPLETE** | Dual Random Forest (Binary + 9-Class Multiclass) trained on 2.5M CIC-IDS2017 flows. |
 | **Network Flow Preprocessing** | **COMPLETE** | Memory-safe Parquet pipeline, Inf/NaN sanitization, deduplication, stratified split. |
 | **Network Heuristic Rules** | **COMPLETE** | Deterministic rules for Port Scan, DoS flood, DDoS, Brute Force, Botnet. |
@@ -86,15 +89,15 @@ CIPHER executes **100% locally on the host machine (`127.0.0.1`)** with zero ext
 ## Subsystem 1: Phishing URL Detection
 
 - **Dataset**: PhiUSIIL Phishing URL Dataset (235,370 clean records).
-- **Features**: 28 reproducible lexical, length, syntactic, and information-entropy features.
+- **Features**: 15 reproducible lexical, length, syntactic, and information-entropy features.
 - **Model**: Single Random Forest Classifier (~3.1 MB artifact).
 - **Test Performance**:
-  - **Accuracy**: 99.66%
-  - **Precision**: 99.91%
-  - **Recall**: 99.29%
-  - **F1 Score**: 0.9960
+  - **Accuracy**: 98.75%
+  - **Precision**: 98.79%
+  - **Recall**: 98.28%
+  - **F1 Score**: 0.9853
   - **ROC-AUC**: 0.9991
-  - **False Positive Rate (FPR)**: 0.064% (13 false alarms across 20,228 legitimate test URLs).
+  - **False Positive Rate (FPR)**: 0.900% (182 false alarms across 20,228 legitimate test URLs).
 - **Endpoint**: `POST /api/phishing/analyze`
 
 ---
@@ -147,8 +150,8 @@ Trained on the canonical **CIC-IDS2017 dataset** (`MachineLearningCSV.zip`):
 | Partition | Total Samples | Benign Samples | Attack Samples | Purpose |
 | :--- | :--- | :--- | :--- | :--- |
 | **Train** | 448,019 | 150,000 | 298,019 | Model training with balanced class representation |
-| **Validation** | 374,832 | 310,971 | 63,861 | Model selection & hyperparameter calibration |
-| **Test (Held-Out)** | 374,833 | 310,972 | 63,861 | Final unskewed benchmark evaluation |
+| **Validation** | 404,442 | — | — | Model selection & hyperparameter calibration |
+| **Test (Held-Out)** | 404,442 | 340,581 | 63,861 | Final unskewed benchmark evaluation |
 
 ---
 
@@ -161,41 +164,43 @@ Trained on the canonical **CIC-IDS2017 dataset** (`MachineLearningCSV.zip`):
 - **Hyperparameters**: `n_estimators=100`, `max_depth=24`, `min_samples_leaf=2`, `max_features="sqrt"`, `n_jobs=-1`, `random_state=42`.
 - **Training Time**: 9.73s (Binary) + 13.02s (Multiclass) on Intel Core Ultra 9.
 
-### Test Set Evaluation (374,833 Unseen Test Flows)
+### Test Set Evaluation (404,442 Unseen Test Flows)
 
 #### Binary Metrics (BENIGN vs ATTACK)
 - **Accuracy**: **99.903%**
-- **Precision**: **99.520%**
-- **Recall**: **99.914%**
-- **F1-Score**: **99.716%**
+- **Precision**: **99.450%**
+- **Recall**: **99.941%**
+- **F1-Score**: **99.695%**
 - **ROC-AUC**: **1.0000**
 - **PR-AUC**: **0.9999**
 - **Confusion Matrix**:
-  - True Negatives (TN): **310,664**
-  - False Positives (FP): **308** (FPR = **0.099%**)
-  - False Negatives (FN): **55** (FNR = **0.086%**)
-  - True Positives (TP): **63,806**
+  - True Negatives (TN): **340,228**
+  - False Positives (FP): **353** (FPR = **0.104%**)
+  - False Negatives (FN): **38** (FNR = **0.060%**)
+  - True Positives (TP): **63,823**
 
 #### Multiclass Classification Report (9 Categories)
 ```
               precision    recall  f1-score   support
 
-      BENIGN     0.9998    0.9990    0.9994    310972
-      BOTNET     0.6939    0.9283    0.7942       293
- BRUTE_FORCE     0.9978    0.9978    0.9978      1373
-        DDOS     0.9995    0.9998    0.9997     19203
-         DOS     0.9960    0.9992    0.9976     29042
-INFILTRATION     1.0000    0.8000    0.8889         5
-OTHER_ATTACK     1.0000    1.0000    1.0000         1
-   PORT_SCAN     0.9953    0.9991    0.9972     13623
-  WEB_ATTACK     0.9873    0.9688    0.9780       321
+      BENIGN     0.9999    0.9990    0.9994    340581
+      BOTNET     0.6977    0.9454    0.8029       293
+ BRUTE_FORCE     0.9985    0.9993    0.9989      1372
+        DDOS     0.9997    0.9996    0.9997     19202
+         DOS     0.9940    0.9995    0.9967     29042
+INFILTRATION     1.0000    0.5000    0.6667         6
+OTHER_ATTACK     1.0000    0.5000    0.6667         2
+   PORT_SCAN     0.9954    0.9994    0.9974     13623
+  WEB_ATTACK     0.9811    0.9688    0.9749       321
 
-    accuracy                         0.9990    374833
-   macro avg     0.9633    0.9658    0.9614    374833
-weighted avg     0.9991    0.9990    0.9990    374833
+    accuracy                         0.9990    404442
+   macro avg     0.9629    0.8790    0.9004    404442
+weighted avg     0.9990    0.9990    0.9990    404442
 ```
 
 #### Top 15 Important Features
+
+_See `models/network/network_evaluation_report.txt` for the authoritative list from the committed model._
 1. `Bwd Packet Length Std` (0.0506)
 2. `Fwd Packet Length Max` (0.0502)
 3. `Avg Fwd Segment Size` (0.0454)

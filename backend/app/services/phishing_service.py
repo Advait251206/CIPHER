@@ -40,6 +40,29 @@ class PhishingService:
         except Exception:
             pass
 
+    # Subdomains of trusted brands that host content anyone can publish.
+    USER_CONTENT_HOSTS = {
+        'sites.google.com', 'docs.google.com', 'drive.google.com', 'forms.google.com',
+        'script.google.com', 'storage.googleapis.com', 'firebasestorage.googleapis.com',
+        'forms.office.com', 'sway.office.com', 'onedrive.live.com', 'sharepoint.com',
+        'gist.github.com', 'raw.githubusercontent.com', 'web.archive.org',
+    }
+    # Platforms where every subdomain is a different (untrusted) publisher.
+    USER_CONTENT_SUFFIXES = (
+        '.github.io', '.web.app', '.firebaseapp.com', '.pages.dev', '.workers.dev', '.netlify.app',
+        '.vercel.app', '.herokuapp.com', '.azurewebsites.net', '.blogspot.com', '.weebly.com',
+        '.wixsite.com', '.glitch.me', '.repl.co', '.ngrok.io', '.ngrok-free.app', '.sharepoint.com',
+    )
+
+    @classmethod
+    def is_whitelisted_domain(cls, domain: str) -> bool:
+        domain = (domain or "").lower().rstrip(".")
+        if domain in cls.USER_CONTENT_HOSTS or domain.endswith(cls.USER_CONTENT_SUFFIXES):
+            return False
+        if any(domain == h or domain.endswith(f".{h}") for h in cls.USER_CONTENT_HOSTS):
+            return False
+        return any(domain == td or domain.endswith(f".{td}") for td in cls.TRUSTED_DOMAINS)
+
     def __init__(
         self,
         extractor: Optional[FeatureExtractor] = None,
@@ -79,18 +102,19 @@ class PhishingService:
         
         is_trusted = False
         
-        # 1. Check strict whitelist matches (top domains)
-        if any(safe_domain == td or safe_domain.endswith(f".{td}") for td in self.TRUSTED_DOMAINS):
+        # 1. Trusted-domain whitelist, except hosts that serve user-generated content
+        #    (Google Sites/Forms/Docs, OneDrive, GitHub Pages, ...), where phishing is commonly hosted.
+        if self.is_whitelisted_domain(safe_domain):
             is_trusted = True
-            
-        # 2. Check for local/development environments (localhost, 127.0.0.1, private IPs)
+
+        # 2. Loopback only. Private LAN addresses are NOT auto-trusted: a lab attacker's fake
+        #    login page on 192.168.x.x is exactly what this detector should flag.
         if not is_trusted:
-            if safe_domain in ('localhost', '0.0.0.0', '::1'):
+            if safe_domain in ('localhost', '::1'):
                 is_trusted = True
             else:
                 with contextlib.suppress(ValueError):
-                    ip = ipaddress.ip_address(safe_domain)
-                    if ip.is_private or ip.is_loopback or ip.is_link_local:
+                    if ipaddress.ip_address(safe_domain).is_loopback:
                         is_trusted = True
         
         if is_trusted:

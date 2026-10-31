@@ -124,7 +124,7 @@ def _build_markdown_summary(data: Dict[str, Any]) -> str:
     md.append(f"| Air-Gapped / No External Leak | {'VERIFIED' if safety.get('external_network_isolated') else 'VIOLATED'} | Zero external threat intel API requests, telemetry broadcasts, or public probes. |")
     md.append(f"| No Destructive Flooding | {'VERIFIED' if safety.get('bounded_connections_enforced') else 'VIOLATED'} | DoS evaluated safely via synthetic flow fixtures; production rate thresholds (50k pkts/s) intact. |")
     md.append(f"| Zero Credential Attacks | {'VERIFIED' if safety.get('no_real_credential_attacks') else 'VIOLATED'} | Auth storm validated via empty TCP connection bursts; no password guessing or dictionary attacks. |")
-    md.append(f"| Host Protection (No Firewall Edits) | {'VERIFIED' if safety.get('no_host_firewall_modified') else 'VIOLATED'} | Prevention validated in simulate and detect_only modes; no netsh or system rule tampering. |")
+    md.append(f"| Host Protection (No Firewall Edits) | {'VERIFIED' if safety.get('no_host_firewall_modified') else 'VIOLATED'} | Every blocklist subprocess call was intercepted during the run; netsh calls attempted: {safety.get('host_firewall_calls_attempted', 'n/a')}. |")
     md.append(f"| Test IOC Isolation | VERIFIED | Phase 10 test IOCs tagged CIPHER_PHASE10_TEST isolated and deleted; production store untouched. |")
     md.append("")
     md.append("---")

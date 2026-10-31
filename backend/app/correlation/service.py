@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Any, List, Optional, Union
 
 from app.database.database import Database
-from app.prevention.prevention_engine import PreventionEngine
+from app.prevention.prevention_engine import PreventionEngine, get_prevention_engine
 from app.correlation.models import NormalizedEvent, IncidentItem
 from app.correlation.normalizer import EventNormalizer
 from app.correlation.correlator import EventCorrelator, CorrelatedChain
@@ -32,7 +32,7 @@ class CorrelationService:
         self.correlator = correlator or EventCorrelator()
         self.db = db or Database()
         self.incident_mgr = incident_mgr or IncidentManager(self.db)
-        self.prevention_engine = prevention_engine or PreventionEngine()
+        self.prevention_engine = prevention_engine or get_prevention_engine()
         logger.info("Initialized CIPHER Unified Correlation Service")
 
     def process_event(self, raw_event: Union[Dict[str, Any], NormalizedEvent]) -> Dict[str, Any]:
@@ -50,26 +50,10 @@ class CorrelationService:
             from app.rules.engine import get_rule_engine
             rule_matches = get_rule_engine().evaluate(raw_event)
             if rule_matches:
-                # Safelist trusted IPs and ports to prevent DOS/DDOS rule false positives
-                is_trusted = False
-                import ipaddress
-                if norm_event.source_ip:
-                    try:
-                        sip = ipaddress.ip_address(norm_event.source_ip)
-                        for subnet in [
-                            ipaddress.ip_network("140.82.0.0/16"),
-                            ipaddress.ip_network("20.0.0.0/8"),
-                            ipaddress.ip_network("192.168.0.0/16"),
-                            ipaddress.ip_network("10.0.0.0/8"),
-                        ]:
-                            if sip in subnet:
-                                is_trusted = True
-                                break
-                    except: pass
-                if norm_event.source_port in [80, 443, 8080, 8443, 53]:
-                    is_trusted = True
-
-                if is_trusted:
+                # Suppress volumetric rule matches only for operator-trusted sources
+                # (CIPHER_TRUSTED_SOURCES); no built-in port or subnet exemptions.
+                from app.network.net_utils import is_trusted_source
+                if is_trusted_source(norm_event.source_ip):
                     rule_matches = [m for m in rule_matches if m.category not in ("DOS", "DDOS")]
 
             if rule_matches:
@@ -134,7 +118,8 @@ class CorrelationService:
                 ml_confidence=chain.confidence,
                 source_ip=chain.source_ip,
                 event_id=chain.incident_id,
-                is_heuristic_hit=chain.escalation_detected
+                is_heuristic_hit=chain.escalation_detected,
+                count_flow=False  # the detector stage already counted this flow
             )
             rec_act = prev_res.get("recommended_action")
             chain.recommended_action = rec_act.value if hasattr(rec_act, "value") else str(rec_act or "ALERT")

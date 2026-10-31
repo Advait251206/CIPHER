@@ -179,9 +179,10 @@ class FlowTracker:
                     raw_payload = bytes(tcp_layer.payload)
                     payload_len = len(raw_payload)
                     
-                    # RESTRICT WAF to INCOMING requests to the Vulnerable App (5174) or Backend (8000).
-                    # Do not inspect responses (src_port) to avoid false positives on CSS/JS files.
-                    if payload_len > 0 and dst_port in [5174, 8000, 8080]:
+                    # WAF inspects plaintext HTTP requests to the protected web apps only (default 5174, 8080).
+                    # CIPHER's own API (8000) is excluded: analysts legitimately submit URLs/emails
+                    # containing '#', '--' etc., which must not get them blocked. Responses are not inspected.
+                    if payload_len > 0 and dst_port in self.config.waf_ports:
                         try:
                             # Basic string extraction for WAF payload inspection
                             payload_str = raw_payload.decode("utf-8", errors="ignore")
@@ -240,24 +241,27 @@ class FlowTracker:
                                     logger.error(f"[WAF] Failed to log incident to DB: {log_e}")
 
                                 if enforce_mode == "enforce":
-                                    logger.error(f"[IPS] Active TCP RST fired for {attack_type} against {src_ip}")
-                                    # Extract seq and ack for forged RST
+                                    # Best-effort teardown: the sensor sees a copy of the packet after the OS has
+                                    # delivered it, so the request has already reached the app. The RST only races
+                                    # the response; it is not inline prevention.
+                                    logger.warning(f"[IPS] Best-effort TCP RST sent for {attack_type} from {src_ip}")
                                     seq = getattr(tcp_layer, "seq", 0)
                                     ack = getattr(tcp_layer, "ack", 0)
-                                    # In a real inline IPS, we'd inject a forged RST packet here.
                                     waf_engine.inject_tcp_rst(src_ip, src_port, dst_ip, dst_port, seq, ack)
                                     
-                                    # Automatically block the IP at the network level
+                                    # Containment goes through the shared engine, so it honours the global
+                                    # prevention mode and never blocks protected addresses.
                                     try:
-                                        from app.network.service import NetworkService
-                                        NetworkService().prevention_engine.blocklist.block_ip(
-                                            ip=src_ip,
+                                        from app.prevention.prevention_engine import get_prevention_engine
+                                        info = get_prevention_engine().contain_ip(
+                                            src_ip,
                                             reason=f"WAF Engine Auto-Blocked: {attack_type}",
                                             attack_type=attack_type,
                                             threat_score=100,
                                             duration_minutes=1440
                                         )
-                                        logger.info(f"[IPS] Source IP {src_ip} automatically added to Blocklist.")
+                                        if info:
+                                            logger.info(f"[IPS] Source IP {src_ip} added to blocklist (os_rule={info.get('os_rule_applied')}).")
                                     except Exception as block_e:
                                         logger.error(f"[IPS] Auto-block failed: {block_e}")
                         except Exception as e:

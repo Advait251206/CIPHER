@@ -1,5 +1,8 @@
 # CIPHER — Final Project Technical Report
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+
 **CIPHER: Cyber Intrusion Prevention & Heuristic Event Response**  
 *A Local-First, Unified Cyber Defense Platform Integrating Machine Learning, Deterministic Heuristics, Threat Intelligence, Multi-Stage Correlation, and SOC Operations*
 
@@ -17,7 +20,7 @@
 7. **Intrusion Prevention Engine**: Multi-mode defense (`detect_only`, `simulate`, `enforce`) featuring TTL-managed blocklists and rate-limiting.
 8. **Modern SOC Operations Dashboard**: React 18, TypeScript, and Vite single-page application delivering 10 operational views.
 
-On held-out test partitions, CIPHER achieved **99.66% accuracy** for Phishing URL classification and **99.90% accuracy** for Network Intrusion Detection. Phase 10 controlled local validation demonstrated 100% pass rates across eight comprehensive test scenarios (A through H) with complete 6-stage provenance tracing.
+On held-out test partitions, CIPHER achieved **98.75% accuracy** for Phishing URL classification and **99.90% accuracy** for Network Intrusion Detection. Phase 10 controlled local validation demonstrated 100% pass rates across eight comprehensive test scenarios (A through H) with complete 6-stage provenance tracing.
 
 ---
 
@@ -52,7 +55,7 @@ CIPHER follows a layered pipeline architecture:
 [ Raw Network Packets / Npcap ]       [ URL Submissions / REST API ]
                │                                     │
      Live Network Sensor                   URL Feature Extractor
-    (50k Active Flow Table)                 (28 Lexical Features)
+    (50k Active Flow Table)                 (15 Lexical Features)
                │                                     │
      67-Feature Flow Dict                            │
                │                                     │
@@ -109,14 +112,14 @@ The system is organized into two primary sub-projects:
 
 ### Phishing URL Detector
 - **Dataset**: PhiUSIIL (235,370 unique URLs post-deduplication; 425 duplicate URLs dropped).
-- **Features**: 28 static lexical, structural, and information-theoretic features.
+- **Features**: 15 static lexical, structural, and information-theoretic features.
 - **Model**: `RandomForestClassifier` (`n_estimators=100`, `max_depth=22`, `min_samples_split=5`, `min_samples_leaf=2`).
 - **Data Split**: Stratified 70% Train (164,759), 15% Validation (35,305), 15% Test (35,306).
 
 ### Network IDS Detector
 - **Dataset**: CIC-IDS2017 (2,498,883 unique flows post-deduplication across 8 capture files; 331,860 cross-file duplicates removed).
 - **Features**: 67 statistical flow features (10 constant zero-variance columns and 1 duplicate column dropped; Infs/NaNs sanitized; stored in float32).
-- **Class Balancing**: Stratified 70/15/15 split. Training partition attack flows were 100% preserved (298,019), while benign training flows were capped at 150,000 samples via stratified sampling (`random_state=42`), producing a balanced training set of 448,019 flows. Validation (374,832) and Test (374,833) partitions were left completely unadulterated.
+- **Class Balancing**: Stratified 70/15/15 split. Training partition attack flows were 100% preserved (298,019), while benign training flows were capped at 150,000 samples via stratified sampling (`random_state=42`), producing a balanced training set of 448,019 flows. Validation (374,832) and Test (404,442) partitions were left completely unadulterated.
 - **Architecture**: Dual Random Forest (Model 1: Binary Gate; Model 2: 9-Class Multiclass Classifier).
 
 ---
@@ -191,16 +194,16 @@ Phase 10 validated the complete defensive pipeline across eight distinct scenari
 
 | Subsystem / Metric | Measured Value | Benchmark Partition |
 |:---|:---:|:---|
-| **Phishing Model Accuracy** | **99.66%** | PhiUSIIL Held-Out Test Set (35,306 URLs) |
-| **Phishing Precision / Recall** | **99.91% / 99.29%** | PhiUSIIL Held-Out Test Set |
-| **Phishing False Positive Rate** | **0.064%** | PhiUSIIL Held-Out Test Set (13 / 20,228 benign) |
-| **Network IDS Binary Accuracy** | **99.903%** | CIC-IDS2017 Held-Out Test Set (374,833 flows) |
-| **Network Binary Precision / Recall** | **99.520% / 99.914%** | CIC-IDS2017 Held-Out Test Set |
-| **Network Binary False Positive Rate**| **0.099%** | CIC-IDS2017 Held-Out Test Set (308 / 310,972 benign)|
+| **Phishing Model Accuracy** | **98.75%** | PhiUSIIL Held-Out Test Set (35,306 URLs) |
+| **Phishing Precision / Recall** | **98.79% / 98.28%** | PhiUSIIL Held-Out Test Set |
+| **Phishing False Positive Rate** | **0.900%** | PhiUSIIL Held-Out Test Set (182 / 20,228 benign) |
+| **Network IDS Binary Accuracy** | **99.903%** | CIC-IDS2017 Held-Out Test Set (404,442 flows) |
+| **Network Binary Precision / Recall** | **99.450% / 99.941%** | CIC-IDS2017 Held-Out Test Set |
+| **Network Binary False Positive Rate**| **0.104%** | CIC-IDS2017 Held-Out Test Set (353 / 340,581 benign)|
 | **Network Multiclass Accuracy** | **99.900%** | CIC-IDS2017 Held-Out Test Set |
-| **Network Multiclass Macro F1** | **96.142%** | CIC-IDS2017 Held-Out Test Set |
-| **Backend Test Suite (Pytest)** | **152 passed (100%)** | Full backend test suite (`pytest tests/`) |
-| **Frontend Test Suite (Vitest)** | **11 passed (100%)** | Full frontend test suite (`npm run test`) |
+| **Network Multiclass Macro F1** | **90.036%** | CIC-IDS2017 Held-Out Test Set |
+| **Backend Test Suite (Pytest)** | **see CI** | Full backend test suite (`pytest tests/`) |
+| **Frontend Test Suite (Vitest)** | **see CI** | Full frontend test suite (`npm run test`) |
 | **Phase 10 Validation Scenarios** | **8 / 8 passed (100%)** | Controlled local validation suite |
 
 ---
@@ -208,7 +211,7 @@ Phase 10 validated the complete defensive pipeline across eight distinct scenari
 ## 14. Security & Safety Controls
 
 - **Confined Loopback Target**: Sockets are programmatically restricted to `127.0.0.1` / `::1`. Remote IPs raise a `ValueError`.
-- **Zero Host Tampering**: No alterations to Windows Firewall (`netsh`), Defender, or registry.
+- **No Host Tampering by Default**: `detect_only` and `simulate` never call `netsh`; Windows Firewall rules are created only in `enforce` mode, never for protected addresses, and removed on TTL expiry. Defender and the registry are never touched.
 - **Resource Ceilings**: Maximum 50 connections, 15-second execution timeouts, and 50,000 in-memory flows.
 - **Data Isolation**: Test IOCs tagged `CIPHER_PHASE10_TEST` are automatically cleaned up post-validation.
 - **Input Sanitization**: Extreme lengths, malformed URLs, and infinite numeric values are sanitized at ingest.

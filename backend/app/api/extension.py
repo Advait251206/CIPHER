@@ -36,6 +36,26 @@ class LaunchBrowserRequest(BaseModel):
     target_url: str = "http://localhost:5173"
 
 
+def _validate_target_url(raw: str) -> str:
+    """Only plain http(s) URLs may be handed to the browser (blocks argument injection)."""
+    from urllib.parse import urlparse
+
+    url = (raw or "").strip()
+    parsed = urlparse(url)
+    if (
+        not url
+        or url.startswith("-")
+        or any(c.isspace() for c in url)
+        or parsed.scheme not in ("http", "https")
+        or not parsed.netloc
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="target_url must be an absolute http:// or https:// URL."
+        )
+    return url
+
+
 @router.get("/status", response_model=ExtensionStatusResponse)
 def get_extension_status():
     """Returns local extension availability and directory metadata."""
@@ -123,7 +143,7 @@ def launch_browser_with_extension(req: LaunchBrowserRequest = LaunchBrowserReque
         )
 
     ext_abs_path = str(EXTENSION_DIR.resolve())
-    target_url = req.target_url
+    target_url = _validate_target_url(req.target_url)
 
     try:
         import tempfile
@@ -149,11 +169,13 @@ def launch_browser_with_extension(req: LaunchBrowserRequest = LaunchBrowserReque
             browser_bin = shutil.which("google-chrome") or shutil.which("chromium")
 
         if browser_bin:
+            # "--" ends Chromium switch parsing, so the URL can never be read as a browser flag.
             subprocess.Popen([
                 browser_bin,
                 f"--user-data-dir={temp_profile}",
                 "--no-first-run",
                 f"--load-extension={ext_abs_path}",
+                "--",
                 target_url
             ])
             return {

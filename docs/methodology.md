@@ -1,5 +1,10 @@
 # CIPHER — Engineering & Scientific Methodology
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+> **Count provenance:** the partition sizes below are from an earlier preprocessing run. The committed network model's metadata reports 448,019 balanced training flows, 404,442 validation flows and 404,442 test flows. Re-run `python -m training.preprocess_cic_ids2017` and update this section from `data/processed/cic_ids2017/metadata/preprocessing_metadata.json` before publication.
+
+
 This document provides a systematic account of the methodology, algorithms, feature pipelines, and architectural decisions employed across all ten development phases of **CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*).
 
 ---
@@ -93,7 +98,7 @@ This document provides a systematic account of the methodology, algorithms, feat
 - **Stateful Flow Aggregation**:
   - Bounded flow table capped at **50,000 active flows**.
   - Bidirectional 5-tuple flow tracking (`source_ip`, `destination_ip`, `source_port`, `destination_port`, `protocol`).
-  - Real-time computation of 67 flow features matching the CIC-IDS2017 feature schema (inter-arrival times, packet length statistics, flag distributions, segment sizes).
+  - Streaming computation of 67 flow features named after the CIC-IDS2017 schema (note: packet lengths are wire lengths and timeouts differ from CICFlowMeter; see limitations.md) (inter-arrival times, packet length statistics, flag distributions, segment sizes).
   - Eviction timers: **5-second idle timeout** and **60-second active timeout**.
   - Finalized flows are automatically dispatched to `NetworkService.analyze_flow` for detection and correlation.
 
@@ -178,6 +183,6 @@ This document provides a systematic account of the methodology, algorithms, feat
   - Strict loopback confinement (`127.0.0.1` / `::1`). Non-local IP requests are rejected by programmatic assertion.
   - Bounded connection counts ($\le 50$) and execution timeouts ($\le 15.0$s).
   - DoS logic evaluated safely using synthetic flow fixtures exceeding 50,000 pkts/s; localhost is never flooded.
-  - Zero modifications to host firewall (`netsh`), Defender, or registry.
+  - Zero modifications to host firewall (`netsh`), Defender, or registry: the runner intercepts every blocklist subprocess call and records how many were attempted (0 in the committed run).
   - Test IOCs are isolated and purged upon validation completion.
 - **Automated Reporting**: Generates machine-readable `validation_report.json` and human-readable `validation_summary.md` in `artifacts/phase10/`.

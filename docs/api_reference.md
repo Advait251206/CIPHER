@@ -2,6 +2,15 @@
 
 The **CIPHER** backend provides a clean, local-first REST API built with FastAPI. All endpoints are hosted locally by default on `http://127.0.0.1:8000`.
 
+## Authentication and origin checks
+
+- Every `POST`, `PUT`, `PATCH` and `DELETE` under `/api/` requires the header `X-CIPHER-Token: <token>`. The token is `CIPHER_API_TOKEN`, or the contents of `backend/.cipher_token` (created on first start). Missing or wrong token → `401`.
+- Browser requests must come from an allowed `Origin` (the dashboard at `http://localhost:5173` / `http://127.0.0.1:5173`, entries in `CIPHER_ALLOWED_ORIGINS`, or a browser extension). Any other `Origin` → `403`.
+- Exempt from the token (still Origin-checked): `POST /api/phishing/analyze`, `POST /api/email/analyze`, `POST /api/email/analyze-text`, used by the browser extension.
+- `GET` endpoints need no token; CORS prevents other websites from reading their responses.
+- `POST /api/network/blocklist/{ip}` validates the address and returns `400` for invalid or protected addresses (loopback, link-local, multicast, this host, `CIPHER_PROTECTED_IPS`). A firewall rule is added only in `enforce` mode (`os_rule_applied` in the response).
+- `POST /api/extension/launch` accepts only absolute `http(s)` URLs.
+
 ---
 
 ## 1. System & Health Endpoints

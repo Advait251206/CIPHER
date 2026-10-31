@@ -35,6 +35,9 @@ from app.api import health, phishing, email, network, events, system, incidents,
 async def lifespan(app: FastAPI):
     """Initializes local database and pre-warms ML models on server startup."""
     logger.info("Initializing CIPHER local security engine...")
+    from app.security import get_api_token, TOKEN_FILE
+    get_api_token()  # creates backend/.cipher_token on first run if CIPHER_API_TOKEN is unset
+    logger.info(f"State-changing API calls require the X-CIPHER-Token header (token file: {TOKEN_FILE.name}).")
     db = Database()
 
     # Pre-warm Phishing Subsystem
@@ -85,20 +88,43 @@ Local-First, Privacy-Preserving Intrusion Detection and Threat Analysis Engine.
 - **Subsystem 2 (Network IDPS)**: Dual Random Forest ML model (Binary Gate + 9-Class Multiclass) trained on CIC-IDS2017 with deterministic flow heuristics.
 - **Unified Defense**: Standardized threat scoring (0-100), severity classification, evidence-backed explanations, and multi-mode IPS architecture (detect_only, simulate, enforce).
     """,
-    version="1.2.0022",
+    version="1.3.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan
 )
 
-# Enable CORS for local development (frontend running on Vite, Next.js, or local extension)
+# CORS: only the local dashboard and browser extensions may call the API from a browser.
+# A wildcard origin would let any website the analyst visits drive this API.
+from fastapi.responses import JSONResponse
+from app.security import (
+    get_allowed_origins, is_origin_allowed, requires_token, is_token_valid, get_api_token, TOKEN_HEADER
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=get_allowed_origins(),
+    allow_origin_regex=r"^(chrome|moz)-extension://[a-zA-Z0-9\-]+$",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", TOKEN_HEADER],
 )
+
+
+@app.middleware("http")
+async def enforce_access_control(request, call_next):
+    """Origin check + API token for every state-changing /api request."""
+    method = request.method.upper()
+    path = request.url.path
+    if method in {"POST", "PUT", "PATCH", "DELETE"} and path.startswith("/api/"):
+        if not is_origin_allowed(request.headers.get("origin")):
+            return JSONResponse(status_code=403, content={"detail": "Origin not allowed."})
+        if requires_token(method, path) and not is_token_valid(request.headers.get(TOKEN_HEADER)):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": f"Missing or invalid {TOKEN_HEADER} header. See backend/.cipher_token or CIPHER_API_TOKEN."},
+            )
+    return await call_next(request)
 
 @app.middleware("http")
 async def add_custom_header(request, call_next):
@@ -138,7 +164,7 @@ def root_redirect():
     return {
         "service": "CIPHER Local Cybersecurity Backend",
         "status": "online",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "documentation": "/docs",
         "health_check": "/api/health",
         "subsystems": {

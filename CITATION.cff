@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use CIPHER in your research, please cite it as below."
+title: "CIPHER: Cyber Intrusion Prevention & Heuristic Event Response"
+type: software
+authors:
+  - family-names: Kawale
+    given-names: Advait
+repository-code: "https://github.com/Advait251206/CIPHER"
+license: MIT
+version: "1.3.0"
+date-released: "2026-10-31"
+keywords:
+  - intrusion detection
+  - intrusion prevention
+  - phishing detection
+  - machine learning
+  - CIC-IDS2017
+  - PhiUSIIL

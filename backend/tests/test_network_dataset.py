@@ -13,6 +13,13 @@ import pandas as pd
 backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 data_dir = os.path.join(backend_root, "data", "processed", "cic_ids2017")
 
+# The processed CIC-IDS2017 partitions are gitignored (several GB). These tests run only
+# where the dataset has been preprocessed: python -m training.preprocess_cic_ids2017
+pytestmark = pytest.mark.skipif(
+    not os.path.exists(os.path.join(data_dir, "metadata", "preprocessing_metadata.json")),
+    reason="Processed CIC-IDS2017 dataset not present (gitignored); run training/preprocess_cic_ids2017.py",
+)
+
 
 def test_preprocessing_metadata_exists_and_valid():
     meta_path = os.path.join(data_dir, "metadata", "preprocessing_metadata.json")

@@ -4,8 +4,8 @@
 
 ## Executive Overview
 
-- **Execution Timestamp**: `2026-10-23T20:27:12Z`
-- **Total Duration**: `4.51 seconds`
+- **Execution Timestamp**: `2026-10-31T02:32:45Z`
+- **Total Duration**: `3.06 seconds`
 - **Environment**: `Localhost (Air-Gapped / Isolated Loopback)`
 - **Scenarios Evaluated**: `8`
 - **Passed**: `8` | **Failed**: `0` | **Skipped**: `0`
@@ -18,13 +18,13 @@
 | Scenario | Name | Traffic Classification | Status | Result / Key Evidence |
 |:---:|:---|:---|:---:|:---|
 | **A** | Benign Localhost Traffic | `REAL LOCAL TRAFFIC` | **PASS** | Generated 5 HTTP flows to http://127.0.0.1:18080. Classification: BENIGN. Threat Score: 3/100. Severity: LOW. ML Confidence: 88.1%. Action: MONITORED_ONLY. No false critical alert raised. |
-| **B** | Port Scan Heuristic Sweep | `REAL LOCAL TRAFFIC` | **PASS** | Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-001']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0µs)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance']. |
-| **C** | Auth-Storm / Brute-Force Heuristic | `REAL LOCAL TRAFFIC + AUTH FLOW METADATA` | **PASS** | Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-BRUTEFORCE-001', 'HEUR-BRUTEFORCE-002', 'HEUR-PORTSCAN-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry']. |
-| **D** | Controlled Flood Heuristic | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DDOS-001', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY. |
-| **E** | Local Threat Intelligence / IOC Match | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-5645FF31 severity: CRITICAL (100/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs. |
-| **F** | Multi-Stage Attack Correlation | `CONTROLLED SEQUENTIAL EVENTS` | **PASS** | Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-61DD2D5F. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-5A9148B7. |
+| **B** | Port Scan Heuristic Sweep | `REAL LOCAL TRAFFIC` | **PASS** | Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-001', 'SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-002']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0µs)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance']. |
+| **C** | Auth-Storm / Brute-Force Heuristic | `REAL LOCAL TRAFFIC + AUTH FLOW METADATA` | **PASS** | Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002', 'HEUR-BRUTEFORCE-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry']. |
+| **D** | Controlled Flood Heuristic | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DOS-002', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY. |
+| **E** | Local Threat Intelligence / IOC Match | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-A8828E7C severity: CRITICAL (98/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs. |
+| **F** | Multi-Stage Attack Correlation | `CONTROLLED SEQUENTIAL EVENTS` | **PASS** | Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-78B4827D. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-ADB368CA. |
 | **G** | IPS Prevention Simulation | `CONTROLLED ENGINE VERIFICATION` | **PASS** | Simulate mode returned action 'SIMULATED_TEMPORARY_BLOCK' without host firewall changes. Detect_only mode returned action 'MONITORED_ONLY'. Enforcement path not exercised on host; detect_only/simulate validated safely. |
-| **H** | Full End-to-End Pipeline Chain | `INTEGRATED PIPELINE DEMONSTRATION` | **PASS** | Complete provenance chain successfully established: Flow [flow-e2e-ce888949] -> Event ID [e02073ed-947d-4b32-9d26-aa91ae5feb3e] -> Rule Match [['HEUR-PORTSCAN-002', 'HEUR-DDOS-001', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-2955F989] -> Prevention Action [MONITORED_ONLY]. |
+| **H** | Full End-to-End Pipeline Chain | `INTEGRATED PIPELINE DEMONSTRATION` | **PASS** | Complete provenance chain successfully established: Flow [flow-e2e-abe0e527] -> Event ID [ae7ba763-a20f-4cdf-8257-19aae265a738] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-B6CC9DB4] -> Prevention Action [MONITORED_ONLY]. |
 
 ---
 
@@ -33,15 +33,15 @@
 The full end-to-end security pipeline was exercised to confirm seamless cross-subsystem event propagation and identity preservation:
 
 ```text
-Network Flow       : flow-e2e-ce888949
+Network Flow       : flow-e2e-abe0e527
        ↓
-Security Event ID  : e02073ed-947d-4b32-9d26-aa91ae5feb3e
+Security Event ID  : ae7ba763-a20f-4cdf-8257-19aae265a738
        ↓
-Rule Matches       : ['HEUR-PORTSCAN-002', 'HEUR-DDOS-001', 'SIGN-PORTSCAN-001']
+Rule Matches       : ['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']
        ↓
 IOC Matches        : ['203.0.113.88']
        ↓
-Correlated Incident: INC-2955F989
+Correlated Incident: INC-B6CC9DB4
        ↓
 Threat Score       : 80/100 (CRITICAL)
        ↓
@@ -54,8 +54,8 @@ Prevention Action  : MONITORED_ONLY
 
 - **Distinct Security Events Generated**: `9`
 - **Correlated Incidents Managed**: `4`
-- **Distinct Heuristic/Signature Rules Triggered**: `SIGN-WEB-001, HEUR-BRUTEFORCE-001, HEUR-BRUTEFORCE-002, SIGN-PORTSCAN-001, HEUR-PORTSCAN-001, HEUR-DOS-001, HEUR-PORTSCAN-002, HEUR-DDOS-001`
-- **Threat Intelligence Indicators Correlated**: `203.0.113.199, 203.0.113.88`
+- **Distinct Heuristic/Signature Rules Triggered**: `HEUR-DOS-002, HEUR-DOS-001, HEUR-BRUTEFORCE-002, SIGN-WEB-001, HEUR-PORTSCAN-002, SIGN-PORTSCAN-001, HEUR-PORTSCAN-001, HEUR-BRUTEFORCE-001`
+- **Threat Intelligence Indicators Correlated**: `203.0.113.88, 203.0.113.199`
 - **IPS Prevention Decisions Issued**: `SIMULATED_TEMPORARY_BLOCK, MONITORED_ONLY`
 
 ---
@@ -68,7 +68,7 @@ Prevention Action  : MONITORED_ONLY
 | Air-Gapped / No External Leak | VERIFIED | Zero external threat intel API requests, telemetry broadcasts, or public probes. |
 | No Destructive Flooding | VERIFIED | DoS evaluated safely via synthetic flow fixtures; production rate thresholds (50k pkts/s) intact. |
 | Zero Credential Attacks | VERIFIED | Auth storm validated via empty TCP connection bursts; no password guessing or dictionary attacks. |
-| Host Protection (No Firewall Edits) | VERIFIED | Prevention validated in simulate and detect_only modes; no netsh or system rule tampering. |
+| Host Protection (No Firewall Edits) | VERIFIED | Every blocklist subprocess call was intercepted during the run; netsh calls attempted: 0. |
 | Test IOC Isolation | VERIFIED | Phase 10 test IOCs tagged CIPHER_PHASE10_TEST isolated and deleted; production store untouched. |
 
 ---

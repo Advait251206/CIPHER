@@ -4,268 +4,164 @@
 
 # CIPHER: Cyber Intrusion Prevention & Heuristic Event Response
 
-[![Backend Tests](https://img.shields.io/badge/backend%20tests-170%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/backend/tests)
-[![Frontend Tests](https://img.shields.io/badge/frontend%20tests-13%20passed-success)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/frontend/src/test)
-[![Validation](https://img.shields.io/badge/validation%20(A--H)-8%2F8%20passed-blue)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
-[![Privacy](https://img.shields.io/badge/privacy-100%25%20local--first-green)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)
+[![CI](https://github.com/Advait251206/CIPHER/actions/workflows/ci.yml/badge.svg)](https://github.com/Advait251206/CIPHER/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+CIPHER is a local-first intrusion detection and prevention research prototype. It combines machine-learning detectors, deterministic heuristic and signature rules, a local threat-intelligence store, sliding-window incident correlation and a three-mode prevention engine behind a React SOC dashboard. Everything runs on `127.0.0.1`; no data is sent to cloud services.
+
+> **Status: research prototype.** The ML numbers below are benchmark results on random splits of public datasets. They do not measure real-world detection; see [Limitations](#limitations) and [docs/model_results.md](docs/model_results.md).
 
 ---
 
-## Overview
+## What it does
 
-**CIPHER** (*Cyber Intrusion Prevention & Heuristic Event Response*) is an integrated, local-first cybersecurity platform that unites machine learning detection, deterministic heuristic/signature evaluation, local threat intelligence, multi-stage event correlation, calibrated threat scoring, and automated defensive prevention. Designed for host and edge environments, CIPHER operates **100% locally on `127.0.0.1`** with zero external cloud API dependencies, eliminating telemetry leakage and third-party exposure.
-
-The platform provides dual-domain threat visibility: inspecting suspicious web indicators via a static 15-feature Random Forest phishing detector trained on PhiUSIIL, while concurrently ingesting raw network packets through an Npcap live sensor and analyzing flow statistics via a Dual Random Forest network intrusion detection system trained on 2.49 million deduplicated flows from CIC-IDS2017. A modern dark-themed SOC operations dashboard developed in React 18, TypeScript, and Vite provides real-time telemetry, interactive sandboxes, incident lifecycle tracking, and evidence inspection.
-
----
-
-## Problem Statement
-
-Contemporary enterprise security environments are hindered by three critical structural flaws:
-1. **Tool Sprawl & Blind Spots**: Phishing filters, network sensors, and threat feeds operate in isolated silos, requiring analysts to manually correlate disjointed alerts.
-2. **Cloud Privacy Hazards**: Many commercial threat analysis tools transmit internal URLs, sensitive IP addresses, and proprietary metadata to cloud APIs, violating regulatory privacy mandates (e.g., GDPR, HIPAA) and revealing internal architecture to external services.
-3. **Alert Fatigue & Destructive Prevention**: Single-event alert floods overwhelm SOC teams without kill-chain context, while poorly calibrated automated prevention mechanisms risk business disruption by blocking legitimate traffic during operational bursts.
-
----
-
-## Objectives
-
-CIPHER fulfills eight core technical objectives:
-- **Network Intrusion Detection**: Real-time statistical flow classification across 8 attack categories (DoS, DDoS, PortScan, BruteForce, Botnet, Web Attacks, Infiltration, Heartbleed).
-- **Phishing URL Detection**: Sub-millisecond static URL inspection across 28 lexical, structural, and information-theoretic features without active web crawling.
-- **Deterministic Heuristic & Signature Detection**: 14 stateful rules operating alongside ML to guarantee deterministic detection of horizontal scans, credential storms, and volumetric floods.
-- **Threat Intelligence Correlation**: Local-first SQLite IOC store (`threat_intel_iocs`) with in-memory caching and dominant severity risk floors.
-- **Multi-Stage Event Correlation**: Sliding-window (300s) incident correlation linking related events using strict `(source_ip, destination_ip)` identity pairing with automated escalation tracking.
-- **Incident Management**: State transitions (`ACTIVE`, `INVESTIGATING`, `RESOLVED`), chronological timeline reconstruction, and official PDF/TXT incident reporting.
-- **Web Application Firewall (WAF)**: Deep packet inspection (DPI) via Scapy to detect and block SQL Injection (SQLi), Cross-Site Scripting (XSS), and Path Traversal attacks in real-time.
-- **Defensive Intrusion Prevention**: Multi-mode defense (`detect_only`, `simulate`, `enforce`) with TTL blocklists, flow rate limiting, and forged TCP RST packet injection to kill malicious connections mid-flight.
-- **SOC Visualization**: Comprehensive React 18 / TypeScript single-page dashboard with 10 operational views, interactive user management, and structured evidence inspection.
-
----
+- **Network IDS**: a binary Random Forest gate plus a 9-class Random Forest over 67 CICFlowMeter-style flow features, trained on CIC-IDS2017.
+- **Phishing URL detection**: a 15-feature lexical Random Forest trained on PhiUSIIL, combined with URL heuristics and a trusted-domain list that excludes user-content hosts.
+- **Email phishing detection**: a 32-feature Random Forest over subject, body, URLs and sender, with embedded-URL scoring.
+- **Rules**: 10 stateful heuristics (port sweep, brute force, DoS, multi-source DDoS with a volume condition, C2 beaconing) and 4 signatures.
+- **Threat intelligence**: local SQLite IOC store (IP, domain, URL, hash) with an in-memory cache and severity score floors.
+- **Correlation**: 300 s sliding-window incident chains keyed on `(source_ip, destination_ip)`, with reconnaissance → exploitation escalation.
+- **Prevention**: `detect_only` (default) · `simulate` (blocklist records only) · `enforce` (Windows firewall rules), with TTL expiry and protected addresses that are never blocked.
+- **Live sensor**: Scapy/Npcap capture, bidirectional flow tracking (50k flow cap) and a plaintext-HTTP WAF for the demo app.
+- **SOC dashboard**: React 18 + TypeScript + Vite, 11 views.
+- **Browser Guard**: a Chromium MV3 extension that scans the current tab or the open email on demand.
 
 ## Architecture
 
 ```text
-Attack / Test Traffic               Suspicious URLs
-         │                                 │
-  [ Live Sensor / Npcap ]                  │
-  (50k Active Flow Table)                  │
-         │                                 │
-67-Feature Flow Extraction        28-Feature URL Extractor
-         │                                 │
-┌────────┴────────┐               ┌────────┴────────┐               ┌────────┴────────┐
-│  Network ML:    │               │  Phishing ML:   │               │   WAF Engine:   │
-│ Dual RF Models  │               │  Random Forest  │               │ DPI (SQLi, XSS, │
-└────────┬────────┘               └────────┬────────┘               │ Path Traversal) │
-         │                                 │                        └────────┬────────┘
-┌────────┴────────┐               ┌────────┴────────┐                        │
-│ Deterministic   │               │ Lexical / Brand │                        │
-│ Rules (10+4)    │               │ Heuristics      │                        │
-└────────┬────────┘               └────────┬────────┘                        │
-         │                                 │                                 │
-         └────────────────┬──────────────────────────────────────────────────┘
-                          │
-          Local Threat Intelligence (SQLite IOC Store)
-                          │
-             Calibrated ThreatScorer (0–100)
-                          │
-          Multi-Stage Event Correlation Engine
-                 (300s Sliding Window)
-                          │
-             Incident Lifecycle Manager
-                          │
-             Intrusion Prevention Engine
-          (detect_only | simulate | enforce)
-                          │
-             SQLite Unified Security Database
-                          │
-             FastAPI REST API Gateway (Port 8000)
-                          │
-             SOC Operations Dashboard (Port 5173)
+ Live sensor (Scapy/Npcap) ─┐        ┌─ Network ML (binary + 9-class RF)
+ POST /api/network/analyze ─┼─▶ flow ├─ Rules engine (10 heuristics + 4 signatures)
+                            │        └─ WAF (plaintext HTTP to protected apps)
+ URL / email submissions ───┼─▶ Phishing URL RF + heuristics + trusted-domain list
+ Browser extension ─────────┘   Email RF + embedded-URL scoring
+                                          │
+                     Threat scorer (0–100) + local IOC matching
+                                          │
+                       Correlation (300 s window, escalation)
+                                          │
+              Prevention engine (detect_only | simulate | enforce)
+                                          │
+                 SQLite (WAL) ──▶ FastAPI 127.0.0.1:8000 ──▶ Dashboard :5173
 ```
 
----
+More detail: [docs/architecture.md](docs/architecture.md).
 
-## Major Components
+## Measured benchmark results
 
-| Component | Technology | Primary Function |
-|:---|:---|:---|
-| **Phishing Detector** | Scikit-Learn Random Forest | 28 static lexical features; 99.66% accuracy on PhiUSIIL test set; hybrid approach with Tranco Top 50,000 domain whitelist to prevent false positives. |
-| **Browser Guard** | Chrome/Edge Extension | 100% local, air-gapped browser extension that connects directly to `localhost:8000` to scan active tabs in real-time. |
-| **Network IDS** | Dual Random Forest Ensemble | Binary gate + 9-class multiclass classifier; 67 flow features; 99.90% accuracy on CIC-IDS2017. |
-| **Live Network Sensor** | Scapy + Npcap Async Sniffer | Captures raw packets; tracks 50,000 flows; 5s idle / 60s active eviction timers. |
-| **WAF Engine** | Regex DPI + TCP RST | Inspects raw HTTP payloads mid-flight for SQLi, XSS, and Path Traversal; injects TCP RST to kill connections. |
-| **Rule Engine** | Stateful Heuristics & Signatures | 10 heuristics (PortScan, BruteForce, DoS) + 4 signatures; 10,000-entry sliding-window trackers. |
-| **Threat Intelligence** | SQLite + Thread-Safe LRU Cache | In-process matching for IP, Domain, URL, Hash; 5,000-entry cache; dominant severity floor. |
-| **Event Correlator** | Sliding-Window Correlator | Identity pairing `(src_ip, dst_ip)`; 300s window; detects reconnaissance $\to$ exploitation escalation. |
-| **Prevention Engine** | State Engine + Rate Limiter | Multi-mode (`detect_only`, `simulate`, `enforce`); TTL blocklist, active TCP connection termination. |
-| **SOC Dashboard** | React 18 + TypeScript + Vite | 10 operational views; dark cybersecurity design system; interactive IP unblocking from Threat Intel DB. |
-| **Vulnerable Web App** | FastAPI + SQLite (Port 5174) | Built-in testbed containing intentional SQLi, XSS, and brute-force vulnerabilities for live attack simulation. |
+<!-- METRICS:SUMMARY:START -->
+| Model | Dataset (held-out test set) | Features | Accuracy | Precision | Recall | F1 | FPR |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 98.75% | 98.79% | 98.28% | 0.9853 | 0.900% |
+| Network IDS, binary gate (Random Forest) | CIC-IDS2017, random stratified split (404,442 flows) | 67 | 99.903% | 99.450% | 99.941% | 0.9969 | 0.104% |
+| Network IDS, 9-class (Random Forest) | CIC-IDS2017, same split | 67 | 99.897% | — | — | macro 0.9004 / weighted 0.9990 | — |
+| Email phishing (Random Forest) | 6-corpus Kaggle aggregate, random stratified split (12,359 emails) | 32 | 91.53% | 94.24% | 89.14% | 0.9162 | 5.89% |
 
----
+_Generated by `backend/scripts/generate_docs_metrics.py` from the committed `models/*/…metadata.json` files. These are random-split benchmark numbers; see the limitations for why they overstate real-world performance._
+<!-- METRICS:SUMMARY:END -->
 
-## Technology Stack
+Per-class network results, confusion matrices and the real-world URL probe are in [docs/model_results.md](docs/model_results.md).
 
-### Backend
-- **Language**: Python 3.13
-- **Framework**: FastAPI 0.115, Pydantic v2, Uvicorn
-- **Machine Learning**: Scikit-Learn 1.6, NumPy, Pandas, Joblib
-- **Packet Capture**: Scapy 2.6, Npcap
-- **Database**: SQLite3 (WAL mode, composite indexing)
-- **Testing**: Pytest 9.1
+## Quick start
 
-### Frontend
-- **Framework**: React 18.3
-- **Language**: TypeScript 5.6
-- **Build Tool**: Vite 6.4
-- **Styling**: Vanilla CSS Design Tokens (Dark SOC Aesthetic, Glassmorphism, Monospace Metrics)
-- **Testing**: Vitest 3.2 + React Testing Library
+Prerequisites: Python 3.12 or 3.13, Node.js 20+, and [Npcap](https://npcap.com/) (Windows) or libpcap (Linux) only for live capture.
 
----
-
-## Installation & Setup
-
-### Prerequisites
-- Python 3.11+ (Python 3.13 verified)
-- Node.js 18+ (Node.js 20+ verified)
-- Npcap (required only for live network packet sniffing; all synthetic and API tests run without Npcap)
-
-### 1. Clone & Setup Backend
 ```powershell
+# Backend
 cd backend
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1          # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-```
-
-### 2. Setup Frontend
-```powershell
-cd ../frontend
-npm install
-```
-
----
-
-## Running the System
-
-### Terminal 1: Backend Server (FastAPI)
-```powershell
-cd backend
+copy .env.example .env                # Linux/macOS: cp .env.example .env
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-*API documentation will be accessible at `http://127.0.0.1:8000/docs`.*
 
-### Terminal 2: Frontend Dashboard (Vite)
-```powershell
+# Dashboard (second terminal)
 cd frontend
-npm run dev
-```
-*SOC Dashboard will launch at `http://localhost:5173`.*
-
-### Terminal 3: Vulnerable Web Application
-```powershell
-cd vulnerable_app
-python -m uvicorn main:app --host 0.0.0.0 --port 5174
-```
-*Vulnerable application (for live attack simulation) will launch at `http://localhost:5174`.*
-
-> **Tip**: You can also just double-click the `run.bat` script in the root directory to automatically launch all three services, configure Windows firewall rules, and request administrator privileges for packet capture!
-
----
-
-## Running Automated Tests
-
-### Backend Test Suite (Pytest)
-```powershell
-cd backend
-pytest tests/ -v
-```
-**Verified Result**: **152 passed** in ~13 seconds across 13 test modules.
-
-### Frontend Test Suite & Production Build (Vitest & Vite)
-```powershell
-cd frontend
-npm run test
-npx tsc --noEmit
-npm run build
-```
-**Verified Result**: **11 passed** in ~1.3 seconds, 0 TypeScript errors, production bundle compiled cleanly in 1.34 seconds.
-
----
-
-## Phase 10 Controlled Local Validation
-
-CIPHER includes an automated, local-only validation suite that executes 8 comprehensive end-to-end scenarios (A through H):
-
-```powershell
-cd backend
-python -m scripts.phase10_validation.runner
+npm ci
+npm run dev                           # http://localhost:5173
 ```
 
-### Scenario Results Matrix
-| Scenario | Name | Traffic Classification | Status | Result / Key Evidence |
-|:---:|:---|:---|:---:|:---|
-| **A** | Benign Localhost Traffic | `REAL LOCAL TRAFFIC` | **PASS** | 5 genuine HTTP flows. Classified as `BENIGN` (score 4/100, `LOW`, ML confidence 86.5%). Zero false critical alerts. |
-| **B** | Port Scan Sweep | `REAL LOCAL TRAFFIC` | **PASS** | 12 bounded connection probes across loopback ports 18010–18021. Triggered `HEUR-PORTSCAN-001` & `HEUR-PORTSCAN-002` (score 80/100, `CRITICAL`). |
-| **C** | Auth-Storm / Brute-Force | `REAL LOCAL TRAFFIC + METADATA` | **PASS** | 6 bounded connections to port 22. Satisfied existing `HEUR-BRUTEFORCE-001` conditions (score 50/100, `HIGH`). |
-| **D** | Controlled Flood Heuristic | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Evaluated flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Triggered `HEUR-DOS-001` & `HEUR-DOS-002`. Zero host packet flooding. |
-| **E** | Threat Intelligence Match | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Synthetic test indicator `203.0.113.199` registered. ThreatScorer elevated score to 98/100 (`CRITICAL`). Verified disabled isolation and safe cleanup. |
-| **F** | Multi-Stage Correlation | `CONTROLLED SEQUENTIAL EVENTS` | **PASS** | Sequential attack chain (`PORT_SCAN` $\to$ `BRUTE_FORCE`) merged into single incident with escalation flag (score 100/100). Distinct destination created separate incident. |
-| **G** | Prevention Simulation | `CONTROLLED ENGINE VERIFICATION` | **PASS** | `simulate` mode returned `SIMULATED_TEMPORARY_BLOCK` without host firewall modifications. `detect_only` mode returned `MONITORED_ONLY`. |
-| **H** | Full Pipeline Provenance | `INTEGRATED DEMONSTRATION` | **PASS** | Complete 6-stage provenance chain recorded with exact entity IDs. |
+On Windows, `run.bat` starts the backend (elevated, for packet capture), the dashboard, and the vulnerable demo app (not elevated). It asks before exposing the demo app to your LAN.
 
-**Audit Artifacts Generated**:
-- Machine-readable JSON: `backend/artifacts/phase10/validation_report.json`
-- Human-readable Markdown: `backend/artifacts/phase10/validation_summary.md`
+### API authentication
 
----
+Every state-changing request (POST/PUT/PATCH/DELETE) needs an `X-CIPHER-Token` header, and browser requests must come from the dashboard or an extension origin. On first start the backend writes a random token to `backend/.cipher_token`; the dashboard's dev proxy adds it automatically. From a script:
 
-## Measured Benchmark Results
+```bash
+curl -H "X-CIPHER-Token: $(cat backend/.cipher_token)" -H "Content-Type: application/json" \
+     -d '{"mode":"simulate"}' http://127.0.0.1:8000/api/network/prevention-mode
+```
 
-| Model / Subsystem | Accuracy | Precision | Recall | F1-Score | Evaluation Test Set |
-|:---|:---:|:---:|:---:|:---:|:---|
-| **Phishing Detector** | **99.66%** | **99.91%** | **99.29%** | **0.9960** | PhiUSIIL Held-Out Test (35,306 URLs) |
-| **Network IDS (Binary Gate)** | **99.903%** | **99.520%** | **99.914%** | **0.99716**| CIC-IDS2017 Held-Out Test (374,833 flows) |
-| **Network IDS (Multiclass)** | **99.900%** | Macro: 96.3% | Macro: 96.1%| Macro: 0.961| CIC-IDS2017 Held-Out Test (374,833 flows) |
+See [SECURITY.md](SECURITY.md) for the threat model.
 
-> [!NOTE]
-> Detailed per-class metrics, confusion matrices, and minority class analyses (e.g., Botnet precision at 69.39%, Infiltration support) are documented in [docs/model_results.md](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/model_results.md).
+### Prevention modes
 
----
+| Mode | What happens on a high-risk event |
+| --- | --- |
+| `detect_only` (default) | Recommendation logged. Nothing is blocked. |
+| `simulate` | The IP is recorded in the SQLite blocklist with a TTL. The host is not touched. |
+| `enforce` | Blocklist record plus a Windows Firewall inbound block rule (`CIPHER_BLOCK_<ip>`), removed when the TTL expires. Loopback, link-local, multicast, this host's addresses and `CIPHER_PROTECTED_IPS` are never blocked. |
 
-## Technical Limitations
+A missing or invalid `CIPHER_PREVENTION_MODE` falls back to `detect_only`. The dashboard switch changes the mode for every subsystem (API, live sensor, WAF, correlation).
 
-1. **Historical Dataset Bounds**: CIC-IDS2017 was captured in 2017. Real-world networks experience protocol drift (QUIC, HTTP/3, TLS 1.3) and evolving attack tools.
-2. **Encrypted Payloads**: The live sensor inspects Layer 3/4 flow metadata (packet lengths, inter-arrival times) and does not perform TLS decryption.
-3. **Lexical Phishing Bounds**: Phishing analysis inspects static URL properties; it does not execute client-side JavaScript or render dynamic DOM trees.
-4. **No Universal Detection Claim**: No intrusion detection system achieves zero false positives or zero false negatives in open, complex network environments.
+## Testing
 
----
+```bash
+cd backend && python -m pytest tests -q          # dataset tests skip if CIC-IDS2017 is not preprocessed
+cd backend && python -m scripts.generate_docs_metrics --check
+cd frontend && npx tsc --noEmit && npx vitest run && npm run build
+```
 
-## Security & Safety Guarantees
+Both suites run in [CI](.github/workflows/ci.yml) on every push. Results are not hard-coded here.
 
-- **Confined Loopback Target**: All validation sockets strictly target `127.0.0.1` / `::1`. Remote and public IPs raise immediate exceptions.
-- **Zero Host Tampering**: CIPHER never alters Windows Defender, host firewall rules (`netsh`), or registry entries.
-- **Safe Prevention Defaults**: Default operating mode is `detect_only`, ensuring non-destructive execution during evaluation and demonstration.
-- **Data Isolation**: Test IOCs tagged `CIPHER_PHASE10_TEST` are automatically purged post-validation.
+### Controlled end-to-end validation
 
----
+```bash
+cd backend && python -m scripts.phase10_validation.runner
+```
 
-## Project Documentation Index
+Eight loopback-only scenarios (benign traffic, port sweep, auth storm, synthetic flood, IOC match, multi-stage correlation, prevention modes, full provenance chain). The runner intercepts every firewall call and records how many were attempted; the latest report is in [backend/artifacts/phase10/](backend/artifacts/phase10/validation_summary.md).
 
-All detailed technical documentation is organized in the [`docs/`](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/) directory:
-- [Architecture & Diagrams](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/architecture.md)
-- [Methodology Across Phases 1–10](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/methodology.md)
-- [Machine Learning Results & Disclaimers](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/model_results.md)
-- [Dataset Documentation & Splits](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/dataset_documentation.md)
-- [Validation Report & Scenarios (A–H)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/validation.md)
-- [Technical Limitations](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/limitations.md)
-- [REST API Reference](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/api_reference.md)
-- [Demonstration Runbook (8–12 Minutes)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/demonstration.md)
-- [Kali / Termux Attack Guide (Live Simulation)](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/kali_attack_guide.md)
-- [Evidence Index & Claim Mapping](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/evidence_index.md)
-- [Verified Project Statistics](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/project_statistics.md)
-- [Final Presentation Slide Deck Outline](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/presentation_outline.md)
-- [Defensible Claims & Evaluation Boundaries](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/defensible_claims.md)
-- [Final Comprehensive Project Report](file:///d:/Advait251206/College/5th%20Sem/IDPS/Project/docs/final_project_report.md)
+### Real-world URL probe
+
+```bash
+cd backend && python -m training.probe_phishing
+```
+
+Scores 15 legitimate deep links and 10 phishing patterns with the raw model and the full service. The committed baseline ([backend/artifacts/phishing_probe_baseline.csv](backend/artifacts/phishing_probe_baseline.csv)) shows the raw PhiUSIIL model flags all 15 legitimate deep links. PhiUSIIL's legitimate URLs are all bare homepages, so the model learned that any URL with a path is suspicious.
+
+## Limitations
+
+- **Benchmark ≠ deployment.** Splits are random, so near-duplicate flows from one attack session can appear in both train and test. CIC-IDS2017 also has documented labelling and flow-construction errors ([Engelen et al., 2021](https://doi.org/10.1109/SPW53761.2021.00009)). Day-held-out and cross-dataset (CSE-CIC-IDS2018) evaluation is future work.
+- **Phishing model shortcut.** See the probe above. The service mitigates it with heuristics and a trusted-domain list, but the raw model needs retraining on legitimate URLs with paths.
+- **Live features vs training features.** The live flow builder measures packet lengths as wire length, while CICFlowMeter (and therefore the training data) uses payload length; timeouts also differ. In live mode the ML verdicts are less reliable than the heuristics.
+- **WAF scope.** Single TCP segments of plaintext HTTP only (no reassembly, no HTTPS). The TCP RST is best-effort teardown from a passive tap, not inline blocking.
+- **Email model.** It is trained on corpora from different decades and sources, so it may partly learn corpus style. A leave-one-corpus-out evaluation is future work.
+- **`RATE_LIMIT`** is an advisory recommendation; CIPHER does not throttle traffic.
+
+Full list: [docs/limitations.md](docs/limitations.md).
+
+## Repository layout
+
+| Path | Contents |
+| --- | --- |
+| `backend/app/` | FastAPI app, detectors, rules, correlation, prevention, live sensor |
+| `backend/training/` | Dataset preprocessing, training, evaluation and probe scripts |
+| `backend/models/` | Committed model artifacts and evaluation reports |
+| `backend/tests/` | Pytest suite (security, prevention safety, WAF, detection regressions, API, models) |
+| `backend/scripts/` | Phase 10 validation runner, docs-metrics generator, demo scripts |
+| `frontend/` | React SOC dashboard |
+| `cipher-browser-extension/` | Chromium MV3 Browser Guard |
+| `vulnerable_app/` | Deliberately vulnerable demo target. Isolate it; see [SECURITY.md](SECURITY.md). |
+| `docs/` | Architecture, methodology, datasets, results, validation, API reference |
+
+## Documentation
+
+[Architecture](docs/architecture.md) · [Methodology](docs/methodology.md) · [Model results](docs/model_results.md) · [Datasets](docs/dataset_documentation.md) · [Validation](docs/validation.md) · [Limitations](docs/limitations.md) · [Defensible claims](docs/defensible_claims.md) · [API reference](docs/api_reference.md) · [Browser extension](docs/browser_extension.md) · [Email phishing](docs/email_phishing.md) · [Demonstration runbook](docs/demonstration.md) · [Changelog](CHANGELOG.md)
+
+## Citation
+
+See [CITATION.cff](CITATION.cff). Datasets: CIC-IDS2017 (Canadian Institute for Cybersecurity) and PhiUSIIL ([Prasad & Chandra, 2024](https://doi.org/10.1016/j.cose.2023.103545)).
+
+## License
+
+MIT © 2026 Advait Kawale

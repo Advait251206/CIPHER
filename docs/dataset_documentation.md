@@ -1,5 +1,10 @@
 # CIPHER — Dataset Ingestion, Cleaning & Partitioning Documentation
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+> **Count provenance:** the partition sizes below are from an earlier preprocessing run. The committed network model's metadata reports 448,019 balanced training flows, 404,442 validation flows and 404,442 test flows. Re-run `python -m training.preprocess_cic_ids2017` and update this section from `data/processed/cic_ids2017/metadata/preprocessing_metadata.json` before publication.
+
+
 This document provides exact, reproducible documentation of the datasets, preprocessing pipelines, deduplication audits, and data splits utilized in **CIPHER**.
 
 ---

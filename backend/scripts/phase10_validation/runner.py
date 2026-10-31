@@ -4,6 +4,8 @@ Orchestrates Scenarios A through H, aggregates evidence, and invokes report gene
 """
 
 import logging
+import subprocess
+from unittest import mock
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 
@@ -50,6 +52,17 @@ def run_all_scenarios() -> Dict[str, Any]:
     print("   Safety Boundary: Strictly Localhost (127.0.0.1) • Bounded Execution")
     print("=" * 80)
 
+    # Host-firewall guard: every subprocess call from the blocklist is intercepted and recorded,
+    # never executed. The safety check below is computed from what was actually attempted.
+    firewall_calls: List[List[str]] = []
+
+    def _intercept(cmd, *args, **kwargs):
+        firewall_calls.append(list(cmd) if isinstance(cmd, (list, tuple)) else [str(cmd)])
+        return subprocess.CompletedProcess(cmd, 1)
+
+    firewall_guard = mock.patch("app.prevention.blocklist.subprocess.run", side_effect=_intercept)
+    firewall_guard.start()
+
     for letter, fn in scenario_funcs:
         print(f"\n[*] Executing Scenario {letter}...")
         try:
@@ -80,6 +93,9 @@ def run_all_scenarios() -> Dict[str, Any]:
                 "prevention_decisions": [],
             })
             print(f"    [FAIL] Scenario {letter} error: {e}")
+
+    firewall_guard.stop()
+    netsh_attempts = [c for c in firewall_calls if c and "netsh" in c[0].lower()]
 
     end_time = datetime.now(timezone.utc)
     duration_secs = (end_time - start_time).total_seconds()
@@ -113,7 +129,8 @@ def run_all_scenarios() -> Dict[str, Any]:
             "target_confined_to_localhost": True,
             "external_network_isolated": True,
             "no_real_credential_attacks": True,
-            "no_host_firewall_modified": True,
+            "no_host_firewall_modified": len(netsh_attempts) == 0,
+            "host_firewall_calls_attempted": len(netsh_attempts),
             "bounded_connections_enforced": True,
             "bounded_duration_enforced": True,
         }

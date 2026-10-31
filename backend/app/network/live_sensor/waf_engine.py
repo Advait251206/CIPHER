@@ -21,30 +21,41 @@ class WAFEngine:
             "brute_force_protection": default_mode
         }
         
-        # SQL Injection Signatures
+        # Signatures are anchored on injection *syntax* (a quote or ';' breaking out of a literal),
+        # not on SQL keywords or '#'/'--' alone, which appear in ordinary text and URLs.
+        # Limits: one TCP segment at a time (no stream reassembly), plaintext HTTP only.
+        sep = r"(?:\s|/\*.*?\*/)+"  # whitespace or inline comments between keywords
         self.sqli_patterns = [
-            re.compile(r"(?i)(UNION\s+ALL\s+SELECT|UNION\s+SELECT)", re.IGNORECASE),
-            re.compile(r"(?i)(\b(OR|AND)\s+['\"]?\d+['\"]?\s*=\s*['\"]?\d+['\"]?)", re.IGNORECASE),
-            re.compile(r"(?i)(\b(OR|AND)\s+%27\d+%27\s*(%3D|=)\s*%27\d+%27)", re.IGNORECASE), # URL Encoded OR '1'='1'
-            re.compile(r"(?i)(\bSELECT\b.*\bFROM\b)", re.IGNORECASE),
-            re.compile(r"(?i)(--\s*|#\s*|/\*.*\*/|%2D%2D)", re.IGNORECASE), # Catch -- anywhere, not just at the end
-            re.compile(r"(?i)(\bDROP\s+TABLE\b|\bINSERT\s+INTO\b|\bUPDATE\b.*\bSET\b)", re.IGNORECASE)
+            re.compile(rf"\bunion{sep}(?:all{sep})?select\b", re.IGNORECASE),
+            # Tautologies after breaking out of a quoted literal: ' OR 'a'='a , " or 1=1 , ') or ('x')=('x
+            re.compile(r"['\"]\s*\)?\s*(?:or|and|\|\||&&)\s*\(?\s*(['\"]?)\w{1,32}\1\s*\)?\s*(?:=|<>|!=|<|>|\blike\b)", re.IGNORECASE),
+            # Unquoted numeric tautology: OR 1=1 / AND 7=7
+            re.compile(r"\b(?:or|and)\s+(\d+)\s*=\s*\1\b", re.IGNORECASE),
+            # Comment used to truncate the rest of a query right after a quote
+            # (the rest of the field must be empty, so a JSON string like "# heading" does not match)
+            re.compile(r"['\"]\s*\)?\s*(?:--|#)[^\w\r\n&]*(?:$|&|\r|\n)", re.MULTILINE),
+            re.compile(r"['\"]\s*\)?\s*/\*"),
+            # Stacked queries
+            re.compile(r";\s*(?:drop|insert|update|delete|create|alter|attach|detach|select|exec|pragma)\b", re.IGNORECASE),
+            # Time-based blind injection
+            re.compile(r"\b(?:sleep|benchmark|pg_sleep)\s*\(|\bwaitfor\s+delay\b", re.IGNORECASE),
+            re.compile(r"\bdrop\s+table\b", re.IGNORECASE),
         ]
-        
+
         # XSS Signatures
         self.xss_patterns = [
-            re.compile(r"(?i)(<script.*?>.*?</script>)", re.IGNORECASE | re.DOTALL),
-            re.compile(r"(?i)(javascript:)", re.IGNORECASE),
-            re.compile(r"(?i)(on\w+\s*=)", re.IGNORECASE),  # onerror=, onload=
-            re.compile(r"(?i)(<img\s+src=.*?onerror=)", re.IGNORECASE)
+            re.compile(r"<\s*script\b", re.IGNORECASE),
+            re.compile(r"javascript\s*:", re.IGNORECASE),
+            re.compile(r"<[^>]*\bon[a-z]+\s*=", re.IGNORECASE),  # event handler inside a tag
+            re.compile(r"<\s*(?:iframe|object|embed)\b", re.IGNORECASE),
+            re.compile(r"data\s*:\s*text/html", re.IGNORECASE),
         ]
-        
+
         # Path Traversal Signatures
         self.path_traversal_patterns = [
-            re.compile(r"(?i)(\.\./\.\./)", re.IGNORECASE),
-            re.compile(r"(?i)(\.\.\\\.\.\\)", re.IGNORECASE),
-            re.compile(r"(?i)(%2e%2e%2f%2e%2e%2f)", re.IGNORECASE),
-            re.compile(r"(?i)(/etc/passwd|Windows\\win\.ini)", re.IGNORECASE)
+            re.compile(r"(?:\.\.[/\\]){2,}"),
+            re.compile(r"(?:%2e%2e|%252e%252e)(?:%2f|%5c|%252f|%255c|/|\\)", re.IGNORECASE),
+            re.compile(r"/etc/(?:passwd|shadow)\b|\bwin\.ini\b|boot\.ini\b", re.IGNORECASE),
         ]
 
     def update_config(self, feature: str, mode: str):
@@ -58,8 +69,11 @@ class WAFEngine:
         Returns: (Attack Type, Enforcement Mode) if malicious, else (None, "off")
         """
         import urllib.parse
-        # Decode URL-encoded payloads (like from a browser form submission)
-        decoded_payload = urllib.parse.unquote(payload_str)
+        # Decode form/URL encoding ('+' as space), then once more to catch double encoding.
+        decoded_payload = urllib.parse.unquote_plus(payload_str)
+        double_decoded = urllib.parse.unquote_plus(decoded_payload)
+        if double_decoded != decoded_payload:
+            decoded_payload = decoded_payload + "\n" + double_decoded
 
         # Check SQLi
         if self.config["sql_protection"] != "off":

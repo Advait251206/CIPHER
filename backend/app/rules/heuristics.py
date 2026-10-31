@@ -14,9 +14,13 @@ from app.rules.config import (
     DOS_PACKET_RATE_THRESHOLD,
     DOS_BYTE_RATE_THRESHOLD,
     DDOS_SOURCES_THRESHOLD,
+    DDOS_AGGREGATE_PACKET_RATE,
     AUTH_PORTS,
+    WEB_LOGIN_PORTS,
+    WEB_LOGIN_BRUTE_FORCE_THRESHOLD,
     IRC_PORTS
 )
+from app.network.net_utils import is_broadcast_or_multicast
 
 
 # =============================================================================
@@ -149,10 +153,11 @@ class BruteForceStormRule(BaseRule):
         features = event.get("features") or {}
         dst_port = event.get("destination_port") or int(features.get("Destination Port", 0))
 
-        if dst_port in AUTH_PORTS:
+        if dst_port in AUTH_PORTS or dst_port in WEB_LOGIN_PORTS:
             ctx = context or {}
             attempts = ctx.get("auth_attempts_count", 0)
-            if attempts >= BRUTE_FORCE_THRESHOLD:
+            threshold = BRUTE_FORCE_THRESHOLD if dst_port in AUTH_PORTS else WEB_LOGIN_BRUTE_FORCE_THRESHOLD
+            if attempts >= threshold:
                 window = ctx.get("auth_window", BRUTE_FORCE_WINDOW_SECONDS)
                 return RuleMatch(
                     rule_id=self.rule_id,
@@ -161,7 +166,7 @@ class BruteForceStormRule(BaseRule):
                     severity=self.severity,
                     confidence=self.confidence,
                     weight=self.weight,
-                    explanation=f"Possible brute-force activity detected: {attempts} connection attempts targeting auth port {dst_port} within {int(window)}s (threshold: {BRUTE_FORCE_THRESHOLD}).",
+                    explanation=f"Possible brute-force activity detected: {attempts} connection attempts targeting auth port {dst_port} within {int(window)}s (threshold: {threshold}).",
                     recommendation=self.recommendation
                 )
         return None
@@ -370,14 +375,15 @@ class DdosMultiSourceRule(BaseRule):
 
         ctx = context or {}
         distinct_sources = ctx.get("distinct_sources_targeting_dest_count", 1)
+        aggregate_pps = float(ctx.get("aggregate_packet_rate_to_dest", 0.0))
         dest_ip = event.get("destination_ip") or "unknown"
-        
-        # Ignore multicast and broadcast IPs (e.g. mDNS 224.0.0.251, SSDP 239.255.255.250, broadcast 255.255.255.255)
-        # Multicast range is 224.0.0.0 to 239.255.255.255.
-        if dest_ip.startswith("224.") or dest_ip.startswith("239.") or dest_ip.endswith(".255"):
+
+        # Multicast/broadcast fan-in (mDNS, SSDP, NetBIOS) is normal LAN chatter, not a flood.
+        if is_broadcast_or_multicast(dest_ip):
             return None
 
-        if distinct_sources >= DDOS_SOURCES_THRESHOLD:
+        # Many clients talking to one server is normal; it is a DDoS only with aggregate volume too.
+        if distinct_sources >= DDOS_SOURCES_THRESHOLD and aggregate_pps >= DDOS_AGGREGATE_PACKET_RATE:
             window = ctx.get("ddos_window", 60.0)
             return RuleMatch(
                 rule_id=self.rule_id,
@@ -386,7 +392,7 @@ class DdosMultiSourceRule(BaseRule):
                 severity=self.severity,
                 confidence=self.confidence,
                 weight=self.weight,
-                explanation=f"Distributed flood pattern detected: {distinct_sources} distinct sources targeting destination {dest_ip} within {int(window)}s.",
+                explanation=f"Distributed flood pattern detected: {distinct_sources} distinct sources targeting destination {dest_ip} within {int(window)}s at an aggregate {aggregate_pps:,.0f} pkts/s.",
                 recommendation=self.recommendation
             )
         return None

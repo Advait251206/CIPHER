@@ -19,7 +19,7 @@ flowchart TD
     subgraph FeaturePipeline["2. Feature & State Processing"]
         B1 --> C1[Flow Aggregator / 67 Flow Features]
         C1 --> B2
-        B3 --> C2[URL Feature Extractor / 28 Lexical Features]
+        B3 --> C2[URL Feature Extractor / 15 Lexical Features]
     end
 
     subgraph DetectionLayer["3. Unified Detection Layer"]
@@ -107,12 +107,12 @@ flowchart TD
 
 ## 4. Phishing Detection Pipeline
 
-The phishing subsystem inspects URLs using 28 lexical and structural features without relying on external web lookups or page fetching:
+The phishing subsystem inspects URLs using 15 lexical and structural features without relying on external web lookups or page fetching:
 
 ```mermaid
 flowchart TD
     U[Submitted URL String] --> V[Format Validation & Normalization]
-    V --> FE[FeatureExtractor<br/>28 Lexical & Structural Metrics]
+    V --> FE[FeatureExtractor<br/>15 Lexical & Structural Metrics]
 
     subgraph Extraction["Extracted Features"]
         FE --> F1[Structural: Lengths, Subdomains, TLD]

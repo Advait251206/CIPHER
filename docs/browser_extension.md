@@ -20,7 +20,7 @@ cipher-browser-extension/
 ├── manifest.json         # Manifest V3 configuration, permissions, and service worker declaration
 ├── background.js         # Event-driven service worker for URL routing, badges, and alarms
 ├── content.js            # Isolated DOM script for Gmail, Outlook, and Yahoo webmail scanning
-├── popup.html / .js      # SOC-styled action popup for real-time site score and manual scanner
+├── popup.html / .js      # SOC-styled action popup: on-demand site score and email scanner
 ├── warning.html / .js    # Active protective interstitial screen for high-risk phishing sites
 └── icons/                # High-contrast 16x16, 48x48, 128x128 security shield icons
 ```

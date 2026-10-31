@@ -157,7 +157,7 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 
     if (ether_type == 0x0806) {
         // Handle ARP
-        if (header->len < 14 + sizeof(struct arp_header)) return;
+        if (header->caplen < 14 + sizeof(struct arp_header)) return;
         struct arp_header *ah = (struct arp_header *)(pkt_data + 14);
         
         char smac[18], dmac[18];
@@ -177,9 +177,12 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
         return;
     } 
     else if (ether_type == 0x0800) {
-        // Handle IPv4
+        // Handle IPv4 (every header access is bounds-checked against the captured length)
+        const u_int caplen = header->caplen;
+        if (caplen < 14 + sizeof(struct ip_header)) return;
         struct ip_header *ih = (struct ip_header *)(pkt_data + 14); // Ethernet header is 14 bytes
         int ip_len = (ih->ver_ihl & 0xf) * 4;
+        if (ip_len < 20 || caplen < (u_int)(14 + ip_len)) return;
         
         std::string src_ip = inet_ntoa(ih->saddr);
         std::string dst_ip = inet_ntoa(ih->daddr);
@@ -191,6 +194,7 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
         std::string flags = "";
         
         if (ih->proto == IPPROTO_TCP) {
+            if (caplen < (u_int)(14 + ip_len) + sizeof(struct tcp_header)) return;
             struct tcp_header *th = (struct tcp_header *)((u_char*)ih + ip_len);
             src_port = ntohs(th->sport);
             dst_port = ntohs(th->dport);
@@ -210,6 +214,7 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
             if (th->flags & 0x40) flags += "E";
             if (th->flags & 0x80) flags += "C";
         } else if (ih->proto == IPPROTO_UDP) {
+            if (caplen < (u_int)(14 + ip_len) + sizeof(struct udp_header)) return;
             struct udp_header *uh = (struct udp_header *)((u_char*)ih + ip_len);
             src_port = ntohs(uh->sport);
             dst_port = ntohs(uh->dport);

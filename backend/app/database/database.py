@@ -9,10 +9,16 @@ import os
 import sqlite3
 import json
 import logging
+import threading
+from contextlib import contextmanager
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timezone
 
 logger = logging.getLogger("cipher.database")
+
+# Schema creation/migration runs once per database file per process, not on every Database().
+_INITIALIZED_PATHS: set = set()
+_INIT_LOCK = threading.Lock()
 
 
 class Database:
@@ -27,18 +33,29 @@ class Database:
             db_path = os.path.join(backend_root, db_path)
 
         self.db_path = db_path
-        self._init_db()
+        with _INIT_LOCK:
+            if self.db_path not in _INITIALIZED_PATHS or not os.path.exists(self.db_path):
+                self._init_db()
+                _INITIALIZED_PATHS.add(self.db_path)
 
-    def _get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
+    @contextmanager
+    def _get_connection(self):
+        """Yields a connection that commits on success, rolls back on error, and is always closed."""
+        conn = sqlite3.connect(self.db_path, timeout=10)
         conn.row_factory = sqlite3.Row
-        return conn
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
 
     def _init_db(self):
         """Initializes and non-destructively migrates tables and indexes."""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
+                # WAL lets the API read while the live sensor writes.
+                cursor.execute("PRAGMA journal_mode=WAL")
                 # 1. Base Security Events Table
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS security_events (
@@ -477,15 +494,22 @@ class Database:
             cursor.execute(query, (status,))
             return [dict(r) for r in cursor.fetchall()]
 
-    def cleanup_expired_blocks(self) -> int:
-        """Marks any expired blocks as EXPIRED."""
+    def expire_blocks(self) -> List[str]:
+        """Marks expired blocks as EXPIRED and returns the IPs that just expired."""
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-        query = "UPDATE ip_blocklist SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND expires_at IS NOT NULL AND expires_at < ?"
+        where = "status = 'ACTIVE' AND expires_at IS NOT NULL AND expires_at < ?"
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, (now_iso,))
-            conn.commit()
-            return cursor.rowcount
+            cursor.execute(f"SELECT ip FROM ip_blocklist WHERE {where}", (now_iso,))
+            ips = [row["ip"] for row in cursor.fetchall()]
+            if ips:
+                cursor.execute(f"UPDATE ip_blocklist SET status = 'EXPIRED' WHERE {where}", (now_iso,))
+                conn.commit()
+            return ips
+
+    def cleanup_expired_blocks(self) -> int:
+        """Marks any expired blocks as EXPIRED (count only; see expire_blocks)."""
+        return len(self.expire_blocks())
 
     # =========================================================================
     # Incident Correlation Repositories (Phase 6)

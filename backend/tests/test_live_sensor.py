@@ -42,6 +42,14 @@ from app.network.service import NetworkService
 from app.network.schemas import NetworkFlowAnalyzeRequest
 
 
+def _libpcap_available() -> bool:
+    try:
+        validate_bpf_filter("tcp")
+        return True
+    except (ValueError, RuntimeError):
+        return False
+
+
 @pytest.fixture
 def client():
     return TestClient(app)
@@ -336,6 +344,7 @@ def test_detect_only_safety():
 
 
 # 20. BPF Filter Validation
+@pytest.mark.skipif(not _libpcap_available(), reason="BPF compilation needs libpcap/Npcap on this host")
 def test_bpf_filter_validation():
     # Valid filter should not raise
     validate_bpf_filter("tcp")

@@ -1,5 +1,8 @@
 # CIPHER — Phase 10: Controlled Local End-to-End Validation Report
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+
 This document records the empirical methodology, safety constraints, scenario configurations, and verified results of the **CIPHER Phase 10 Controlled Local Validation**.
 
 ---
@@ -13,7 +16,7 @@ Phase 10 proved that all eight detection, intelligence, scoring, correlation, an
 | **Strict Loopback Target** | All network probes are restricted to `127.0.0.1` / `::1`. Target validation function `assert_safe_target` immediately rejects any non-loopback, corporate, university, or public IP address with a `ValueError`. | **VERIFIED** |
 | **Air-Gapped Operation** | Zero network calls to public resolvers, cloud AI services, external telemetry collectors, or remote threat intelligence feeds. | **VERIFIED** |
 | **Bounded Load & Timeouts** | Maximum connection ceiling ($\le 50$ connections) and duration ceiling ($\le 15.0$ seconds) enforced by `validate_traffic_bounds`. | **VERIFIED** |
-| **Host System Protection** | No host firewall modifications (`netsh`), Defender changes, or registry edits. Prevention is validated strictly via `simulate` and `detect_only` modes. | **VERIFIED** |
+| **Host System Protection** | No host firewall modifications (`netsh`), Defender changes, or registry edits. Every blocklist subprocess call is intercepted during the run and counted (`host_firewall_calls_attempted` in validation_report.json). | **VERIFIED** |
 | **Non-Destructive DoS Testing** | High-volume flooding ($\ge 50,000$ packets/s) is evaluated through controlled synthetic flow fixtures. Host sockets and CPU are never saturated. | **VERIFIED** |
 | **Test IOC Isolation** | Test indicators are tagged `CIPHER_PHASE10_TEST`, evaluated, and safely deleted from the SQLite store upon completion without touching production intelligence. | **VERIFIED** |
 

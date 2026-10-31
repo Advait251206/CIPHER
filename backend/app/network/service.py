@@ -13,7 +13,7 @@ from app.network.model_loader import NetworkModelLoader
 from app.network.predictor import NetworkPredictor
 from app.detection.network_detector import NetworkDetector
 from app.detection.threat_scorer import ThreatScorer
-from app.prevention.prevention_engine import PreventionEngine
+from app.prevention.prevention_engine import PreventionEngine, get_prevention_engine
 from app.database.database import Database
 from app.network.schemas import NetworkFlowAnalyzeRequest, NetworkDetectionResponse
 
@@ -35,7 +35,7 @@ class NetworkService:
         self.predictor = NetworkPredictor(self.loader) if self.loader.is_ready else None
         self.detector = NetworkDetector()
         self.threat_scorer = threat_scorer or ThreatScorer()
-        self.prevention_engine = prevention_engine or PreventionEngine()
+        self.prevention_engine = prevention_engine or get_prevention_engine()
 
     def analyze_flow(self, request: NetworkFlowAnalyzeRequest) -> NetworkDetectionResponse:
         """
@@ -62,38 +62,13 @@ class NetworkService:
             protocol=request.protocol
         )
 
-        is_bcast_mcast = False
-        is_trusted_traffic = False
-        import ipaddress
-        
-        # Check source IP for trusted CDNs / Providers to avoid DDoS false positives
-        if request.source_ip:
-            try:
-                sip = ipaddress.ip_address(request.source_ip)
-                trusted_subnets = [
-                    ipaddress.ip_network("140.82.0.0/16"),   # GitHub
-                    ipaddress.ip_network("20.0.0.0/8"),      # Microsoft/Azure
-                    ipaddress.ip_network("192.168.0.0/16"),  # Local Network
-                    ipaddress.ip_network("10.0.0.0/8"),      # Local Network
-                ]
-                for subnet in trusted_subnets:
-                    if sip in subnet:
-                        is_trusted_traffic = True
-                        break
-            except ValueError:
-                pass
-
-        # If it's reply traffic from a web server (source port 80, 443, etc.), it's likely a download, not a DDoS.
-        if request.source_port in [80, 443, 8080, 8443, 53]:
-            is_trusted_traffic = True
-
-        if request.destination_ip:
-            try:
-                ip = ipaddress.ip_address(request.destination_ip)
-                if ip.is_multicast or (ip.version == 4 and (str(ip) == "255.255.255.255" or ip.exploded.endswith(".255"))):
-                    is_bcast_mcast = True
-            except ValueError:
-                pass
+        # Volumetric verdicts are suppressed only for broadcast/multicast destinations and for
+        # sources the operator explicitly trusts (CIPHER_TRUSTED_SOURCES). Source ports and
+        # private address ranges are NOT trusted: both are trivially spoofed, and a LAN is
+        # exactly where a lab attacker sits.
+        from app.network.net_utils import is_broadcast_or_multicast, is_trusted_source
+        is_bcast_mcast = is_broadcast_or_multicast(request.destination_ip)
+        is_trusted_traffic = is_trusted_source(request.source_ip)
 
         # 3. Determine Attack Type (Synergy between ML and Heuristics)
         if (is_bcast_mcast or is_trusted_traffic) and (h_category in ["DOS", "DDOS"] or ml_predicted_category in ["DOS", "DDOS"]):
@@ -101,7 +76,7 @@ class NetworkService:
             detection_method = "HEURISTIC"
             h_score = 0
             ml_attack_prob = 0.0
-            h_reasons.append("Traffic targets broadcast/multicast or comes from known trusted provider (safelisted for DOS/DDOS)")
+            h_reasons.append("Traffic targets broadcast/multicast or comes from an operator-trusted source (CIPHER_TRUSTED_SOURCES); DOS/DDOS verdict suppressed")
         elif h_score >= 50 and h_category:
             attack_type = h_category
             detection_method = "HEURISTIC" if ml_attack_prob < 0.50 else "HYBRID"

@@ -1,5 +1,8 @@
 # CIPHER — Final Presentation Slide Deck Outline (15 Slides)
 
+> **Note (v1.3, Oct 2026):** This document predates the v1.3 hardening release. Model metrics have been reconciled with the committed artifacts; where any figure here differs from [model_results.md](model_results.md) (generated from the artifacts), model_results.md is authoritative. Security and prevention behaviour changed in v1.3: see [SECURITY.md](../SECURITY.md) and [CHANGELOG.md](../CHANGELOG.md).
+
+
 This outline is designed for a concise, high-impact 10–15 minute capstone or technical presentation.
 
 ---
@@ -23,7 +26,7 @@ This outline is designed for a concise, high-impact 10–15 minute capstone or t
 
 ### Slide 3: Proposed Solution
 - **CIPHER**: A cohesive, unified defensive platform bridging machine learning with deterministic rule enforcement.
-- Dual threat detection: Phishing URL analysis (28 features) + Network IDS (67 features).
+- Dual threat detection: Phishing URL analysis (15 features) + Network IDS (67 features).
 - Defense-in-depth: ML inference $\to$ Heuristics/Signatures $\to$ Local IOC Matching $\to$ Calibrated ThreatScorer (0–100).
 - Stateful multi-stage event correlation + non-destructive IPS simulation + modern React SOC dashboard.
 
@@ -76,10 +79,10 @@ This outline is designed for a concise, high-impact 10–15 minute capstone or t
 
 ### Slide 10: Quantitative Machine Learning Results
 - **Phishing Detector (PhiUSIIL)**:
-  - Accuracy: **99.66%**, Precision: **99.91%**, Recall: **99.29%**, F1: **0.9960**, FPR: **0.064%**.
+  - Accuracy: **98.75%**, Precision: **98.79%**, Recall: **98.28%**, F1: **0.9853**, FPR: **0.900%**.
 - **Network IDS (CIC-IDS2017)**:
-  - Binary Gate: Accuracy: **99.903%**, Precision: **99.520%**, Recall: **99.914%**, F1: **0.99716**.
-  - Multiclass Classifier: Accuracy: **99.900%**, Macro F1: **96.142%**, Weighted F1: **99.902%**.
+  - Binary Gate: Accuracy: **99.903%**, Precision: **99.450%**, Recall: **99.941%**, F1: **0.99695**.
+  - Multiclass Classifier: Accuracy: **99.897%**, Macro F1: **90.036%**, Weighted F1: **99.899%**.
 - *Held-out Evaluation*: All metrics measured on 15% unseen test partitions.
 
 ---
@@ -100,7 +103,7 @@ This outline is designed for a concise, high-impact 10–15 minute capstone or t
 
 ### Slide 13: Security & Safety by Design
 - **Localhost Boundary**: Socket targets restricted strictly to `127.0.0.1` / `::1`.
-- **Zero Host Tampering**: No alterations to Windows Defender, Firewall (`netsh`), or registry.
+- **No Host Tampering by Default**: firewall rules only in `enforce` mode; validation intercepts and counts firewall calls (0 attempted).
 - **Bounded Resource Ceilings**: Maximum 50 connections, 15s execution timeout, 50,000 sensor flows.
 - **Data Hygiene**: Test IOCs tagged `CIPHER_PHASE10_TEST` and purged post-validation.
 

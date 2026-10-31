@@ -189,6 +189,7 @@ class RuleEngine:
             "distinct_ports_count": 0,
             "auth_attempts_count": 0,
             "distinct_sources_targeting_dest_count": 0,
+            "aggregate_packet_rate_to_dest": 0.0,
             "port_sweep_window": PORT_SCAN_WINDOW_SECONDS,
             "auth_window": BRUTE_FORCE_WINDOW_SECONDS,
             "ddos_window": DDOS_WINDOW_SECONDS
@@ -221,18 +222,25 @@ class RuleEngine:
             ]
             context["auth_attempts_count"] = len(self._auth_attempts[auth_key])
 
-        # 3. Update Multi-Source DDoS Tracker
+        # 3. Update Multi-Source DDoS Tracker (distinct sources + aggregate packet rate)
         if dest_ip and source_ip:
+            try:
+                rate = float(features.get("Flow Packets/s", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                rate = 0.0
             if dest_ip not in self._dest_sources:
                 self._dest_sources[dest_ip] = []
-            self._dest_sources[dest_ip].append((now, source_ip))
+            self._dest_sources[dest_ip].append((now, source_ip, rate))
 
             cutoff_ddos = now - DDOS_WINDOW_SECONDS
             self._dest_sources[dest_ip] = [
-                (t, s) for (t, s) in self._dest_sources[dest_ip] if t >= cutoff_ddos
+                entry for entry in self._dest_sources[dest_ip] if entry[0] >= cutoff_ddos
             ]
-            distinct_sources = {s for (_, s) in self._dest_sources[dest_ip]}
-            context["distinct_sources_targeting_dest_count"] = len(distinct_sources)
+            latest_rate_per_source: Dict[str, float] = {}
+            for entry in self._dest_sources[dest_ip]:
+                latest_rate_per_source[entry[1]] = entry[2] if len(entry) > 2 else 0.0
+            context["distinct_sources_targeting_dest_count"] = len(latest_rate_per_source)
+            context["aggregate_packet_rate_to_dest"] = sum(latest_rate_per_source.values())
 
         # Memory Bounding
         self._bound_state_entries()

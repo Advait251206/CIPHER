@@ -27,6 +27,7 @@ from app.network.model_loader import NetworkModelLoader
 from app.schemas.events import EventsListResponse, SecurityEventItem
 from app.network.live_sensor import get_sensor_service
 from app.prevention.actions import PreventionMode
+from app.prevention.prevention_engine import get_prevention_engine
 
 router = APIRouter(prefix="/network", tags=["Network Intrusion Detection & Prevention"])
 network_service = NetworkService()
@@ -41,7 +42,8 @@ def set_prevention_mode(req: PreventionModeUpdateRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid mode. Must be one of {valid_modes}"
         )
-    network_service.prevention_engine.mode = req.mode
+    # One shared engine: this switch applies to the API, live sensor, WAF and correlation layer.
+    get_prevention_engine().mode = req.mode
 
     # Sync WAF engine with the global prevention mode
     from app.network.live_sensor.waf_engine import waf_engine
@@ -49,6 +51,7 @@ def set_prevention_mode(req: PreventionModeUpdateRequest):
     waf_engine.update_config("sql_protection", waf_mode)
     waf_engine.update_config("xss_protection", waf_mode)
     waf_engine.update_config("brute_force_protection", waf_mode)
+    waf_engine.update_config("path_traversal_protection", waf_mode)
 
     return {"status": "success", "mode": req.mode}
 
@@ -64,7 +67,7 @@ def network_health():
         model_loaded=loader.is_ready,
         model_version=loader.model_version if loader.is_ready else "not_loaded",
         feature_count=loader.feature_count,
-        prevention_mode=network_service.prevention_engine.mode,
+        prevention_mode=get_prevention_engine().mode,
         database_connected=True,
         timestamp=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     )
@@ -231,14 +234,14 @@ def list_network_rules():
 @router.get("/blocklist", response_model=List[BlocklistEntry], summary="List Blocked IPs")
 def get_blocklist(status: str = Query(default="ACTIVE")):
     """Returns currently active or expired entries in the IPS blocklist."""
-    entries = network_service.prevention_engine.blocklist.list_blocked(status=status)
+    entries = get_prevention_engine().blocklist.list_blocked(status=status)
     return [BlocklistEntry(**e) for e in entries]
 
 
 @router.delete("/blocklist/{ip}", summary="Unblock an IP")
 def unblock_ip(ip: str):
     """Manually removes an IP from the active blocklist."""
-    success = network_service.prevention_engine.blocklist.unblock_ip(ip)
+    success = get_prevention_engine().blocklist.unblock_ip(ip)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -249,15 +252,19 @@ def unblock_ip(ip: str):
 
 @router.post("/blocklist/{ip}", summary="Block an IP")
 def block_ip(ip: str):
-    """Manually adds an IP to the active blocklist."""
-    network_service.prevention_engine.blocklist.block_ip(
-        ip=ip,
-        reason="Manually blocked by SOC analyst via Dashboard.",
-        attack_type="MANUAL_BLOCK",
-        threat_score=100,
-        duration_minutes=60
-    )
-    return {"status": "blocked", "ip": ip}
+    """
+    Manually adds an IP to the active blocklist (60 minutes by default).
+    A host firewall rule is added only when the prevention mode is `enforce`.
+    Invalid and protected addresses (loopback, this host, CIPHER_PROTECTED_IPS, ...) are refused.
+    """
+    try:
+        info = get_prevention_engine().manual_block(
+            ip=ip,
+            reason="Manually blocked by SOC analyst via Dashboard."
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    return {"status": "blocked", "ip": info["ip"], "os_rule_applied": info.get("os_rule_applied", False)}
 
 
 @router.get("/interfaces", response_model=NetworkInterfacesResponse, summary="List Available Network Interfaces")

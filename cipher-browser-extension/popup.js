@@ -220,7 +220,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         emailVerdictBadge.textContent = "NO MESSAGE FOUND";
         emailRiskVal.textContent = "--";
         emailSeverityVal.textContent = "N/A";
-        emailEvidenceList.innerHTML = `<li>${extracted?.reason || "Please open an email message in this tab first."}</li>`;
+        emailEvidenceList.replaceChildren();
+        const reasonItem = document.createElement("li");
+        reasonItem.textContent = extracted?.reason || "Please open an email message in this tab first.";
+        emailEvidenceList.appendChild(reasonItem);
         embeddedUrlsBox.classList.add("hidden");
         return;
       }
@@ -280,7 +283,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           res.urls_analyzed.forEach((u) => {
             const pill = document.createElement("div");
             pill.className = `url-pill ${u.risk_score >= 50 ? "risk" : ""}`;
-            pill.innerHTML = `<span>${u.url.length > 35 ? u.url.slice(0, 35) + "..." : u.url}</span><strong>${u.classification} (${u.risk_score})</strong>`;
+            // URLs come from an untrusted email body: build nodes with textContent, never innerHTML.
+            const urlSpan = document.createElement("span");
+            const urlText = String(u.url || "");
+            urlSpan.textContent = urlText.length > 35 ? urlText.slice(0, 35) + "..." : urlText;
+            const verdict = document.createElement("strong");
+            verdict.textContent = `${u.classification} (${u.risk_score})`;
+            pill.append(urlSpan, verdict);
             urlPillsList.appendChild(pill);
           });
         } else {
