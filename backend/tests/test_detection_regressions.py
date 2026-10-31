@@ -96,3 +96,44 @@ def test_lan_phishing_page_is_not_auto_trusted():
     r = TestClient(app).post("/api/phishing/analyze", json={"url": "http://192.168.1.66/paypal/login.php"})
     assert r.status_code == 200
     assert r.json()["model_version"] != "cipher-whitelist-v1"
+
+
+def test_tranco_domain_two_tier_whitelist():
+    sample_domain = "example-tranco-partner.org"
+    original_tranco = PhishingService.TRANCO_DOMAINS.copy()
+    try:
+        PhishingService.TRANCO_DOMAINS.add(sample_domain)
+        # Exact domain trusted
+        assert PhishingService.is_whitelisted_domain(sample_domain) is True
+        # www.<domain> trusted
+        assert PhishingService.is_whitelisted_domain(f"www.{sample_domain}") is True
+        # Arbitrary subdomain NOT trusted
+        assert PhishingService.is_whitelisted_domain(f"evil.{sample_domain}") is False
+        assert PhishingService.is_whitelisted_domain(f"sub.sub2.{sample_domain}") is False
+    finally:
+        PhishingService.TRANCO_DOMAINS = original_tranco
+
+
+def test_user_content_hosts_never_trusted_even_if_in_tranco():
+    original_tranco = PhishingService.TRANCO_DOMAINS.copy()
+    try:
+        PhishingService.TRANCO_DOMAINS.add("sites.google.com")
+        PhishingService.TRANCO_DOMAINS.add("phish.github.io")
+        assert PhishingService.is_whitelisted_domain("sites.google.com") is False
+        assert PhishingService.is_whitelisted_domain("phish.github.io") is False
+    finally:
+        PhishingService.TRANCO_DOMAINS = original_tranco
+
+
+def test_service_robust_without_tranco_file():
+    original_tranco = PhishingService.TRANCO_DOMAINS.copy()
+    try:
+        PhishingService.TRANCO_DOMAINS = set()
+        # Curated tier-1 domains must still work with subdomain matching
+        assert PhishingService.is_whitelisted_domain("google.com") is True
+        assert PhishingService.is_whitelisted_domain("mail.google.com") is True
+        assert PhishingService.is_whitelisted_domain("github.com") is True
+        # User content hosts still blocked
+        assert PhishingService.is_whitelisted_domain("docs.google.com") is False
+    finally:
+        PhishingService.TRANCO_DOMAINS = original_tranco
