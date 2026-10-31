@@ -53,7 +53,7 @@ if '%errorlevel%' NEQ '0' (
     echo @echo off > "%temp%\cipher_vuln.bat"
     echo cd /d "%PROJECT_ROOT%vulnerable_app" >> "%temp%\cipher_vuln.bat"
     echo call run.bat %VULN_HOST% >> "%temp%\cipher_vuln.bat"
-    runas /trustlevel:0x20000 "cmd /k %temp%\cipher_vuln.bat"
+    runas /trustlevel:0x20000 "cmd /k \"%temp%\cipher_vuln.bat\""
 
     echo.
     echo ---------------------------------------------------
