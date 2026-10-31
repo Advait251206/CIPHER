@@ -12,11 +12,11 @@ Vulnerable App: http://127.0.0.1:5174
 
 [STEP 2] Vulnerable Demo App Status:
   Vulnerable app not responding on http://127.0.0.1:5174. Starting in background...
-  Started vulnerable app (PID 30368), response code: 200
+  Started vulnerable app (PID 29916), response code: 200
 
 [STEP 3] Sensor & WAF Configuration:
   Set prevention mode: detect_only (HTTP 200)
-  Sensor start on Loopback Pseudo-Interface 1 -> HTTP 200: {'running': True, 'interface': 'Loopback Pseudo-Interface 1', 'bpf_filter': 'tcp port 5174', 'packets_captured': 0, 'active_flows': 0, 'completed_flows': 0, 'analyzed_flows': 0, 'detected_attacks': 0, 'started_at': '2026-10-31T04:47:47.049638+00:00', 'errors': 0, 'npcap_available': True, 'scapy_available': True}
+  Sensor start on Loopback Pseudo-Interface 1 -> HTTP 200: {'running': True, 'interface': 'Loopback Pseudo-Interface 1', 'bpf_filter': 'tcp port 5174', 'packets_captured': 0, 'active_flows': 0, 'completed_flows': 0, 'analyzed_flows': 0, 'detected_attacks': 0, 'started_at': '2026-10-31T05:45:37.124320+00:00', 'errors': 0, 'npcap_available': True, 'scapy_available': True}
 
 [STEP 4] Submitting Targeted WAF Attack Payloads:
   Executed: SQL Injection (Auth Bypass)
@@ -35,7 +35,7 @@ Vulnerable App: http://127.0.0.1:5174
     Target: GET http://127.0.0.1:5174/?file=..%2F..%2F..%2F..%2Fwindows%2Fwin.ini
     Payload: /?file=..%2F..%2F..%2F..%2Fwindows%2Fwin.ini
     Target Response: HTTP 200
-  Executed: CVE-2026-0001 Exploit Vector
+  Executed: SQLite ATTACH Injection
     Target: POST http://127.0.0.1:5174/login
     Payload: username=%27%3B+ATTACH+DATABASE+%27hack.db%27+AS+h%3B+--&pas
     Target Response: HTTP 200
@@ -43,43 +43,43 @@ Vulnerable App: http://127.0.0.1:5174
 [STEP 5] Sensor Telemetry & Security Events Verification:
   Sensor Telemetry (HTTP 200):
     Running:          True
-    Packets Captured: 82
+    Packets Captured: 89
     Active Flows:     0
-    Completed Flows:  5
-    Analyzed Flows:   5
+    Completed Flows:  8
+    Analyzed Flows:   8
     Detected Attacks: 0
 
-  Logged Security Events in DB: 10 returned
-    - Event ID:    d86ed615-1abf-428d-b485-5e17355e4894
-      Attack Type: BENIGN
-      Severity:    LOW
-      Threat Score:None
-      Method:      ML
-      Timestamp:   2026-10-31T04:47:53Z
-    - Event ID:    3a49ff05-d8da-4914-a973-72300d6abea8
-      Attack Type: BENIGN
-      Severity:    LOW
-      Threat Score:None
-      Method:      ML
-      Timestamp:   2026-10-31T04:47:52Z
-    - Event ID:    e7874697-8b91-42b9-88fa-e6bf081af11a
-      Attack Type: BENIGN
-      Severity:    LOW
-      Threat Score:None
-      Method:      ML
-      Timestamp:   2026-10-31T04:47:51Z
-    - Event ID:    cb067060-ef32-470e-a853-d4b04730e226
-      Attack Type: BENIGN
-      Severity:    LOW
-      Threat Score:None
-      Method:      ML
-      Timestamp:   2026-10-31T04:47:51Z
-    - Event ID:    af6b99da-8357-47ae-bd96-197c0f3c6042
-      Attack Type: BENIGN
-      Severity:    LOW
-      Threat Score:None
-      Method:      ML
-      Timestamp:   2026-10-31T04:47:50Z
+  Logged WAF Security Events in DB (/api/events?event_type=WEB_ATTACK): 10 returned
+    - Event ID:     8ca47b24-c75f-4f74-b90a-9208cdd47a0c
+      Event Type:   WEB_ATTACK
+      Attack Type:  SQL_INJECTION
+      Severity:     HIGH
+      Threat Score: None
+      Timestamp:    2026-10-31T05:45:43Z
+    - Event ID:     9a7279f6-4ff9-43ee-a4a2-6b89a8742ab7
+      Event Type:   WEB_ATTACK
+      Attack Type:  DIRECTORY_TRAVERSAL
+      Severity:     HIGH
+      Threat Score: None
+      Timestamp:    2026-10-31T05:45:42Z
+    - Event ID:     d87d87f5-d88f-4fac-b44f-e6967b8bfdc1
+      Event Type:   WEB_ATTACK
+      Attack Type:  XSS
+      Severity:     HIGH
+      Threat Score: None
+      Timestamp:    2026-10-31T05:45:41Z
+    - Event ID:     aaacef85-9dc6-4eb1-9603-a9c89f7803f5
+      Event Type:   WEB_ATTACK
+      Attack Type:  SQL_INJECTION
+      Severity:     HIGH
+      Threat Score: None
+      Timestamp:    2026-10-31T05:45:40Z
+    - Event ID:     3af05863-d414-4a94-8870-d5391cddaf56
+      Event Type:   WEB_ATTACK
+      Attack Type:  SQL_INJECTION
+      Severity:     HIGH
+      Threat Score: None
+      Timestamp:    2026-10-31T05:45:39Z
 
 [STEP 6] Graceful Teardown:
   Sensor stop -> HTTP 200: False

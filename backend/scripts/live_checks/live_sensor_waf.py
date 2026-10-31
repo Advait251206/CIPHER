@@ -150,7 +150,7 @@ def main() -> int:
          "username=%3Cscript%3Ealert%28%27CIPHER_XSS%27%29%3C%2Fscript%3E&password=p",
          {"Content-Type": "application/x-www-form-urlencoded"}),
         ("Path Traversal", "/?file=..%2F..%2F..%2F..%2Fwindows%2Fwin.ini", "GET", None, {}),
-        ("CVE-2026-0001 Exploit Vector", "/login", "POST",
+        ("SQLite ATTACH Injection", "/login", "POST",
          "username=%27%3B+ATTACH+DATABASE+%27hack.db%27+AS+h%3B+--&password=p",
          {"Content-Type": "application/x-www-form-urlencoded"})
     ]
@@ -178,17 +178,17 @@ def main() -> int:
     print(f"    Analyzed Flows:   {status_resp.get('analyzed_flows')}")
     print(f"    Detected Attacks: {status_resp.get('detected_attacks')}")
 
-    # Query recent events
-    code, events_resp = api_request(f"{backend_url}/api/network/events?limit=10", method="GET", token=token)
+    # Query recent unified security events (/api/events) - WAF detections are categorized as WEB_ATTACK
+    code, events_resp = api_request(f"{backend_url}/api/events?event_type=WEB_ATTACK&limit=10", method="GET", token=token)
     events = events_resp.get("events", [])
-    print(f"\n  Logged Security Events in DB: {len(events)} returned")
+    print(f"\n  Logged WAF Security Events in DB (/api/events?event_type=WEB_ATTACK): {len(events)} returned")
     for ev in events[:5]:
-        print(f"    - Event ID:    {ev.get('event_id')}")
-        print(f"      Attack Type: {ev.get('attack_type')}")
-        print(f"      Severity:    {ev.get('severity')}")
-        print(f"      Threat Score:{ev.get('threat_score')}")
-        print(f"      Method:      {ev.get('detection_method')}")
-        print(f"      Timestamp:   {ev.get('timestamp')}")
+        print(f"    - Event ID:     {ev.get('event_id')}")
+        print(f"      Event Type:   {ev.get('event_type')}")
+        print(f"      Attack Type:  {ev.get('attack_type')}")
+        print(f"      Severity:     {ev.get('severity')}")
+        print(f"      Threat Score: {ev.get('threat_score')}")
+        print(f"      Timestamp:    {ev.get('timestamp')}")
 
     # 6. STOP SENSOR & CLEANUP
     print("\n[STEP 6] Graceful Teardown:")
