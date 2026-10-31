@@ -160,7 +160,7 @@ Full list: [docs/limitations.md](docs/limitations.md).
 
 ## Citation
 
-See [CITATION.cff](CITATION.cff). Datasets: CIC-IDS2017 (Canadian Institute for Cybersecurity) and PhiUSIIL ([Prasad & Chandra, 2024](https://doi.org/10.1016/j.cose.2023.103545)).
+See [CITATION.cff](CITATION.cff). Datasets: CIC-IDS2017 (Canadian Institute for Cybersecurity), PhiUSIIL ([Prasad & Chandra, 2024](https://doi.org/10.1016/j.cose.2023.103545)), and Tranco Top Sites ([Le Pochat et al., 2019](https://doi.org/10.14722/ndss.2019.23386)). The top-50,000 trusted domain list is committed as a dated snapshot in `backend/data/trusted_domains.json` with metadata in `backend/data/trusted_domains.meta.json` (reproducible via `python -m scripts.fetch_tranco`).
 
 ## License
 

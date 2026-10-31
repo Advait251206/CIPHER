@@ -58,7 +58,6 @@ Thumbs.db
 # Local Tooling & Generation
 .gemini/
 scratch/
-backend/data/trusted_domains.json
 
 # C++ Sensor
 .clangd/

@@ -1,0 +1,9 @@
+{
+  "dataset_name": "Tranco Top Sites Ranking",
+  "citation": "P. Le Pochat et al., NDSS 2019 (https://tranco-list.eu/)",
+  "list_id": "5JXX",
+  "date": "2024-01-01",
+  "top_n": 50000,
+  "sha256": "7b00a60270a80e1dd1f109641d890b722052d26b0a57e53ea9f5e5905fa032f4",
+  "file": "trusted_domains.json"
+}
