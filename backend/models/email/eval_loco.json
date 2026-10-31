@@ -1,0 +1,72 @@
+{
+  "CEAS_08": {
+    "accuracy": 0.6924,
+    "precision": 0.7322,
+    "recall": 0.7064,
+    "f1": 0.7191,
+    "fpr": 0.3253,
+    "total_samples": 39100,
+    "benign_samples": 17305,
+    "phish_samples": 21795,
+    "true_positives": 15397,
+    "true_negatives": 11675,
+    "false_positives": 5630,
+    "false_negatives": 6398
+  },
+  "Enron": {
+    "accuracy": 0.6267,
+    "precision": 0.7935,
+    "recall": 0.276,
+    "f1": 0.4096,
+    "fpr": 0.0635,
+    "total_samples": 29742,
+    "benign_samples": 15791,
+    "phish_samples": 13951,
+    "true_positives": 3851,
+    "true_negatives": 14789,
+    "false_positives": 1002,
+    "false_negatives": 10100
+  },
+  "Ling": {
+    "accuracy": 0.8391,
+    "precision": 0.4985,
+    "recall": 0.738,
+    "f1": 0.5951,
+    "fpr": 0.1416,
+    "total_samples": 2859,
+    "benign_samples": 2401,
+    "phish_samples": 458,
+    "true_positives": 338,
+    "true_negatives": 2061,
+    "false_positives": 340,
+    "false_negatives": 120
+  },
+  "Nazario": {
+    "accuracy": 0.3811,
+    "precision": 1.0,
+    "recall": 0.3811,
+    "f1": 0.5519,
+    "fpr": 0.0,
+    "total_samples": 1564,
+    "benign_samples": 0,
+    "phish_samples": 1564,
+    "true_positives": 596,
+    "true_negatives": 0,
+    "false_positives": 0,
+    "false_negatives": 968
+  },
+  "SpamAssasin": {
+    "accuracy": 0.7072,
+    "precision": 0.5082,
+    "recall": 0.2711,
+    "f1": 0.3536,
+    "fpr": 0.11,
+    "total_samples": 5806,
+    "benign_samples": 4091,
+    "phish_samples": 1715,
+    "true_positives": 465,
+    "true_negatives": 3641,
+    "false_positives": 450,
+    "false_negatives": 1250
+  }
+}

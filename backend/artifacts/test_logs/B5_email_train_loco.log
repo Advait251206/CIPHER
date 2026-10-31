@@ -1,0 +1,73 @@
+================================================================================
+CIPHER PHASE 12 � EMAIL PHISHING MODEL BENCHMARKING & TRAINING
+================================================================================
+
+[1/5] Ingesting Parquet splits with 32 features...
+      - Training samples:   57,671
+      - Validation samples: 12,358
+      - Held-out samples:   12,359
+
+[2/5] Benchmarking candidate classifiers on Validation split...
+      * Random Forest (100 trees, depth=20)    | Fit:  2.54s | Acc:  91.08% | F1:  91.18% | AUC: 0.9722 | FP:  375 | FN:  727
+      * HistGradientBoosting                   | Fit:  2.60s | Acc:  89.85% | F1:  90.04% | AUC: 0.9657 | FP:  500 | FN:  754
+      * Logistic Regression (L2, Scaled)       | Fit:  0.25s | Acc:  75.42% | F1:  75.38% | AUC: 0.8345 | FP: 1268 | FN: 1770
+
+      Selected Top Architecture: [Random Forest (100 trees, depth=20)] (Validation F1 = 91.18%)
+
+[3/5] Comprehensive Evaluation of Selected Model on Held-Out Test Set (12,359 samples)...
+
+--- HELD-OUT TEST PERFORMANCE ---
+  Accuracy:                  91.528%
+  Precision:                 94.237%
+  Recall:                    89.143%
+  F1-Score:                  91.619%
+  ROC-AUC:                   0.9736
+  PR-AUC:                    0.9784
+  Confusion Matrix:          TN=5,589, FP=350, FN=697, TP=5,723
+  False Positive Rate (FPR): 5.8932% (350 benign emails flagged)
+  False Negative Rate (FNR): 10.8567% (697 malicious emails missed)
+  Inference Throughput:      56,818.3 emails/sec
+
+              precision    recall  f1-score   support
+
+      BENIGN     0.8891    0.9411    0.9144      5939
+   MALICIOUS     0.9424    0.8914    0.9162      6420
+
+    accuracy                         0.9153     12359
+   macro avg     0.9157    0.9163    0.9153     12359
+weighted avg     0.9168    0.9153    0.9153     12359
+
+
+Top 10 Feature Importances:
+  - avg_word_length               : 0.09829
+  - body_length                   : 0.09391
+  - exclamation_count             : 0.09150
+  - word_count                    : 0.08977
+  - char_count                    : 0.08453
+  - max_url_length                : 0.06859
+  - uppercase_ratio               : 0.06316
+  - subject_length                : 0.06035
+  - financial_term_count          : 0.04670
+  - question_count                : 0.04356
+
+[4/5] Generating Confusion Matrix Visualization...
+      Saved: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\confusion_matrix.png
+
+[5/5] Serializing model artifact and metadata...
+      - Saved: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\email_phishing_model.joblib (8,586,800 bytes)
+      - Saved: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\email_feature_pipeline.joblib
+      - Saved: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\email_model_metadata.json
+      - Saved: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\email_evaluation_report.txt
+
+[6/6] Executing Leave-One-Corpus-Out (LOCO) cross-corpus generalization evaluation...
+      Corpus          |  Samples | Accuracy | Precision |   Recall | F1-Score |    FPR
+      ------------------------------------------------------------------------
+      CEAS_08         |   39,100 |   69.24% |    73.22% |   70.64% |   0.7191 | 32.53%
+      Enron           |   29,742 |   62.67% |    79.35% |   27.60% |   0.4096 |  6.35%
+      Ling            |    2,859 |   83.91% |    49.85% |   73.80% |   0.5951 | 14.16%
+      Nazario         |    1,564 |   38.11% |   100.00% |   38.11% |   0.5519 |  0.00%
+      SpamAssasin     |    5,806 |   70.72% |    50.82% |   27.11% |   0.3536 | 11.00%
+
+      - Saved LOCO evaluation artifact: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\email\eval_loco.json
+
+Training & evaluation completed successfully!

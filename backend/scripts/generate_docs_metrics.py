@@ -121,10 +121,34 @@ def build_blocks() -> dict:
     except Exception as e:
         split_rows.append(f"| Split comparison error: {e} | | | | |")
 
+    # Email LOCO table
+    loco_rows = [
+        "| Held-Out Evaluation Corpus | Test Samples | Accuracy | Precision | Recall | F1-Score | False Positive Rate | Transfer Diagnosis |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    try:
+        loco = _load("email/eval_loco.json")
+        diagnoses = {
+            "CEAS_08": "Balanced corpus; achieves highest LOCO F1 (0.7191), but 32.5% FPR from aggressive header filters",
+            "Enron": "Corporate ham vs spam; severe recall collapse (27.60%) as model memorized business writing style",
+            "Ling": "Linguistics listserv; 73.80% recall but 14.16% FPR on academic email vocabulary",
+            "Nazario": "Pure targeted phishing templates; severe recall drop (38.11%) due to lack of standard spam tokens",
+            "SpamAssasin": "Early 2000s spam; severe recall drop (27.11%) showing vintage spam patterns fail to generalize"
+        }
+        for corpus_name, c in loco.items():
+            loco_rows.append(
+                f"| **{corpus_name}** | {c['total_samples']:,} | {pct(c['accuracy'])} | {pct(c['precision'])} | {pct(c['recall'])} | {c['f1']:.4f} | {pct(c['fpr'])} | {diagnoses.get(corpus_name, '—')} |"
+            )
+        loco_rows.append("")
+        loco_rows.append("_Generated from `models/email/eval_loco.json` via Leave-One-Corpus-Out evaluation._")
+    except Exception as e:
+        loco_rows.append(f"| LOCO error: {e} | | | | | | | |")
+
     return {
         "SUMMARY": summary,
         "NETWORK_PER_CLASS": "\n".join(per_class_rows),
         "NETWORK_SPLIT_COMPARISON": "\n".join(split_rows),
+        "EMAIL_LOCO": "\n".join(loco_rows),
         "PHISHING_CM": phishing_cm,
         "NETWORK_CM": network_cm,
     }

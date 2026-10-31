@@ -279,7 +279,87 @@ def train_email_model():
     print(f"      - Saved: {pipeline_path}")
     print(f"      - Saved: {meta_out_path}")
     print(f"      - Saved: {report_path}")
+
+    # [6/6] Leave-One-Corpus-Out (LOCO) Generalization Evaluation
+    print("\n[6/6] Executing Leave-One-Corpus-Out (LOCO) cross-corpus generalization evaluation...")
+    evaluate_loco(data_dir, feature_names, models_dir)
+
     print("\nTraining & evaluation completed successfully!")
+
+
+def evaluate_loco(data_dir: str, feature_names: list, models_dir: str):
+    """
+    Evaluates Leave-One-Corpus-Out generalization across 5 distinct email corpora
+    to quantify domain shift and style memorization versus invariant phishing intent.
+    """
+    df = pd.concat([
+        pd.read_parquet(os.path.join(data_dir, "train.parquet")),
+        pd.read_parquet(os.path.join(data_dir, "val.parquet")),
+        pd.read_parquet(os.path.join(data_dir, "test.parquet"))
+    ], ignore_index=True)
+
+    target_corpora = ["CEAS_08.csv", "Enron.csv", "Ling.csv", "Nazario.csv", "SpamAssasin.csv"]
+    loco_results = {}
+
+    print("      Corpus          |  Samples | Accuracy | Precision |   Recall | F1-Score |    FPR")
+    print("      " + "-" * 72)
+
+    for corpus in target_corpora:
+        test_mask = df["source_corpus"] == corpus
+        train_df = df[~test_mask]
+        test_df = df[test_mask]
+
+        pipe = EmailFeaturePipeline(feature_names)
+        pipe.fit(train_df[feature_names])
+
+        X_train = pipe.transform(train_df[feature_names])
+        y_train = train_df["label"].values.astype(int)
+
+        X_test = pipe.transform(test_df[feature_names])
+        y_test = test_df["label"].values.astype(int)
+
+        clf = RandomForestClassifier(
+            n_estimators=100,
+            max_depth=20,
+            min_samples_leaf=2,
+            max_features="sqrt",
+            n_jobs=-1,
+            random_state=42
+        )
+        clf.fit(X_train, y_train)
+
+        y_pred = clf.predict(X_test)
+        acc = float(accuracy_score(y_test, y_pred))
+        prec = float(precision_score(y_test, y_pred, zero_division=0))
+        rec = float(recall_score(y_test, y_pred, zero_division=0))
+        f1 = float(f1_score(y_test, y_pred, zero_division=0))
+
+        cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
+        tn, fp, fn, tp = cm.ravel()
+        fpr = float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0
+
+        corpus_clean = corpus.replace(".csv", "")
+        loco_results[corpus_clean] = {
+            "accuracy": round(acc, 4),
+            "precision": round(prec, 4),
+            "recall": round(rec, 4),
+            "f1": round(f1, 4),
+            "fpr": round(fpr, 4),
+            "total_samples": len(test_df),
+            "benign_samples": int((y_test == 0).sum()),
+            "phish_samples": int((y_test == 1).sum()),
+            "true_positives": int(tp),
+            "true_negatives": int(tn),
+            "false_positives": int(fp),
+            "false_negatives": int(fn)
+        }
+
+        print(f"      {corpus_clean:15s} | {len(test_df):>8,d} |  {acc*100:6.2f}% |   {prec*100:6.2f}% |  {rec*100:6.2f}% |   {f1:.4f} | {fpr*100:5.2f}%")
+
+    loco_path = os.path.join(models_dir, "eval_loco.json")
+    with open(loco_path, "w", encoding="utf-8") as f:
+        json.dump(loco_results, f, indent=2)
+    print(f"\n      - Saved LOCO evaluation artifact: {loco_path}")
 
 
 if __name__ == "__main__":

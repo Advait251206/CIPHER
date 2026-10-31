@@ -125,6 +125,20 @@ Selected rows:
 - Model: Random Forest (100 trees, depth 20) on 32 engineered features. Test metrics are in the summary table.
 - **Caveat.** The corpora differ in era and source, and the top features are length and style (`avg_word_length`, `body_length`, `exclamation_count`), so the model may partly identify the corpus rather than the intent. A leave-one-corpus-out evaluation is needed before claiming generalisation.
 
+### Leave-One-Corpus-Out (LOCO) Generalization Across Corpora
+
+<!-- METRICS:EMAIL_LOCO:START -->
+| Held-Out Evaluation Corpus | Test Samples | Accuracy | Precision | Recall | F1-Score | False Positive Rate | Transfer Diagnosis |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **CEAS_08** | 39,100 | 69.24% | 73.22% | 70.64% | 0.7191 | 32.53% | Balanced corpus; achieves highest LOCO F1 (0.7191), but 32.5% FPR from aggressive header filters |
+| **Enron** | 29,742 | 62.67% | 79.35% | 27.60% | 0.4096 | 6.35% | Corporate ham vs spam; severe recall collapse (27.60%) as model memorized business writing style |
+| **Ling** | 2,859 | 83.91% | 49.85% | 73.80% | 0.5951 | 14.16% | Linguistics listserv; 73.80% recall but 14.16% FPR on academic email vocabulary |
+| **Nazario** | 1,564 | 38.11% | 100.00% | 38.11% | 0.5519 | 0.00% | Pure targeted phishing templates; severe recall drop (38.11%) due to lack of standard spam tokens |
+| **SpamAssasin** | 5,806 | 70.72% | 50.82% | 27.11% | 0.3536 | 11.00% | Early 2000s spam; severe recall drop (27.11%) showing vintage spam patterns fail to generalize |
+
+_Generated from `models/email/eval_loco.json` via Leave-One-Corpus-Out evaluation._
+<!-- METRICS:EMAIL_LOCO:END -->
+
 ## 6. Reproducing
 
 ```bash

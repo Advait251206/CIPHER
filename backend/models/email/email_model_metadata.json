@@ -1,7 +1,7 @@
 {
   "model_name": "Random Forest (100 trees, depth=20)",
   "model_version": "cipher-email-rf-v1",
-  "training_timestamp": "2026-09-15T14:31:06Z",
+  "training_timestamp": "2026-10-31T05:28:29Z",
   "dataset_name": "Kaggle Phishing Email Multi-Corpus Aggregation",
   "source_corpora": [
     "CEAS_08.csv",
@@ -86,7 +86,7 @@
   "test_samples": 12359,
   "benchmark_comparison": {
     "Random Forest (100 trees, depth=20)": {
-      "fit_time_s": 1.29,
+      "fit_time_s": 2.54,
       "val_accuracy": 0.9108,
       "val_precision": 0.9382,
       "val_recall": 0.8868,
@@ -97,7 +97,7 @@
       "val_fn": 727
     },
     "HistGradientBoosting": {
-      "fit_time_s": 3.95,
+      "fit_time_s": 2.6,
       "val_accuracy": 0.8985,
       "val_precision": 0.9189,
       "val_recall": 0.8826,
@@ -108,7 +108,7 @@
       "val_fn": 754
     },
     "Logistic Regression (L2, Scaled)": {
-      "fit_time_s": 0.2,
+      "fit_time_s": 0.25,
       "val_accuracy": 0.7542,
       "val_precision": 0.7857,
       "val_recall": 0.7243,
@@ -132,6 +132,6 @@
     "true_positives": 5723,
     "false_positive_rate": 0.058932,
     "false_negative_rate": 0.108567,
-    "throughput_emails_per_sec": 80945.6
+    "throughput_emails_per_sec": 56818.3
   }
 }
