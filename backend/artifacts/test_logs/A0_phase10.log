@@ -1,0 +1,41 @@
+================================================================================
+      CIPHER PHASE 10: CONTROLLED LOCAL END-TO-END VALIDATION
+   Safety Boundary: Strictly Localhost (127.0.0.1) ò Bounded Execution
+================================================================================
+
+[*] Executing Scenario A...
+    [PASS] Benign Localhost Traffic (REAL LOCAL TRAFFIC)
+    Evidence: Generated 5 HTTP flows to http://127.0.0.1:18080. Classification: BENIGN. Threat Score: 3/100. Severity: LOW. ML Confidence: 88.1%. Action: MONITORED_ONLY. No false critical alert raised.
+
+[*] Executing Scenario B...
+    [PASS] Port Scan Heuristic Sweep (REAL LOCAL TRAFFIC)
+    Evidence: Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-001', 'HEUR-PORTSCAN-002']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0╡s)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance'].
+
+[*] Executing Scenario C...
+    [PASS] Auth-Storm / Brute-Force Heuristic (REAL LOCAL TRAFFIC + AUTH FLOW METADATA)
+    Evidence: Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002', 'HEUR-BRUTEFORCE-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry'].
+
+[*] Executing Scenario D...
+    [PASS] Controlled Flood Heuristic (CONTROLLED SYNTHETIC TEST DATA)
+    Evidence: Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DOS-002', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY.
+
+[*] Executing Scenario E...
+    [PASS] Local Threat Intelligence / IOC Match (CONTROLLED SYNTHETIC TEST DATA)
+    Evidence: Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-98A24458 severity: CRITICAL (98/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs.
+
+[*] Executing Scenario F...
+    [PASS] Multi-Stage Attack Correlation (CONTROLLED SEQUENTIAL EVENTS)
+    Evidence: Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-C220CA83. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-2C9FC5EE.
+
+[*] Executing Scenario G...
+Prevention mode changed: simulate -> detect_only
+    [PASS] IPS Prevention Simulation (CONTROLLED ENGINE VERIFICATION)
+    Evidence: Simulate mode returned action 'SIMULATED_TEMPORARY_BLOCK' without host firewall changes. Detect_only mode returned action 'MONITORED_ONLY'. Enforcement path not exercised on host; detect_only/simulate validated safely.
+
+[*] Executing Scenario H...
+    [PASS] Full End-to-End Pipeline Chain (INTEGRATED PIPELINE DEMONSTRATION)
+    Evidence: Complete provenance chain successfully established: Flow [flow-e2e-02a32bbd] -> Event ID [5f3ca401-4891-498d-bb0b-2f5a565b43e4] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-26C2976D] -> Prevention Action [MONITORED_ONLY].
+
+================================================================================
+  VALIDATION COMPLETED: 8/8 PASSED in 5.76s
+================================================================================

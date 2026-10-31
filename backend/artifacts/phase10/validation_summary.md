@@ -4,8 +4,8 @@
 
 ## Executive Overview
 
-- **Execution Timestamp**: `2026-10-31T04:13:28Z`
-- **Total Duration**: `4.42 seconds`
+- **Execution Timestamp**: `2026-10-31T04:31:12Z`
+- **Total Duration**: `5.76 seconds`
 - **Environment**: `Localhost (Air-Gapped / Isolated Loopback)`
 - **Scenarios Evaluated**: `8`
 - **Passed**: `8` | **Failed**: `0` | **Skipped**: `0`
@@ -18,13 +18,13 @@
 | Scenario | Name | Traffic Classification | Status | Result / Key Evidence |
 |:---:|:---|:---|:---:|:---|
 | **A** | Benign Localhost Traffic | `REAL LOCAL TRAFFIC` | **PASS** | Generated 5 HTTP flows to http://127.0.0.1:18080. Classification: BENIGN. Threat Score: 3/100. Severity: LOW. ML Confidence: 88.1%. Action: MONITORED_ONLY. No false critical alert raised. |
-| **B** | Port Scan Heuristic Sweep | `REAL LOCAL TRAFFIC` | **PASS** | Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-001']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0µs)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance']. |
-| **C** | Auth-Storm / Brute-Force Heuristic | `REAL LOCAL TRAFFIC + AUTH FLOW METADATA` | **PASS** | Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-BRUTEFORCE-001', 'HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry']. |
+| **B** | Port Scan Heuristic Sweep | `REAL LOCAL TRAFFIC` | **PASS** | Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-001', 'HEUR-PORTSCAN-002']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0µs)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance']. |
+| **C** | Auth-Storm / Brute-Force Heuristic | `REAL LOCAL TRAFFIC + AUTH FLOW METADATA` | **PASS** | Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002', 'HEUR-BRUTEFORCE-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry']. |
 | **D** | Controlled Flood Heuristic | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DOS-002', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY. |
-| **E** | Local Threat Intelligence / IOC Match | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-9967EAA1 severity: CRITICAL (100/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs. |
-| **F** | Multi-Stage Attack Correlation | `CONTROLLED SEQUENTIAL EVENTS` | **PASS** | Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-2D90370B. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-CAA58375. |
+| **E** | Local Threat Intelligence / IOC Match | `CONTROLLED SYNTHETIC TEST DATA` | **PASS** | Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-98A24458 severity: CRITICAL (98/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs. |
+| **F** | Multi-Stage Attack Correlation | `CONTROLLED SEQUENTIAL EVENTS` | **PASS** | Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-C220CA83. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-2C9FC5EE. |
 | **G** | IPS Prevention Simulation | `CONTROLLED ENGINE VERIFICATION` | **PASS** | Simulate mode returned action 'SIMULATED_TEMPORARY_BLOCK' without host firewall changes. Detect_only mode returned action 'MONITORED_ONLY'. Enforcement path not exercised on host; detect_only/simulate validated safely. |
-| **H** | Full End-to-End Pipeline Chain | `INTEGRATED PIPELINE DEMONSTRATION` | **PASS** | Complete provenance chain successfully established: Flow [flow-e2e-b6153f5d] -> Event ID [548704ee-6fe4-4569-b45e-0d21d13abbe7] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-38745C22] -> Prevention Action [MONITORED_ONLY]. |
+| **H** | Full End-to-End Pipeline Chain | `INTEGRATED PIPELINE DEMONSTRATION` | **PASS** | Complete provenance chain successfully established: Flow [flow-e2e-02a32bbd] -> Event ID [5f3ca401-4891-498d-bb0b-2f5a565b43e4] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-26C2976D] -> Prevention Action [MONITORED_ONLY]. |
 
 ---
 
@@ -33,15 +33,15 @@
 The full end-to-end security pipeline was exercised to confirm seamless cross-subsystem event propagation and identity preservation:
 
 ```text
-Network Flow       : flow-e2e-b6153f5d
+Network Flow       : flow-e2e-02a32bbd
        ↓
-Security Event ID  : 548704ee-6fe4-4569-b45e-0d21d13abbe7
+Security Event ID  : 5f3ca401-4891-498d-bb0b-2f5a565b43e4
        ↓
 Rule Matches       : ['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']
        ↓
 IOC Matches        : ['203.0.113.88']
        ↓
-Correlated Incident: INC-38745C22
+Correlated Incident: INC-26C2976D
        ↓
 Threat Score       : 80/100 (CRITICAL)
        ↓
@@ -54,9 +54,9 @@ Prevention Action  : MONITORED_ONLY
 
 - **Distinct Security Events Generated**: `9`
 - **Correlated Incidents Managed**: `4`
-- **Distinct Heuristic/Signature Rules Triggered**: `HEUR-PORTSCAN-002, HEUR-PORTSCAN-001, HEUR-BRUTEFORCE-002, HEUR-DOS-002, SIGN-PORTSCAN-001, SIGN-WEB-001, HEUR-BRUTEFORCE-001, HEUR-DOS-001`
+- **Distinct Heuristic/Signature Rules Triggered**: `SIGN-PORTSCAN-001, HEUR-DOS-001, HEUR-PORTSCAN-001, HEUR-BRUTEFORCE-002, HEUR-DOS-002, HEUR-BRUTEFORCE-001, HEUR-PORTSCAN-002, SIGN-WEB-001`
 - **Threat Intelligence Indicators Correlated**: `203.0.113.199, 203.0.113.88`
-- **IPS Prevention Decisions Issued**: `SIMULATED_TEMPORARY_BLOCK, MONITORED_ONLY`
+- **IPS Prevention Decisions Issued**: `MONITORED_ONLY, SIMULATED_TEMPORARY_BLOCK`
 
 ---
 
