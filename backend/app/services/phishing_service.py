@@ -23,7 +23,7 @@ from app.schemas.phishing import PhishingAnalyzeRequest, PhishingAnalyzeResponse
 class PhishingService:
     """Core detection engine orchestrator."""
 
-    # Load trusted domains once at startup
+    # Tier-1: Curated trusted brands (subdomain matching allowed, except user content)
     TRUSTED_DOMAINS = {
         'wikipedia.org', 'google.com', 'github.com', 'microsoft.com',
         'apple.com', 'amazon.com', 'cloudflare.com', 'mozilla.org',
@@ -31,14 +31,16 @@ class PhishingService:
         'facebook.com', 'instagram.com', 'netflix.com', 'reddit.com',
         'bing.com', 'yahoo.com', 'zoom.us', 'office.com', 'live.com'
     }
-    
+
+    # Tier-2: External Tranco top domains (exact domain and www. only, never arbitrary subdomains)
+    TRANCO_DOMAINS = set()
     _trusted_file = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'trusted_domains.json')
     if os.path.exists(_trusted_file):
         try:
-            with open(_trusted_file, 'r') as _f:
-                TRUSTED_DOMAINS.update(json.load(_f))
+            with open(_trusted_file, 'r', encoding='utf-8') as _f:
+                TRANCO_DOMAINS = set(json.load(_f))
         except Exception:
-            pass
+            TRANCO_DOMAINS = set()
 
     # Subdomains of trusted brands that host content anyone can publish.
     USER_CONTENT_HOSTS = {
@@ -57,11 +59,25 @@ class PhishingService:
     @classmethod
     def is_whitelisted_domain(cls, domain: str) -> bool:
         domain = (domain or "").lower().rstrip(".")
+        if not domain:
+            return False
+        # Exclude user content hosts and suffixes
         if domain in cls.USER_CONTENT_HOSTS or domain.endswith(cls.USER_CONTENT_SUFFIXES):
             return False
         if any(domain == h or domain.endswith(f".{h}") for h in cls.USER_CONTENT_HOSTS):
             return False
-        return any(domain == td or domain.endswith(f".{td}") for td in cls.TRUSTED_DOMAINS)
+
+        # Tier 1: Curated trusted domains (allow subdomains)
+        if any(domain == td or domain.endswith(f".{td}") for td in cls.TRUSTED_DOMAINS):
+            return True
+
+        # Tier 2: Tranco list (exact registrable domain or www.<domain> only, never arbitrary subdomains)
+        if domain in cls.TRANCO_DOMAINS:
+            return True
+        if domain.startswith("www.") and domain[4:] in cls.TRANCO_DOMAINS:
+            return True
+
+        return False
 
     def __init__(
         self,
