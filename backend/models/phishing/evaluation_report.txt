@@ -5,7 +5,7 @@ MACHINE LEARNING EVALUATION REPORT - PHISHING URL DETECTOR
 
 Model Name:                 CIPHER Random Forest Phishing Detector
 Model Version:              phiusiil-rf-v1
-Evaluation Date:            2026-10-23 20:19:36 UTC
+Evaluation Date:            2026-10-31 04:12:28 UTC
 Dataset:                    PhiUSIIL Phishing URL Dataset
 Dataset Total Clean Rows:   235,370 unique URLs (zero duplicate URLs)
 Split Strategy:             Stratified Split: 70% Train, 15% Validation, 15% Held-Out Test
@@ -24,7 +24,7 @@ Specificity (TNR):          99.10%
 False Positive Rate (FPR):  0.900% (182 out of 20,228 legitimate sites)
 False Negative Rate (FNR):  1.718% (259 out of 15,078 phishing sites)
 
-Inference Throughput:       353,668 URLs/sec (0.003 ms/URL)
+Inference Throughput:       314,795 URLs/sec (0.003 ms/URL)
 Local Privacy:              100% Offline, Zero Network Calls, Zero Browsing History Leaks
 
 --------------------------------------------------------------------------------

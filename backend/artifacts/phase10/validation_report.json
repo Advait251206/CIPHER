@@ -1,8 +1,8 @@
 {
   "phase": "10",
   "title": "CIPHER Controlled Local End-to-End Validation",
-  "timestamp": "2026-10-31T02:32:45Z",
-  "duration_seconds": 3.06,
+  "timestamp": "2026-10-31T04:13:28Z",
+  "duration_seconds": 4.42,
   "environment": "Localhost (Air-Gapped / Isolated Loopback)",
   "summary": {
     "total_scenarios": 8,
@@ -19,10 +19,10 @@
       "status": "PASS",
       "evidence": "Generated 5 HTTP flows to http://127.0.0.1:18080. Classification: BENIGN. Threat Score: 3/100. Severity: LOW. ML Confidence: 88.1%. Action: MONITORED_ONLY. No false critical alert raised.",
       "flow_ids": [
-        "flow-benign-dd93f25a"
+        "flow-benign-838639c0"
       ],
       "event_ids": [
-        "6e3f4d03-64c5-477b-ac9a-f594e67bf33a"
+        "6f02eb2a-69b1-4ec1-a51c-4398e427b527"
       ],
       "incident_ids": [],
       "rule_matches": [],
@@ -36,18 +36,18 @@
       "name": "Port Scan Heuristic Sweep",
       "traffic_type": "REAL LOCAL TRAFFIC",
       "status": "PASS",
-      "evidence": "Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-001', 'SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-002']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0\u00b5s)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance'].",
+      "evidence": "Generated 12 bounded connection probes across ports 18010..18021. Rule Matches: ['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001', 'HEUR-PORTSCAN-001']. Classification: PORT_SCAN. Threat Score: 80/100. Severity: CRITICAL. Evidence: ['Probable SYN port scan probe: SYN flag set with zero ACK and zero backward response (Duration=200.0\u00b5s)', 'Unresponsive outbound probe flow characteristic of automated port reconnaissance'].",
       "flow_ids": [
-        "flow-sweep-a83de60e"
+        "flow-sweep-3d162ce0"
       ],
       "event_ids": [
-        "ce1c600a-8345-4227-a758-6446efa840ac"
+        "2a9115d2-4313-4d87-8417-3e5359952111"
       ],
       "incident_ids": [],
       "rule_matches": [
-        "HEUR-PORTSCAN-001",
+        "HEUR-PORTSCAN-002",
         "SIGN-PORTSCAN-001",
-        "HEUR-PORTSCAN-002"
+        "HEUR-PORTSCAN-001"
       ],
       "ioc_matches": [],
       "prevention_decisions": [
@@ -59,18 +59,18 @@
       "name": "Auth-Storm / Brute-Force Heuristic",
       "traffic_type": "REAL LOCAL TRAFFIC + AUTH FLOW METADATA",
       "status": "PASS",
-      "evidence": "Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002', 'HEUR-BRUTEFORCE-001']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry'].",
+      "evidence": "Generated 6 bounded connection attempts targeting auth port 22 on loopback. Satisfied HEUR-BRUTEFORCE-001 conditions. Matched Rules: ['HEUR-BRUTEFORCE-001', 'HEUR-PORTSCAN-001', 'HEUR-BRUTEFORCE-002']. Classification: BRUTE_FORCE. Threat Score: 50/100. Severity: HIGH. Evidence: ['Abnormally truncated session targeting SSH auth port 22, indicative of automated credential retry'].",
       "flow_ids": [
-        "flow-auth-66d84c10"
+        "flow-auth-766a13dc"
       ],
       "event_ids": [
-        "e42dedf5-ce2c-4a5b-9ec6-d2d54e236811"
+        "a0d366f9-9c77-4ba4-ab2a-2515ff3d475e"
       ],
       "incident_ids": [],
       "rule_matches": [
+        "HEUR-BRUTEFORCE-001",
         "HEUR-PORTSCAN-001",
-        "HEUR-BRUTEFORCE-002",
-        "HEUR-BRUTEFORCE-001"
+        "HEUR-BRUTEFORCE-002"
       ],
       "ioc_matches": [],
       "prevention_decisions": [
@@ -84,10 +84,10 @@
       "status": "PASS",
       "evidence": "Evaluated synthetic flow exceeding production thresholds (60,000 pkts/s, 8 MB/s). Production thresholds unchanged. Rules Matched: ['HEUR-DOS-001', 'HEUR-DOS-002', 'SIGN-WEB-001']. Classification: DOS. Threat Score: 65/100. Severity: HIGH. IPS Action: MONITORED_ONLY.",
       "flow_ids": [
-        "flow-flood-d0c7d234"
+        "flow-flood-0394752b"
       ],
       "event_ids": [
-        "7a946869-9d4e-4df6-9794-bd2bf2694101"
+        "0634ef07-8fd9-40a7-8c16-1c3e596088ec"
       ],
       "incident_ids": [],
       "rule_matches": [
@@ -105,15 +105,15 @@
       "name": "Local Threat Intelligence / IOC Match",
       "traffic_type": "CONTROLLED SYNTHETIC TEST DATA",
       "status": "PASS",
-      "evidence": "Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-A8828E7C severity: CRITICAL (98/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs.",
+      "evidence": "Synthetic IOC '203.0.113.199' correctly registered and matched. ThreatScorer elevated threat score to 98/100 (CRITICAL). Correlated Incident INC-9967EAA1 severity: CRITICAL (100/100). Verified disabled IOC isolation and safe removal without deleting unrelated production IOCs.",
       "flow_ids": [
-        "flow-ioc-562f5681"
+        "flow-ioc-723fc85c"
       ],
       "event_ids": [
-        "259d8b67-9c61-425d-99b3-c17fc427881f"
+        "18981f4e-bb60-4859-a131-23e232c21125"
       ],
       "incident_ids": [
-        "INC-A8828E7C"
+        "INC-9967EAA1"
       ],
       "rule_matches": [],
       "ioc_matches": [
@@ -128,16 +128,16 @@
       "name": "Multi-Stage Attack Correlation",
       "traffic_type": "CONTROLLED SEQUENTIAL EVENTS",
       "status": "PASS",
-      "evidence": "Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-78B4827D. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-ADB368CA.",
+      "evidence": "Sequential chain (PORT_SCAN -> BRUTE_FORCE) from 198.51.100.77 correctly merged into Incident INC-2D90370B. Escalation Flag: True. Correlation Score: 100/100. Verified distinct destination (10.0.0.99) created independent Incident INC-CAA58375.",
       "flow_ids": [],
       "event_ids": [
-        "45985953-6180-4829-ad0e-a5cf838dea81",
-        "ce2103db-f80b-455b-abde-e4a29e262a3b",
-        "afd2c03c-d488-472a-b8b6-6f4773b40d09"
+        "c8e89f77-c488-49ef-b2c7-a5a6b6bee51b",
+        "74d82a97-cd6f-40cd-8fe5-1504541c0830",
+        "b3b6d9ad-b6cf-45a6-824d-6a7ee050fbe7"
       ],
       "incident_ids": [
-        "INC-78B4827D",
-        "INC-ADB368CA"
+        "INC-2D90370B",
+        "INC-CAA58375"
       ],
       "rule_matches": [],
       "ioc_matches": [],
@@ -166,15 +166,15 @@
       "name": "Full End-to-End Pipeline Chain",
       "traffic_type": "INTEGRATED PIPELINE DEMONSTRATION",
       "status": "PASS",
-      "evidence": "Complete provenance chain successfully established: Flow [flow-e2e-abe0e527] -> Event ID [ae7ba763-a20f-4cdf-8257-19aae265a738] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-B6CC9DB4] -> Prevention Action [MONITORED_ONLY].",
+      "evidence": "Complete provenance chain successfully established: Flow [flow-e2e-b6153f5d] -> Event ID [548704ee-6fe4-4569-b45e-0d21d13abbe7] -> Rule Match [['HEUR-PORTSCAN-002', 'SIGN-PORTSCAN-001']] -> IOC Match [['203.0.113.88']] -> Incident ID [INC-38745C22] -> Prevention Action [MONITORED_ONLY].",
       "flow_ids": [
-        "flow-e2e-abe0e527"
+        "flow-e2e-b6153f5d"
       ],
       "event_ids": [
-        "ae7ba763-a20f-4cdf-8257-19aae265a738"
+        "548704ee-6fe4-4569-b45e-0d21d13abbe7"
       ],
       "incident_ids": [
-        "INC-B6CC9DB4"
+        "INC-38745C22"
       ],
       "rule_matches": [
         "HEUR-PORTSCAN-002",
@@ -187,8 +187,8 @@
         "MONITORED_ONLY"
       ],
       "chain_trace": {
-        "flow_id": "flow-e2e-abe0e527",
-        "event_id": "ae7ba763-a20f-4cdf-8257-19aae265a738",
+        "flow_id": "flow-e2e-b6153f5d",
+        "event_id": "548704ee-6fe4-4569-b45e-0d21d13abbe7",
         "rule_matches": [
           "HEUR-PORTSCAN-002",
           "SIGN-PORTSCAN-001"
@@ -196,7 +196,7 @@
         "ioc_matches": [
           "203.0.113.88"
         ],
-        "incident_id": "INC-B6CC9DB4",
+        "incident_id": "INC-38745C22",
         "prevention_action": "MONITORED_ONLY",
         "threat_score": 80,
         "severity": "CRITICAL"
@@ -207,18 +207,18 @@
     "total_events_generated": 9,
     "total_incidents_generated": 4,
     "distinct_rules_matched": [
-      "HEUR-DOS-002",
-      "HEUR-DOS-001",
-      "HEUR-BRUTEFORCE-002",
-      "SIGN-WEB-001",
       "HEUR-PORTSCAN-002",
-      "SIGN-PORTSCAN-001",
       "HEUR-PORTSCAN-001",
-      "HEUR-BRUTEFORCE-001"
+      "HEUR-BRUTEFORCE-002",
+      "HEUR-DOS-002",
+      "SIGN-PORTSCAN-001",
+      "SIGN-WEB-001",
+      "HEUR-BRUTEFORCE-001",
+      "HEUR-DOS-001"
     ],
     "distinct_iocs_matched": [
-      "203.0.113.88",
-      "203.0.113.199"
+      "203.0.113.199",
+      "203.0.113.88"
     ],
     "prevention_decisions": [
       "SIMULATED_TEMPORARY_BLOCK",
