@@ -1,0 +1,88 @@
+=== [PHASE 4.4] LIVE SENSOR & WAF VERIFICATION ===
+Backend URL:    http://127.0.0.1:8000
+Vulnerable App: http://127.0.0.1:5174
+
+[STEP 1] Lab VM Environment Check:
+  Checking network adapters for attached Kali Linux lab VM...
+  Status: Lab Kali VM is NOT RUNNING / not connected to host-only adapter.
+  [NOT RUN] nmap SYN scan (requires live Kali attacker VM)
+  [NOT RUN] Hydra SSH brute-force (requires live Kali attacker VM)
+  [NOT RUN] Slowloris attack (requires live Kali attacker VM)
+  Proceeding with local WAF attack verification against vulnerable demo app.
+
+[STEP 2] Vulnerable Demo App Status:
+  Vulnerable app not responding on http://127.0.0.1:5174. Starting in background...
+  Started vulnerable app (PID 30368), response code: 200
+
+[STEP 3] Sensor & WAF Configuration:
+  Set prevention mode: detect_only (HTTP 200)
+  Sensor start on Loopback Pseudo-Interface 1 -> HTTP 200: {'running': True, 'interface': 'Loopback Pseudo-Interface 1', 'bpf_filter': 'tcp port 5174', 'packets_captured': 0, 'active_flows': 0, 'completed_flows': 0, 'analyzed_flows': 0, 'detected_attacks': 0, 'started_at': '2026-10-31T04:47:47.049638+00:00', 'errors': 0, 'npcap_available': True, 'scapy_available': True}
+
+[STEP 4] Submitting Targeted WAF Attack Payloads:
+  Executed: SQL Injection (Auth Bypass)
+    Target: POST http://127.0.0.1:5174/login
+    Payload: username=%27+OR+%271%27%3D%271%27+--&password=test
+    Target Response: HTTP 200
+  Executed: SQL Injection (UNION SELECT)
+    Target: POST http://127.0.0.1:5174/signup
+    Payload: username=admin%27+UNION+SELECT+1%2C2%2C3%2C4+--&password=p&f
+    Target Response: HTTP 200
+  Executed: Reflected XSS
+    Target: POST http://127.0.0.1:5174/login
+    Payload: username=%3Cscript%3Ealert%28%27CIPHER_XSS%27%29%3C%2Fscript
+    Target Response: HTTP 200
+  Executed: Path Traversal
+    Target: GET http://127.0.0.1:5174/?file=..%2F..%2F..%2F..%2Fwindows%2Fwin.ini
+    Payload: /?file=..%2F..%2F..%2F..%2Fwindows%2Fwin.ini
+    Target Response: HTTP 200
+  Executed: CVE-2026-0001 Exploit Vector
+    Target: POST http://127.0.0.1:5174/login
+    Payload: username=%27%3B+ATTACH+DATABASE+%27hack.db%27+AS+h%3B+--&pas
+    Target Response: HTTP 200
+
+[STEP 5] Sensor Telemetry & Security Events Verification:
+  Sensor Telemetry (HTTP 200):
+    Running:          True
+    Packets Captured: 82
+    Active Flows:     0
+    Completed Flows:  5
+    Analyzed Flows:   5
+    Detected Attacks: 0
+
+  Logged Security Events in DB: 10 returned
+    - Event ID:    d86ed615-1abf-428d-b485-5e17355e4894
+      Attack Type: BENIGN
+      Severity:    LOW
+      Threat Score:None
+      Method:      ML
+      Timestamp:   2026-10-31T04:47:53Z
+    - Event ID:    3a49ff05-d8da-4914-a973-72300d6abea8
+      Attack Type: BENIGN
+      Severity:    LOW
+      Threat Score:None
+      Method:      ML
+      Timestamp:   2026-10-31T04:47:52Z
+    - Event ID:    e7874697-8b91-42b9-88fa-e6bf081af11a
+      Attack Type: BENIGN
+      Severity:    LOW
+      Threat Score:None
+      Method:      ML
+      Timestamp:   2026-10-31T04:47:51Z
+    - Event ID:    cb067060-ef32-470e-a853-d4b04730e226
+      Attack Type: BENIGN
+      Severity:    LOW
+      Threat Score:None
+      Method:      ML
+      Timestamp:   2026-10-31T04:47:51Z
+    - Event ID:    af6b99da-8357-47ae-bd96-197c0f3c6042
+      Attack Type: BENIGN
+      Severity:    LOW
+      Threat Score:None
+      Method:      ML
+      Timestamp:   2026-10-31T04:47:50Z
+
+[STEP 6] Graceful Teardown:
+  Sensor stop -> HTTP 200: False
+  Terminated temporary vulnerable app process.
+
+=== Live Sensor & WAF Check Complete ===
