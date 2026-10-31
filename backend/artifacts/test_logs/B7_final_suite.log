@@ -1,0 +1,15 @@
+........................................................................ [ 28%]
+......s................................................................. [ 56%]
+........................................................................ [ 84%]
+........................................                                 [100%]
+============================== warnings summary ===============================
+.venv\Lib\site-packages\fastapi\testclient.py:1
+  D:\Advait251206\College\5th Sem\IDPS\Project\backend\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_api.py::test_feature_extraction_failure_safe_handling
+  D:\Advait251206\College\5th Sem\IDPS\Project\backend\.venv\Lib\site-packages\fastapi\telemetry\_api.py:244: StarletteDeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    return function(**arguments)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+255 passed, 1 skipped, 2 warnings in 28.81s
