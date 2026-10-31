@@ -9,7 +9,7 @@ All tables in the generated blocks come from the committed model artifacts (`bac
 <!-- METRICS:SUMMARY:START -->
 | Model | Dataset (held-out test set) | Features | Accuracy | Precision | Recall | F1 | FPR |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 98.75% | 98.79% | 98.28% | 0.9853 | 0.900% |
+| Phishing URL (Random Forest) | PhiUSIIL, random stratified split (35,306 URLs) | 15 | 97.13% | 98.01% | 95.20% | 0.9659 | 1.440% |
 | Network IDS, binary gate (Random Forest) | CIC-IDS2017, random stratified split (404,433 flows) | 67 | 99.903% | 99.445% | 99.944% | 0.9969 | 0.104% |
 | Network IDS, 9-class (Random Forest) | CIC-IDS2017, same split | 67 | 99.900% | — | — | macro 0.9192 / weighted 0.9990 | — |
 | Email phishing (Random Forest) | 6-corpus Kaggle aggregate, random stratified split (12,359 emails) | 32 | 91.53% | 94.24% | 89.14% | 0.9162 | 5.89% |
@@ -29,8 +29,8 @@ Test-set confusion matrix:
 <!-- METRICS:PHISHING_CM:START -->
 ```text
                    Predicted Legitimate    Predicted Phishing
-Actual Legitimate        20,046 (TN)             182 (FP)
-Actual Phishing             259 (FN)          14,819 (TP)
+Actual Legitimate        19,936 (TN)             292 (FP)
+Actual Phishing             723 (FN)          14,355 (TP)
 ```
 <!-- METRICS:PHISHING_CM:END -->
 

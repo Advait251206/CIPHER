@@ -59,6 +59,45 @@ def train_phishing_model():
     extractor = FeatureExtractor()
     feature_cols = extractor.feature_names
 
+    # 1.5 Augment with Tranco deep-path legitimate URLs to mitigate bare-homepage bias
+    trusted_domains_path = os.path.join(backend_root, "data", "trusted_domains.json")
+    if os.path.exists(trusted_domains_path):
+        print("\n[1.5/5] Augmenting training distribution with Tranco deep-path legitimate URLs...")
+        with open(trusted_domains_path, "r", encoding="utf-8") as f:
+            tranco_domains = json.load(f)[:15000]
+
+        path_stems = [
+            "/issues/12345", "/dp/B0CHX1W1XY?ref=ppx_yo2ov_dt_b_product_details&th=1", "/watch?v=dQw4w9WgXcQ",
+            "/questions/231767/what-does-the-yield-keyword-do", "/3/library/urllib.parse.html",
+            "/conference/usenixsecurity22/presentation/arp", "/package/react",
+            "/project/scikit-learn/", "/wiki/Random_forest", "/nget/train-search",
+            "/web/personal-banking", "/page/notices", "/mail/u/0/#inbox",
+            "/abs/2010.09470", "/Advait251206/CIPHER", "/scikit-learn/scikit-learn/issues/12345",
+            "/about-us", "/help/faq", "/docs/v2/api", "/blog/2026/01/release-notes",
+            "/search?q=machine+learning", "/download/v1.0.4/setup.tar.gz",
+            "/products/category/electronics?page=2", "/profile/account-settings"
+        ]
+        subdomains = ["", "www.", "docs.", "mail.", "api.", "en.", "blog.", "support."]
+
+        import random
+        random.seed(42)
+        augmented_urls = []
+        for _ in range(25000):
+            dom = random.choice(tranco_domains)
+            sub = random.choice(subdomains)
+            path = random.choice(path_stems)
+            augmented_urls.append(f"https://{sub}{dom}{path}")
+
+        aug_feats = extractor.extract_features_dataframe(pd.Series(augmented_urls))
+        aug_feats["label"] = 0
+        aug_feats["URL"] = augmented_urls
+        aug_feats["Domain"] = [u.split("/")[2] for u in augmented_urls]
+
+        legit_train = train_df[train_df["label"] == 0].sample(n=50000, random_state=42)
+        phish_train = train_df[train_df["label"] == 1]
+        train_df = pd.concat([legit_train, aug_feats, phish_train], ignore_index=True)
+        print(f"      Augmented training set: {len(train_df):,} samples (75,000 Benign, {len(phish_train):,} Phishing)")
+
     X_train = train_df[feature_cols].copy()
     y_train = train_df['label'].values
 

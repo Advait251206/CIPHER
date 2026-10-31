@@ -1,0 +1,63 @@
+=================================================================
+CIPHER - MODEL EVALUATION ON HELD-OUT TEST SET
+=================================================================
+
+[1/4] Loading model and held-out test data...
+      Loaded model (RandomForestClassifier) and 35,306 test samples in 0.81s
+
+[2/4] Running inference on held-out test set...
+      Inference completed in 0.20s (175,905 predictions/sec, 0.006 ms/URL)
+
+[3/4] Computing performance metrics...
+      Test Accuracy:             97.13%
+      Test Precision:            98.01%
+      Test Recall:               95.20%
+      Test F1 Score:             0.9659
+      Test ROC-AUC:              0.9957
+      False Positive Rate (FPR): 1.444% (292 false alarms out of 20,228 legit URLs)
+      False Negative Rate (FNR): 4.795% (723 missed phish out of 15,078 phish URLs)
+      Specificity (TNR):         98.56%
+
+      Confusion Matrix:
+                    Predicted Legit (0)    Predicted Phish (1)
+      Actual Legit:        19,936 (TN)                292 (FP)
+      Actual Phish:           723 (FN)             14,355 (TP)
+
+[4/4] Conducting forensic error analysis on False Positives and False Negatives...
+
+      --- FALSE POSITIVE ANALYSIS (292 samples) ---
+      (Legitimate sites incorrectly flagged as phishing)
+        * URL: https://www.fussball-fanshop-24.de
+          Prob=0.969, HTTPS=1, DomainLen=26, Entropy=4.1829, Keywords=0
+        * URL: https://www.ethnicity-facts-figures.service.gov.uk
+          Prob=0.956, HTTPS=1, DomainLen=42, Entropy=4.2615, Keywords=1
+        * URL: https://www.angewandtekunst-frankfurt.de
+          Prob=0.584, HTTPS=1, DomainLen=32, Entropy=3.9939, Keywords=0
+        * URL: https://www.defenseproducts101.com
+          Prob=0.530, HTTPS=1, DomainLen=26, Entropy=4.1163, Keywords=0
+        * URL: https://www.how-to-draw-funny-cartoons.com
+          Prob=0.954, HTTPS=1, DomainLen=34, Entropy=4.012, Keywords=0
+      Root Cause Insight: False positives typically stem from legitimate URLs that omit HTTPS,
+      use unusually long or complex query parameters, or contain words like 'account' or 'login'.
+
+      --- FALSE NEGATIVE ANALYSIS (723 samples) ---
+      (Phishing sites missed by the ML model)
+        * URL: https://bio.site/dufghru
+          Prob=0.393, HTTPS=1, DomainLen=12, Entropy=3.9408, Keywords=0
+        * URL: https://kdsadef.mrbasic.com/
+          Prob=0.252, HTTPS=1, DomainLen=19, Entropy=4.0391, Keywords=0
+        * URL: https://www.unionbindinqcompany.it
+          Prob=0.024, HTTPS=1, DomainLen=26, Entropy=3.9957, Keywords=0
+        * URL: https://idimaro.cl/mails/webmail/
+          Prob=0.121, HTTPS=1, DomainLen=14, Entropy=3.9156, Keywords=0
+        * URL: https://erputils.com/miziha/client/login.php
+          Prob=0.136, HTTPS=1, DomainLen=16, Entropy=4.1217, Keywords=2
+      Root Cause Insight: False negatives are often short, HTTPS-enabled phishing landing pages
+      that mimic clean corporate root domains. This is precisely why CIPHER combines ML with
+      the heuristic engine to catch brand impersonation and homoglyph tricks.
+
+      Saved human-readable evaluation report to: D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\evaluation_report.txt
+      Updated D:\Advait251206\College\5th Sem\IDPS\Project\backend\models\phishing\model_metadata.json with test performance metrics.
+=================================================================
+MODEL EVALUATION COMPLETED SUCCESSFULLY!
+=================================================================

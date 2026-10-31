@@ -5,7 +5,7 @@ MACHINE LEARNING EVALUATION REPORT - PHISHING URL DETECTOR
 
 Model Name:                 CIPHER Random Forest Phishing Detector
 Model Version:              phiusiil-rf-v1
-Evaluation Date:            2026-10-31 04:12:28 UTC
+Evaluation Date:            2026-10-31 05:25:25 UTC
 Dataset:                    PhiUSIIL Phishing URL Dataset
 Dataset Total Clean Rows:   235,370 unique URLs (zero duplicate URLs)
 Split Strategy:             Stratified Split: 70% Train, 15% Validation, 15% Held-Out Test
@@ -14,30 +14,30 @@ Test Set Sample Count:      35,306 samples (Unseen during training & hyperparame
 --------------------------------------------------------------------------------
 1. EXECUTIVE PERFORMANCE SUMMARY
 --------------------------------------------------------------------------------
-Accuracy:                   98.75%
-Precision (Positive=Phish): 98.79%
-Recall / Sensitivity:       98.28%
-F1 Score:                   0.9853
-ROC-AUC:                    0.9976
-Specificity (TNR):          99.10%
+Accuracy:                   97.13%
+Precision (Positive=Phish): 98.01%
+Recall / Sensitivity:       95.20%
+F1 Score:                   0.9659
+ROC-AUC:                    0.9957
+Specificity (TNR):          98.56%
 
-False Positive Rate (FPR):  0.900% (182 out of 20,228 legitimate sites)
-False Negative Rate (FNR):  1.718% (259 out of 15,078 phishing sites)
+False Positive Rate (FPR):  1.444% (292 out of 20,228 legitimate sites)
+False Negative Rate (FNR):  4.795% (723 out of 15,078 phishing sites)
 
-Inference Throughput:       314,795 URLs/sec (0.003 ms/URL)
+Inference Throughput:       175,905 URLs/sec (0.006 ms/URL)
 Local Privacy:              100% Offline, Zero Network Calls, Zero Browsing History Leaks
 
 --------------------------------------------------------------------------------
 2. CONFUSION MATRIX
 --------------------------------------------------------------------------------
                           Predicted Legitimate (0)    Predicted Phishing (1)
-Actual Legitimate (0):           20,046 (TN)                     182 (FP)
-Actual Phishing (1):                259 (FN)                  14,819 (TP)
+Actual Legitimate (0):           19,936 (TN)                     292 (FP)
+Actual Phishing (1):                723 (FN)                  14,355 (TP)
 
 --------------------------------------------------------------------------------
 3. SECURITY RISK & TRADE-OFF ANALYSIS
 --------------------------------------------------------------------------------
-A. FALSE POSITIVES (182 occurrences, FPR = 0.900%):
+A. FALSE POSITIVES (292 occurrences, FPR = 1.444%):
    - Impact: A legitimate website is flagged as phishing, potentially causing user
      friction or alert fatigue.
    - Analysis: With an FPR under 0.1%, fewer than 1 in 1,000 legitimate URLs trigger
@@ -46,7 +46,7 @@ A. FALSE POSITIVES (182 occurrences, FPR = 0.900%):
    - Mitigation: CIPHER's Threat Scorer requires corroboration from the Heuristic
      Engine before escalating severity to CRITICAL.
 
-B. FALSE NEGATIVES (259 occurrences, FNR = 1.718%):
+B. FALSE NEGATIVES (723 occurrences, FNR = 4.795%):
    - Impact: A phishing website is misclassified as legitimate, leaving credentials
      vulnerable.
    - Analysis: Missed URLs are predominantly clean HTTPS links hosted on compromised
@@ -57,16 +57,16 @@ B. FALSE NEGATIVES (259 occurrences, FNR = 1.718%):
 --------------------------------------------------------------------------------
 4. TOP INFLUENTIAL FEATURES
 --------------------------------------------------------------------------------
-   1. IsHTTPS                     : 39.03%
-   2. DegitRatioInURL             : 13.06%
-   3. CharContinuationRate        : 10.00%
-   4. URLEntropy                  :  9.26%
-   5. DomainLength                :  7.09%
-   6. LetterRatioInURL            :  6.35%
-   7. DomainEntropy               :  5.34%
-   8. SpacialCharRatioInURL       :  3.52%
-   9. IsSuspiciousTLD             :  2.10%
-  10. SuspiciousKeywordCount      :  1.88%
+   1. IsHTTPS                     : 39.61%
+   2. DomainLength                : 11.54%
+   3. DomainEntropy               : 10.47%
+   4. CharContinuationRate        :  7.49%
+   5. SpacialCharRatioInURL       :  7.23%
+   6. LetterRatioInURL            :  6.89%
+   7. DegitRatioInURL             :  6.03%
+   8. URLEntropy                  :  4.56%
+   9. IsSuspiciousTLD             :  2.04%
+  10. TLDLength                   :  1.25%
 
 --------------------------------------------------------------------------------
 5. PRODUCTION READINESS & LIMITATIONS
