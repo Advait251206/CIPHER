@@ -28,54 +28,7 @@ if backend_root not in sys.path:
     sys.path.insert(0, backend_root)
 
 
-class NetworkFeaturePipeline:
-    """
-    Guarantees strict feature ordering, NaN/Inf sanitization,
-    and type conversion for network flow features.
-    """
-    def __init__(self, feature_names):
-        self.feature_names = list(feature_names)
-        self.feature_count = len(self.feature_names)
-        self.medians = {}
-
-    def fit(self, X):
-        if isinstance(X, pd.DataFrame):
-            for col in self.feature_names:
-                if col in X.columns:
-                    val = float(X[col].median())
-                    self.medians[col] = 0.0 if np.isnan(val) else val
-                else:
-                    self.medians[col] = 0.0
-        return self
-
-    def transform(self, X):
-        if isinstance(X, dict):
-            # Single flow dict -> DataFrame
-            X = pd.DataFrame([X])
-
-        if isinstance(X, pd.DataFrame):
-            # Ensure all required features exist, filling missing with medians
-            df_out = pd.DataFrame(index=X.index)
-            for col in self.feature_names:
-                if col in X.columns:
-                    df_out[col] = X[col]
-                else:
-                    df_out[col] = self.medians.get(col, 0.0)
-
-            # Sanitize Infs and NaNs
-            arr = df_out.values.astype(np.float32)
-            pos_mask = np.isposinf(arr)
-            neg_mask = np.isneginf(arr)
-            nan_mask = np.isnan(arr)
-            arr[pos_mask] = 1e6
-            arr[neg_mask] = 0.0
-            arr[nan_mask] = 0.0
-            return arr
-        elif isinstance(X, np.ndarray):
-            arr = np.nan_to_num(X.astype(np.float32), nan=0.0, posinf=1e6, neginf=0.0)
-            return arr
-        else:
-            raise ValueError(f"Unsupported input type for transform: {type(X)}")
+from app.network.feature_extractor import NetworkFeaturePipeline
 
 
 def train_network_ids():

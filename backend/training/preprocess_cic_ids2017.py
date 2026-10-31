@@ -141,22 +141,13 @@ def preprocess_cic_ids2017(
         dedup_count = len(df)
         print(f"      Rows: {raw_count:,} -> {dedup_count:,} after dropping {n_before_dedup - dedup_count:,} duplicate flows")
 
-        # 5. Sanitize Infs and NaNs
+        # 5. Clean negative infinities; positive infinities and NaNs are fit strictly on the train split
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         for col in numeric_cols:
             vals = df[col].values
-            pos_mask = np.isposinf(vals)
             neg_mask = np.isneginf(vals)
-            if pos_mask.any() or neg_mask.any():
-                valid_vals = vals[~pos_mask & ~neg_mask & ~np.isnan(vals)]
-                max_val = float(np.percentile(valid_vals, 99.9)) if len(valid_vals) > 0 else 1e6
-                df.loc[pos_mask, col] = max_val
+            if neg_mask.any():
                 df.loc[neg_mask, col] = 0.0
-
-            # Impute NaNs with median or 0
-            if df[col].isnull().any():
-                median_val = float(df[col].median())
-                df[col] = df[col].fillna(0.0 if np.isnan(median_val) else median_val)
 
         # 6. Cast feature columns to float32 to cut memory by 50%
         feature_cols = [c for c in df.columns if c not in ["original_label", "attack_category", "is_attack"]]
@@ -204,6 +195,38 @@ def preprocess_cic_ids2017(
     print(f"      Train attacks: {(train_full['is_attack']==1).sum():,} | Benign: {(train_full['is_attack']==0).sum():,}")
     print(f"      Val attacks:   {(val_full['is_attack']==1).sum():,} | Benign: {(val_full['is_attack']==0).sum():,}")
     print(f"      Test attacks:  {(test_full['is_attack']==1).sum():,} | Benign: {(test_full['is_attack']==0).sum():,}")
+
+    # Fit +inf replacements (99.9th percentile) and imputation medians strictly on train partition
+    print("\n      Fitting +inf replacement and imputation medians on train partition only...")
+    train_medians = {}
+    train_pos_inf = {}
+    for col in curated_feature_names:
+        vals = train_full[col].values
+        pos_mask = np.isposinf(vals)
+        neg_mask = np.isneginf(vals)
+        nan_mask = np.isnan(vals)
+        valid_vals = vals[~pos_mask & ~neg_mask & ~nan_mask]
+
+        pos_val = float(np.percentile(valid_vals, 99.9)) if len(valid_vals) > 0 else 1e6
+        med_val = float(np.median(valid_vals)) if len(valid_vals) > 0 else 0.0
+        if np.isnan(med_val):
+            med_val = 0.0
+
+        train_pos_inf[col] = pos_val
+        train_medians[col] = med_val
+
+    # Apply identical train-fitted parameters across all partitions to prevent data leakage
+    print("      Applying train-fitted parameters across all partitions...")
+    for split_df in [train_full, val_full, test_full]:
+        for col in curated_feature_names:
+            vals = split_df[col].values
+            p_mask = np.isposinf(vals)
+            n_mask = np.isneginf(vals)
+            if p_mask.any():
+                split_df.loc[p_mask, col] = train_pos_inf[col]
+            if n_mask.any():
+                split_df.loc[n_mask, col] = 0.0
+            split_df[col] = split_df[col].fillna(train_medians[col])
 
     # Optimize training balance (retain all attacks in train, sample benign to cap)
     print(f"\n      Optimizing training set balance (capping benign training samples to {benign_train_sample_cap:,})...")
@@ -256,6 +279,8 @@ def preprocess_cic_ids2017(
         "train_samples": len(train_balanced),
         "validation_samples": len(val_full),
         "test_samples": len(test_full),
+        "feature_medians": train_medians,
+        "pos_inf_replacements": train_pos_inf,
         "binary_classes": {"0": "BENIGN", "1": "ATTACK"},
         "multiclass_classes": multiclass_classes,
         "class_to_idx": class_to_idx,
