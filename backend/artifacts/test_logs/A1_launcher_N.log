@@ -1,0 +1,34 @@
+=== CIPHER LAUNCHER ISOLATION CHECK: LAN=N (127.0.0.1) ===
+Timestamp: 2026-10-31 10:02:24
+
+[1/3] Starting backend on 127.0.0.1:8000...
+[2/3] Starting frontend on 127.0.0.1:5173...
+[3/3] Starting vulnerable app via runas /trustlevel:0x20000 on 127.0.0.1:5174...
+
+--- NETSTAT PORT BINDINGS (:8000, :5173, :5174) ---
+
+--- API TOKEN CHECK ---
+backend/.cipher_token exists: True
+Token length: 43 chars
+
+--- VULNERABLE APP INTEGRITY / MANDATORY LEVEL CHECK ---
+Everyone                                                      Well-known group S-1-1-0                                       Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Local account and member of Administrators group Well-known group S-1-5-114                                     Group used for deny only                          
+LAPTOP-UHAKGMP0\docker-users                                  Alias            S-1-5-21-2157212200-3827646983-150029504-1019 Mandatory group, Enabled by default, Enabled group
+LAPTOP-UHAKGMP0\ORA_DBA                                       Alias            S-1-5-21-2157212200-3827646983-150029504-1018 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Administrators                                        Alias            S-1-5-32-544                                  Group used for deny only                          
+BUILTIN\Performance Log Users                                 Alias            S-1-5-32-559                                  Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                                                 Alias            S-1-5-32-545                                  Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\INTERACTIVE                                      Well-known group S-1-5-4                                       Mandatory group, Enabled by default, Enabled group
+CONSOLE LOGON                                                 Well-known group S-1-2-1                                       Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users                              Well-known group S-1-5-11                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization                                Well-known group S-1-5-15                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Local account                                    Well-known group S-1-5-113                                     Mandatory group, Enabled by default, Enabled group
+LOCAL                                                         Well-known group S-1-2-0                                       Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication                              Well-known group S-1-5-64-10                                   Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Mandatory Level                        Label            S-1-16-8192                                                                                     
+
+High Mandatory Level present (Elevated): False
+Medium Mandatory Level present (Non-Elevated): True
+
+[CLEANUP] Services stopped.

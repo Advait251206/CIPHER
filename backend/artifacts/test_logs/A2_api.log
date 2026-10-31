@@ -1,0 +1,21 @@
+Loaded CIPHER API token: KZgxAWkp... from D:\Advait251206\College\5th Sem\IDPS\Project\backend\.cipher_token
+Target Backend:   http://127.0.0.1:8000
+Target Dashboard: http://127.0.0.1:5173
+
+[CHECK 1] Dashboard Proxy (Vite server-injected token on 5173)...
+  [PASS] 1a. Switched mode to simulate via dashboard proxy.
+  [PASS] 1b. Blocked 203.0.113.50 via dashboard proxy.
+  [PASS] 1c. Unblocked 203.0.113.50 via dashboard proxy.
+
+[CHECK 2] CSRF Origin Guard from foreign origin (https://example.com)...
+  [PASS] Foreign origin correctly blocked with HTTP 403 (Forbidden).
+
+[CHECK 3] Direct API Token Validation on POST /api/waf/config...
+  [PASS] Request without token correctly rejected with HTTP 401 Unauthorized.
+  [PASS] Request with token authenticated and reached payload validation (HTTP 422).
+
+[CHECK 4] Argument Injection Defense on POST /api/extension/launch...
+  [PASS] Malicious target_url rejected with HTTP 400 Bad Request.
+
+------------------------------------------------------------
+[RESULT] ALL 4 API ACCESS CONTROL CHECKS PASSED.

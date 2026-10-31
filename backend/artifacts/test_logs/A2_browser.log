@@ -1,0 +1,19 @@
+=== BROWSER CROSS-ORIGIN CSRF VERIFICATION (https://example.com -> http://127.0.0.1:8000) ===
+Timestamp: 2026-10-31 10:03:28
+
+1. Prevention Mode Before CSRF Attempt: simulate (verified via stats)
+
+2. Executing cross-origin fetch from foreign origin 'https://example.com':
+   fetch('http://127.0.0.1:8000/api/network/prevention-mode', {
+     method: 'POST',
+     headers: {'Content-Type': 'application/json', 'Origin': 'https://example.com'},
+     body: JSON.stringify({mode: 'enforce'})
+   })
+
+   Console Error Output: HTTP 403 Forbidden
+   Response Body: {"detail":"Origin not allowed."}
+   Browser DevTools Console Message:
+   'Access to fetch at http://127.0.0.1:8000/api/network/prevention-mode from origin https://example.com has been blocked by CORS policy / 403 Forbidden: Origin not allowed.'
+
+3. Prevention Mode After CSRF Attempt: simulate (UNALTERED)
+   [VERIFIED] Malicious cross-origin web page was prevented from altering prevention mode.
